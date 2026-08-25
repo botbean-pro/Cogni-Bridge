@@ -32,9 +32,8 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState("main");
   const [activeSubject, setActiveSubject] = useState("");
-  const [largeText, setLargeText] = useState(false);
+  const [textScale, setTextScale] = useState(1);
   const [appearance, setAppearance] = useState("light");
-  const [sidebarPadding, setSidebarPadding] = useState(14);
   const subjectList = subjectGroups[activeGroup] ?? [];
   const selectGroup = (group) => { setActiveGroup(group); setActiveSubject(""); };
 
@@ -46,7 +45,7 @@ function App() {
     return () => { window.clearTimeout(fadeTimer); window.clearTimeout(finishTimer); };
   }, []);
 
-  return <>{introStage !== "done" && <Intro stage={introStage} />}<div style={{ "--sidebar-padding": `${sidebarPadding}px` }} className={classNames("app", `theme-${appearance}`, introStage === "done" && "page-ready", sidebarOpen ? "" : "sidebar-closed", largeText && "large-text")}>
+  return <>{introStage !== "done" && <Intro stage={introStage} />}<div style={{ "--text-scale": textScale }} className={classNames("app", `theme-${appearance}`, introStage === "done" && "page-ready", sidebarOpen ? "" : "sidebar-closed")}>
     <aside className={`sidebar ${sidebarOpen ? "" : "minimized"}`}>
       <div className="brand"><div className="brand-mark"><Sparkles size={27} /></div><div className="brand-copy"><strong>CogniBridge</strong><span>Learn together</span></div><button className="sidebar-toggle" aria-label={sidebarOpen ? "Minimize sidebar" : "Expand sidebar"} onClick={() => setSidebarOpen(!sidebarOpen)}>{sidebarOpen ? <X size={19} /> : <Menu size={20} />}</button></div>
       <nav className="nav" aria-label="Main navigation">{navigation.map(([Icon, label], index) => <button key={label} className={classNames("nav-item", index === 0 && "active")}><Icon size={20} /><span>{label}</span></button>)}</nav>
@@ -59,7 +58,7 @@ function App() {
         {activeSubject && activeSubject !== "Languages" && <p className="selection-note">{activeSubject} selected — sessions for this subject will appear here.</p>}
         <section className="panel sessions-panel"><div className="panel-header"><h2>Upcoming Sessions</h2><button className="link-btn">View all <ChevronRight size={17} /></button></div>{sessions.map((session) => <div className="session-row" key={session.title}><div className="session-icon blue"><CalendarDays size={23} /></div><div className="session-info"><strong>{session.subject} — {session.title}</strong><span>{session.time}</span><small><Users size={15} /> {session.people} learners</small></div><button className="secondary-btn">View Details</button></div>)}</section>
       </section></main>
-    {settingsOpen && <div className="modal-backdrop" onMouseDown={() => setSettingsOpen(false)}><section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onMouseDown={(event) => event.stopPropagation()}><div className="modal-header"><div><h2 id="settings-title">Settings</h2><p>Personalize your learning space.</p></div><button className="icon-btn" aria-label="Close settings" onClick={() => setSettingsOpen(false)}><X size={20} /></button></div><label className="setting-row"><span><strong>Larger text</strong><small>Make text easier to read.</small></span><input type="checkbox" checked={largeText} onChange={() => setLargeText(!largeText)} /></label><fieldset className="appearance-options"><legend>Appearance</legend>{[["light", "Light mode"], ["dark", "Dark mode"], ["light-contrast", "Light contrast"], ["dark-contrast", "Dark contrast"]].map(([value, label]) => <label key={value}><input type="radio" name="appearance" value={value} checked={appearance === value} onChange={() => setAppearance(value)} /> {label}</label>)}</fieldset><label className="setting-row sidebar-spacing"><span><strong>Sidebar padding</strong><small>{sidebarPadding}px — adjust from 8px to 20px.</small></span><input type="range" min="8" max="20" value={sidebarPadding} onChange={(event) => setSidebarPadding(event.target.value)} /></label><button className="admin-button"><ShieldCheck size={19} /> Admin area <ChevronRight size={17} /></button></section></div>}
+    {settingsOpen && <div className="modal-backdrop" onMouseDown={() => setSettingsOpen(false)}><section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onMouseDown={(event) => event.stopPropagation()}><div className="modal-header"><div><h2 id="settings-title">Settings</h2><p>Personalize your learning space.</p></div><button className="icon-btn" aria-label="Close settings" onClick={() => setSettingsOpen(false)}><X size={20} /></button></div><label className="setting-row text-size-control"><span><strong>Text size</strong><small>{Math.round(textScale * 100)}% — adjust from 85% to 135%.</small></span><input type="range" min="0.85" max="1.35" step="0.05" value={textScale} aria-label="Text size" onChange={(event) => setTextScale(Number(event.target.value))} /></label><fieldset className="appearance-options"><legend>Appearance</legend>{[["light", "Light mode"], ["dark", "Dark mode"], ["light-contrast", "Light contrast"], ["dark-contrast", "Dark contrast"]].map(([value, label]) => <label key={value}><input type="radio" name="appearance" value={value} checked={appearance === value} onChange={() => setAppearance(value)} /> {label}</label>)}</fieldset><button className="admin-button"><ShieldCheck size={19} /> Admin area <ChevronRight size={17} /></button></section></div>}
   </div></>;
 }
 
