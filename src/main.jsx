@@ -24,7 +24,49 @@ function LogoImage({ size = 28 }) {
   const [hasLogo, setHasLogo] = useState(true);
   return hasLogo ? <img src={LOGO_PATH} alt="" width={size} height={size} onError={() => setHasLogo(false)} /> : <Sparkles size={size} aria-hidden="true" />;
 }
-function AnimatedLogo() { return <div className="intro-mark" aria-hidden="true"><span className="intro-half intro-left"><LogoImage size={82} /></span><span className="intro-half intro-right"><LogoImage size={82} /></span></div>; }
+function AnimatedLogo() {
+  return (
+    <div className="intro-mark" aria-hidden="true">
+      <span className="intro-half intro-left">
+        <img src="/src/assets/logo without text.svg" alt="" width={140} height={140} />
+      </span>
+      <span className="intro-half intro-right">
+        <img src="/src/assets/logo without text.svg" alt="" width={140} height={140} />
+      </span>
+    </div>
+  );
+}
+
+function MouseTrail() {
+  useEffect(() => {
+    const circle = document.createElement('div');
+    circle.className = 'mouse-trail-circle';
+    document.body.appendChild(circle);
+
+    const handleMouseMove = (e) => {
+      circle.style.left = `${e.clientX}px`;
+      circle.style.top = `${e.clientY}px`;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      circle.remove();
+    };
+  }, []);
+
+  return null;
+}
+
+function FloatingCornerLogo({ show }) {
+  if (!show) return null;
+  return (
+    <div className="floating-corner-logo">
+      <img src="/src/assets/CogniBridge Logo.svg" alt="CogniBridge" />
+    </div>
+  );
+}
 
 function App() {
   const [sessions, setSessions] = useState(initialSessions), [signedIn, setSignedIn] = useState(false), [registeredSessionIds, setRegisteredSessionIds] = useState([]), [subjectFilter, setSubjectFilter] = useState("All subjects"), [activeTab, setActiveTab] = useState("home"), [selectedSession, setSelectedSession] = useState(null), [loginOpen, setLoginOpen] = useState(false), [mentorOpen, setMentorOpen] = useState(false), [accessibilityOpen, setAccessibilityOpen] = useState(false), [appearance, setAppearance] = useState("light"), [textScale, setTextScale] = useState(1), [studentLanguage, setStudentLanguage] = useState("English"), [introExiting, setIntroExiting] = useState(false), [showIntro, setShowIntro] = useState(true);
@@ -39,6 +81,8 @@ function App() {
   if (mentorOpen) return <MentorPortal sessions={sessions} initialLoggedIn onAddSession={(session) => setSessions((items) => [session, ...items])} onBack={() => setMentorOpen(false)} />;
   if (signupEmail) return <SignupPage email={signupEmail} onBack={() => setSignupEmail("")} onComplete={() => { setSignupEmail(""); setSignedIn(true); }} />;
   return <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+    <MouseTrail />
+    <FloatingCornerLogo show={!showIntro} />
     {showIntro && <div className={classNames("intro-screen", introExiting && "is-exiting")} aria-label="Loading CogniBridge"><AnimatedLogo /><p>CogniBridge</p></div>}
     <header className="sidebar"><div className="brand"><div className="brand-mark"><LogoImage size={30} /></div><div className="brand-copy"><strong>CogniBridge</strong><span>Learn together</span></div></div><nav className="nav" aria-label="Main navigation">{navigation.map(([Icon, label, tab]) => <button key={label} className={classNames("nav-item", activeTab === tab && "active")} onClick={() => goToTab(tab)}><Icon size={20} /><span>{label}</span></button>)}</nav><div className="top-actions">{signedIn ? <button className="profile-chip" onClick={logOut}><span className="avatar-small">A</span> Alex <LogOut size={16} /></button> : <button className="login-button" onClick={() => setLoginOpen(true)}><LogIn size={18} /> Sign in</button>}</div></header>
     <main className="main">{activeTab === "home" && <HomePage sessions={filteredSessions} subjectFilter={subjectFilter} setSubjectFilter={setSubjectFilter} signedIn={signedIn} registeredSessionIds={registeredSessionIds} onSignIn={() => setLoginOpen(true)} onRegister={registerForSession} onOpenSession={openSession} />}{activeTab === "sessions" && <SessionsPage sessions={sessions} selectedSession={selectedSession} signedIn={signedIn} registeredSessionIds={registeredSessionIds} onSelect={setSelectedSession} onBack={() => setSelectedSession(null)} onSignIn={() => setLoginOpen(true)} onRegister={registerForSession} />}{activeTab === "flow" && <FlowPage />}{activeTab === "messages" && <MessagesPage />}</main>
