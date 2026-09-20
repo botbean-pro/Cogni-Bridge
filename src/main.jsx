@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Accessibility, ArrowLeft, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Clock3, Eye, FileText, Home, Languages, LogIn, LogOut, MessageCircle, Plus, ShieldCheck, Sparkles, Upload, UserRound, Users, X } from "lucide-react";
 import "./styles.css";
+import logoWithoutText from "./assets/logo without text.svg";
 
 const MENTOR_EMAIL = "priya@cognibridge.com";
 const MENTOR_PASSWORD = "password123";
 const DEMO_STUDENT_EMAIL = "student@cognibridge.com";
 const DEMO_STUDENT_PASSWORD = "student123";
-const LOGO_PATH = "/cognibridge-logo.svg";
+const LOGO_PATH = logoWithoutText;
 
 const initialSessions = [
   { id: "algebra-basics", subject: "Maths", title: "Algebra Basics", date: "2026-09-22", time: "16:00", endTime: "17:00", meetLink: "https://meet.google.com/algebra-basics", attendees: 12, description: "Build confidence with variables, expressions, and simple equations.", learn: ["Identify variables and constants", "Simplify basic algebraic expressions", "Solve one-step equations together"] },
@@ -59,15 +60,6 @@ function MouseTrail() {
   return null;
 }
 
-function FloatingCornerLogo({ show }) {
-  if (!show) return null;
-  return (
-    <div className="floating-corner-logo">
-      <img src="/src/assets/CogniBridge Logo.svg" alt="CogniBridge" />
-    </div>
-  );
-}
-
 function App() {
   const [sessions, setSessions] = useState(initialSessions), [signedIn, setSignedIn] = useState(false), [registeredSessionIds, setRegisteredSessionIds] = useState([]), [subjectFilter, setSubjectFilter] = useState("All subjects"), [activeTab, setActiveTab] = useState("home"), [selectedSession, setSelectedSession] = useState(null), [loginOpen, setLoginOpen] = useState(false), [mentorOpen, setMentorOpen] = useState(false), [accessibilityOpen, setAccessibilityOpen] = useState(false), [appearance, setAppearance] = useState("light"), [textScale, setTextScale] = useState(1), [studentLanguage, setStudentLanguage] = useState("English"), [introExiting, setIntroExiting] = useState(false), [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState(""), [toast, setToast] = useState("");
@@ -82,7 +74,6 @@ function App() {
   if (signupEmail) return <SignupPage email={signupEmail} onBack={() => setSignupEmail("")} onComplete={() => { setSignupEmail(""); setSignedIn(true); }} />;
   return <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
     <MouseTrail />
-    <FloatingCornerLogo show={!showIntro} />
     {showIntro && <div className={classNames("intro-screen", introExiting && "is-exiting")} aria-label="Loading CogniBridge"><AnimatedLogo /><p>CogniBridge</p></div>}
     <header className="sidebar"><div className="brand"><div className="brand-mark"><LogoImage size={30} /></div><div className="brand-copy"><strong>CogniBridge</strong><span>Learn together</span></div></div><nav className="nav" aria-label="Main navigation">{navigation.map(([Icon, label, tab]) => <button key={label} className={classNames("nav-item", activeTab === tab && "active")} onClick={() => goToTab(tab)}><Icon size={20} /><span>{label}</span></button>)}</nav><div className="top-actions">{signedIn ? <button className="profile-chip" onClick={logOut}><span className="avatar-small">A</span> Alex <LogOut size={16} /></button> : <button className="login-button" onClick={() => setLoginOpen(true)}><LogIn size={18} /> Sign in</button>}</div></header>
     <main className="main">{activeTab === "home" && <HomePage sessions={filteredSessions} subjectFilter={subjectFilter} setSubjectFilter={setSubjectFilter} signedIn={signedIn} registeredSessionIds={registeredSessionIds} onSignIn={() => setLoginOpen(true)} onRegister={registerForSession} onOpenSession={openSession} />}{activeTab === "sessions" && <SessionsPage sessions={sessions} selectedSession={selectedSession} signedIn={signedIn} registeredSessionIds={registeredSessionIds} onSelect={setSelectedSession} onBack={() => setSelectedSession(null)} onSignIn={() => setLoginOpen(true)} onRegister={registerForSession} />}{activeTab === "flow" && <FlowPage />}{activeTab === "messages" && <MessagesPage />}</main>

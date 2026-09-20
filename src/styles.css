@@ -23,23 +23,6 @@ body { margin:0; min-width:320px; background:var(--canvas); }
   transform: translate(-50%, -50%);
 }
 
-/* Floating corner logo */
-.floating-corner-logo {
-  position: fixed;
-  top: 100px;
-  left: 20px;
-  width: 120px;
-  height: 120px;
-  z-index: 9998;
-  filter: drop-shadow(0 4px 12px rgba(8, 169, 150, 0.2));
-}
-
-.floating-corner-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 @keyframes floatPulse {
   0%, 100% {
     transform: translateY(0px) scale(1);
@@ -56,6 +39,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .sidebar { position:sticky; top:0; z-index:10; width:100%; min-height:0; padding:17px clamp(20px, 5vw, 60px); display:flex; align-items:center; gap:36px; background:var(--charcoal); color:#f4fbfb; border-bottom:1px solid rgba(255,255,255,.08); box-shadow:0 8px 24px rgba(24,47,50,.08); }
 .brand { display:flex; flex:0 0 auto; gap:13px; align-items:center; padding:0; }
 .brand-mark,.mentor-wordmark > span { width:48px; height:48px; display:grid; place-items:center; flex:none; border-radius:14px; color:white; background:var(--teal); overflow:hidden; }
+.brand-mark { background:#fff; }
 .brand-mark img,.mentor-wordmark img,.mentor-logo-mark img { object-fit:contain; }
 .brand strong { display:block; font-family:var(--font-body); font-size:19px; font-weight:800; letter-spacing:-.04em; color:#fff; }
 .brand span { display:block; margin-top:3px; font-size:13px; color:#a8c2c3; }
