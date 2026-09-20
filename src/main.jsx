@@ -29,10 +29,10 @@ function AnimatedLogo() {
   return (
     <div className="intro-mark" aria-hidden="true">
       <span className="intro-half intro-left">
-        <img src="/src/assets/logo without text.svg" alt="" width={140} height={140} />
+        <img src={logoWithoutText} alt="" width={140} height={140} />
       </span>
       <span className="intro-half intro-right">
-        <img src="/src/assets/logo without text.svg" alt="" width={140} height={140} />
+        <img src={logoWithoutText} alt="" width={140} height={140} />
       </span>
     </div>
   );
