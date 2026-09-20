@@ -44,15 +44,57 @@ function MouseTrail() {
     circle.className = 'mouse-trail-circle';
     document.body.appendChild(circle);
 
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let animationFrame = null;
+    let fadeTimer = null;
+    let hasPosition = false;
+
+    const animate = () => {
+      // Exponential easing: fast at first, then gently settling near the cursor.
+      currentX += (targetX - currentX) * 0.12;
+      currentY += (targetY - currentY) * 0.12;
+      circle.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+
+      if (Math.abs(targetX - currentX) > 0.1 || Math.abs(targetY - currentY) > 0.1) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        animationFrame = null;
+      }
+    };
+
     const handleMouseMove = (e) => {
-      circle.style.left = `${e.clientX}px`;
-      circle.style.top = `${e.clientY}px`;
+      targetX = e.clientX;
+      targetY = e.clientY;
+
+      if (!hasPosition) {
+        currentX = targetX;
+        currentY = targetY;
+        hasPosition = true;
+      }
+
+      circle.classList.add('is-visible');
+      window.clearTimeout(fadeTimer);
+      fadeTimer = window.setTimeout(() => circle.classList.remove('is-visible'), 700);
+
+      if (animationFrame === null) animationFrame = requestAnimationFrame(animate);
+    };
+
+    const handleMouseLeave = () => {
+      window.clearTimeout(fadeTimer);
+      circle.classList.remove('is-visible');
     };
 
     document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      window.clearTimeout(fadeTimer);
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
       circle.remove();
     };
   }, []);

@@ -13,14 +13,21 @@ body { margin:0; min-width:320px; background:var(--canvas); }
 /* Mouse trail effect */
 .mouse-trail-circle {
   position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
   z-index: 9999;
   width: 20px;
   height: 20px;
   border: 2px solid rgba(128, 128, 128, 0.4);
   border-radius: 50%;
-  transition: left 0.15s ease-out, top 0.15s ease-out;
-  transform: translate(-50%, -50%);
+  opacity: 0;
+  transform: translate3d(-100px, -100px, 0);
+  transition: opacity 0.22s ease;
+  will-change: transform, opacity;
+}
+.mouse-trail-circle.is-visible {
+  opacity: 1;
 }
 
 @keyframes floatPulse {
