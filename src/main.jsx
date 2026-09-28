@@ -4,7 +4,7 @@ import { Accessibility, ArrowLeft, BookOpen, CalendarDays, CheckCircle2, Chevron
 import "./styles.css";
 import logoWithoutText from "./assets/logo without text.svg";
 
-const MENTOR_EMAIL = "priya@cognibridge.com";
+const MENTOR_EMAIL = "mentor@cognibridge.com";
 const MENTOR_PASSWORD = "password123";
 const DEMO_STUDENT_EMAIL = "student@cognibridge.com";
 const DEMO_STUDENT_PASSWORD = "student123";
