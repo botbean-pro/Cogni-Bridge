@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import logoWithoutText from "../assets/logo without text.svg";
 
