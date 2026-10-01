@@ -474,7 +474,6 @@ const SignupPage = ({ email, onBack, onComplete }) => {
 };
 
 const CreateAccountPage = ({ onBack, onComplete }) => {
-  const [role, setRole] = useState("Student");
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -533,7 +532,7 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
             email: normalizedEmail,
             password: form.password,
             name: form.name,
-            role,
+            role: "Student",
             createdAt: new Date().toISOString(),
           },
         ]),
@@ -563,22 +562,6 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
           <p className="create-account-subtitle">
             Join CogniBridge and start your learning journey today.
           </p>
-
-          <div className="role-tabs">
-            {["Student", "Mentor", "Admin"].map((currentRole) => (
-              <button
-                key={currentRole}
-                type="button"
-                className={classNames(
-                  "role-tab",
-                  role === currentRole && "active",
-                )}
-                onClick={() => setRole(currentRole)}
-              >
-                {currentRole}
-              </button>
-            ))}
-          </div>
 
           <form className="create-account-form" onSubmit={submit}>
             <label className="create-account-label">
