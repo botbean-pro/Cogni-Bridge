@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Clock3, FileText, MessageCircle, Sparkles, UserRound, Users } from "lucide-react";
-import logoWithoutText from "../assets/logo without text.svg";
 import { classNames, formatSession, subjects } from "../constants";
 
 function HomePage({ sessions, subjectFilter, setSubjectFilter, signedIn, registeredSessionIds, onSignIn, onRegister, onOpenSession }) { return <section className="content home-content"><section className="sessions-section"><div className="section-title"><div><p className="eyebrow">PLAN AHEAD</p><h2>Upcoming sessions</h2><p>Choose a session to see exactly what you will learn.</p></div><span className="session-count">{sessions.length} sessions</span></div><div className="filter-bar" aria-label="Filter sessions by subject"><span>Filter by subject</span><button className={subjectFilter === "All subjects" ? "selected" : ""} onClick={() => setSubjectFilter("All subjects")}>All subjects</button>{subjects.map((subject) => <button key={subject} className={subjectFilter === subject ? "selected" : ""} onClick={() => setSubjectFilter(subject)}>{subject}</button>)}</div>{sessions.length ? <div className="session-card-grid">{sessions.map((session) => <SessionCard key={session.id} session={session} signedIn={signedIn} registered={registeredSessionIds.includes(session.id)} onSignIn={onSignIn} onRegister={() => onRegister(session.id)} onOpen={() => onOpenSession(session)} />)}</div> : <div className="empty-state">No sessions found for this subject.</div>}</section>{signedIn && <StudentStats sessions={sessions} />}</section>; }
@@ -76,7 +75,7 @@ function FlowPage() {
         <div className="ai-chat-header">
           <div className="ai-header-content">
             <div className="ai-header-icon">
-              <img src={logoWithoutText} alt="" aria-hidden="true" />
+              <Sparkles size={26} aria-hidden="true" />
             </div>
             <div>
               <h2>Cogni-Flow AI</h2>

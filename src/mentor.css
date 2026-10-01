@@ -27,7 +27,7 @@
   display: grid;
   gap: 8px;
   color: var(--text);
-  font-size: 13px;
+  font-size:calc(13px * var(--text-scale, 1));
   font-weight: 800;
 }
 
@@ -90,7 +90,7 @@
 
 .file-upload small {
   color: var(--muted);
-  font-size: 12px;
+  font-size:calc(12px * var(--text-scale, 1));
   font-weight: 500;
 }
 
@@ -106,7 +106,7 @@
 
 .uploaded-notes h2 {
   margin: 0 0 4px;
-  font-size: 20px;
+  font-size:calc(20px * var(--text-scale, 1));
 }
 
 .uploaded-notes > div {

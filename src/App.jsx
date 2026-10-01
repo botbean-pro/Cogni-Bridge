@@ -26,6 +26,10 @@ const App = () => {
   const [toast, setToast] = useState("");
 
   useEffect(() => {
+    document.documentElement.style.setProperty("--text-scale", textScale);
+  }, [textScale]);
+
+  useEffect(() => {
     const exitTimer = setTimeout(() => setIntroExiting(true), 1250);
     const removeTimer = setTimeout(() => setShowIntro(false), 1800);
 
