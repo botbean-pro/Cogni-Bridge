@@ -162,7 +162,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .ai-chat-container { max-width:900px; margin:0 auto; height:calc(100vh - 160px); display:flex; flex-direction:column; border:1px solid var(--line); border-radius:20px; background:var(--surface); box-shadow:var(--shadow); overflow:hidden; }
 .ai-chat-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--line); background:var(--surface); }
 .ai-header-content { display:flex; align-items:center; gap:14px; }
-.ai-header-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:12px; background:var(--teal); color:white; }
+.ai-header-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:12px; background:#fff; color:var(--teal); }
 .ai-header-icon img { width:30px; height:30px; object-fit:contain; }
 .ai-chat-header h2 { margin:0; font-size:calc(20px * var(--text-scale, 1)); }
 .ai-chat-header p { margin:4px 0 0; color:var(--muted); font-size:calc(13px * var(--text-scale, 1)); font-weight:500; }
@@ -187,7 +187,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .typing-indicator span:nth-child(2) { animation-delay:0.2s; }
 .typing-indicator span:nth-child(3) { animation-delay:0.4s; }
 @keyframes typing { 0%, 60%, 100% { transform:translateY(0); opacity:0.5; } 30% { transform:translateY(-10px); opacity:1; } }
-.quick-prompts { padding:0 24px 16px; }
+.quick-prompts { padding:8px 24px 16px; }
 .quick-prompts-title { margin:0 0 12px; color:var(--muted); font-size:calc(13px * var(--text-scale, 1)); font-weight:600; }
 .quick-prompts-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
 .quick-prompt-btn { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); font-size:calc(13px * var(--text-scale, 1)); font-weight:600; text-align:left; transition:all 0.2s ease; cursor:pointer; }
@@ -222,12 +222,12 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 /* Create Account Modal Styles */
 .create-account-modal {
   position: relative;
-  width: min(100%, 500px);
-  max-height: calc(100vh - 40px);
+  width: min(100%, 480px);
+  max-height: calc(100dvh - 24px);
   overflow-y: auto;
-  padding: 28px 36px 24px;
+  padding: 22px 28px 18px;
   border: 1px solid #e2e8f0;
-  border-radius: 20px;
+  border-radius: 26px;
   background: #ffffff;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
 }
@@ -258,8 +258,8 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 }
 
 .create-account-heading {
-  margin: 0 0 8px;
-  font-size:calc(26px * var(--text-scale, 1));
+  margin: 0 0 6px;
+  font-size:calc(24px * var(--text-scale, 1));
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.025em;
@@ -267,7 +267,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 }
 
 .create-account-subtitle {
-  margin: 0 0 18px;
+  margin: 0 0 10px;
   color: #64748b;
   font-size:calc(14px * var(--text-scale, 1));
   line-height: 1.5;
@@ -309,13 +309,13 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .create-account-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .create-account-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   color: #0f172a;
   font-size:calc(13px * var(--text-scale, 1));
   font-weight: 600;
@@ -323,7 +323,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 
 .create-account-input {
   width: 100%;
-  height: 46px;
+  height: 42px;
   padding: 0 14px;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
@@ -386,8 +386,8 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   justify-content: center;
   gap: 8px;
   width: 100%;
-  height: 52px;
-  margin-top: 4px;
+  height: 46px;
+  margin-top: 2px;
   border: none;
   border-radius: 11px;
   background: var(--teal);
@@ -429,7 +429,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .create-account-form .social-buttons-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 7px;
   margin-top: 0;
 }
 
@@ -439,8 +439,8 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 62px;
-  padding: 8px 6px;
+  height: 52px;
+  padding: 6px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #ffffff;
@@ -505,8 +505,9 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 
   .create-account-modal {
     width: min(100%, calc(100vw - 32px));
-    padding: 32px 24px 28px;
-    max-height: calc(100vh - 40px);
+    padding: 20px 20px 16px;
+    max-height: calc(100dvh - 20px);
+    border-radius: 24px;
   }
 
   .create-account-icon {
@@ -516,13 +517,13 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   }
 
   .create-account-heading {
-    font-size:calc(28px * var(--text-scale, 1));
-    margin-bottom: 10px;
+    font-size:calc(24px * var(--text-scale, 1));
+    margin-bottom: 6px;
   }
 
   .create-account-subtitle {
-    font-size:calc(15px * var(--text-scale, 1));
-    margin-bottom: 26px;
+    font-size:calc(13px * var(--text-scale, 1));
+    margin-bottom: 10px;
   }
 
   .role-tabs {
@@ -537,33 +538,34 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   }
 
   .create-account-form {
-    gap: 18px;
+    gap: 8px;
   }
 
   .create-account-label {
-    gap: 7px;
+    gap: 4px;
     font-size:calc(13px * var(--text-scale, 1));
   }
 
   .create-account-input {
-    height: 50px;
+    height: 40px;
     padding: 0 14px;
     font-size:calc(14px * var(--text-scale, 1));
   }
 
   .create-account-btn {
-    height: 52px;
+    height: 44px;
     font-size:calc(14px * var(--text-scale, 1));
     margin-top: 6px;
   }
 
   .create-account-form .social-buttons-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 7px;
   }
 
   .create-account-form .social-btn {
-    height: 76px;
+    height: 48px;
+    flex-direction: row;
   }
 
   .password-hint {
@@ -571,10 +573,10 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   }
 
   .login-link-section {
-    flex-direction: column;
-    gap: 10px;
-    padding: 14px;
-    margin-top: 10px;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    margin-top: 2px;
   }
 
   .login-link-btn {
