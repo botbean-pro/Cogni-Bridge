@@ -195,7 +195,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
   }[tab];
 
   return (
-    <div className="modal-backdrop" onMouseDown={onClose}>
+    <div className="modal-backdrop">
       <section
         className="auth-modal"
         role="dialog"
@@ -548,7 +548,7 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onBack}>
+    <div className="modal-backdrop">
       <div
         className="create-account-modal"
         onClick={(event) => event.stopPropagation()}
