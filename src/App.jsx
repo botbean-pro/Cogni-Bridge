@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Accessibility, CheckCircle2 } from "lucide-react";
-import { classNames, initialSessions } from "./constants";
-import { AccessibilityPanel, AuthModal, CreateAccountPage, SignupPage } from "./components/AccessAndAuth";
+import { Accessibility, CheckCircle2, UserRound } from "lucide-react";
+import { classNames, initialSessions, readStudents } from "./constants";
+import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
+import { StudentProfileFlow } from "./components/StudentProfileFlow";
 import { HomePage, SessionsPage, FlowPage, MessagesPage } from "./components/LearningPages";
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
@@ -22,6 +23,9 @@ const App = () => {
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState("");
+  const [studentProfile, setStudentProfile] = useState(null);
+  const [studentEmail, setStudentEmail] = useState("");
+  const [profileOpen, setProfileOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [toast, setToast] = useState("");
 
@@ -62,6 +66,8 @@ const App = () => {
 
   const logOut = () => {
     setSignedIn(false);
+    setStudentProfile(null);
+    setStudentEmail("");
     notify("You have been logged out");
   };
 
@@ -88,12 +94,28 @@ const App = () => {
 
   if (signupEmail) {
     return (
-      <SignupPage
+      <StudentProfileFlow
         email={signupEmail}
         onBack={() => setSignupEmail("")}
-        onComplete={() => {
+        onComplete={(profile) => {
           setSignupEmail("");
+          setStudentProfile(profile);
+          setStudentEmail(profile.email);
           setSignedIn(true);
+        }}
+      />
+    );
+  }
+
+  if (profileOpen) {
+    return (
+      <StudentProfileFlow
+        email={studentProfile?.email || studentEmail}
+        existingProfile={studentProfile}
+        onBack={() => setProfileOpen(false)}
+        onComplete={(profile) => {
+          setStudentProfile(profile);
+          setProfileOpen(false);
         }}
       />
     );
@@ -135,17 +157,46 @@ const App = () => {
           />
         )}
         pageContent={{
-          home: <HomePage sessions={filteredSessions} subjectFilter={subjectFilter} setSubjectFilter={setSubjectFilter} signedIn={signedIn} registeredSessionIds={registeredSessionIds} onSignIn={() => setLoginOpen(true)} onRegister={registerForSession} onOpenSession={openSession} />,
-          sessions: <SessionsPage sessions={sessions} selectedSession={selectedSession} signedIn={signedIn} registeredSessionIds={registeredSessionIds} onSelect={setSelectedSession} onBack={() => setSelectedSession(null)} onSignIn={() => setLoginOpen(true)} onRegister={registerForSession} />,
+          home: (
+            <HomePage
+              sessions={filteredSessions}
+              subjectFilter={subjectFilter}
+              setSubjectFilter={setSubjectFilter}
+              signedIn={signedIn}
+              registeredSessionIds={registeredSessionIds}
+              onSignIn={() => setLoginOpen(true)}
+              onRegister={registerForSession}
+              onOpenSession={openSession}
+            />
+          ),
+          sessions: (
+            <SessionsPage
+              sessions={sessions}
+              selectedSession={selectedSession}
+              signedIn={signedIn}
+              registeredSessionIds={registeredSessionIds}
+              onSelect={setSelectedSession}
+              onBack={() => setSelectedSession(null)}
+              onSignIn={() => setLoginOpen(true)}
+              onRegister={registerForSession}
+            />
+          ),
           flow: <FlowPage />,
           messages: <MessagesPage />,
         }}
       />
+      {signedIn && <button className="student-account-button" onClick={() => setProfileOpen(true)}><UserRound size={17} /> My account</button>}
       {loginOpen && (
         <AuthModal
           onClose={() => setLoginOpen(false)}
-          onStudentSuccess={() => {
+          onStudentSuccess={(email) => {
             setLoginOpen(false);
+            const normalizedEmail = email?.toLowerCase() || "";
+            const savedStudent = normalizedEmail
+              ? readStudents().find((student) => student.email.toLowerCase() === normalizedEmail)
+              : null;
+            setStudentProfile(savedStudent?.handwritingType ? savedStudent : null);
+            setStudentEmail(normalizedEmail);
             setSignedIn(true);
           }}
           onCreateAccount={() => {
