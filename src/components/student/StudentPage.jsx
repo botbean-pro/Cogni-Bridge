@@ -9,6 +9,7 @@ export const StudentPage = ({
   activeTab,
   goToTab,
   signedIn,
+  studentName,
   onLogin,
   onLogout,
   showIntro,
@@ -28,7 +29,7 @@ export const StudentPage = ({
     )}
     <header className="sidebar">
       <StudentSidebar activeTab={activeTab} onNavigate={goToTab} />
-      <StudentTopBar signedIn={signedIn} onLogin={onLogin} onLogout={onLogout} />
+      <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} />
     </header>
     <main className="main">{pageContent[activeTab]}</main>
     <button className="accessibility-tab" aria-label="Open accessibility options" onClick={onToggleAccessibility}>

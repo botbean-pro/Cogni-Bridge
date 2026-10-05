@@ -1,8 +1,11 @@
 import React from "react";
 import { ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3 } from "lucide-react";
 import { formatSession } from "../../../constants";
+import { isSessionComplete } from "../../../studentActivity";
 
-function SessionDetail({ session, signedIn, registered, onBack, onSignIn, onRegister }) {
+function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended }) {
+  const canMarkAttended = signedIn && isSessionComplete(session) && !attended;
+
   return (
     <div className="session-detail">
       <button className="back-link" onClick={onBack}><ArrowLeft size={17} /> Back to Sessions</button>
@@ -26,6 +29,13 @@ function SessionDetail({ session, signedIn, registered, onBack, onSignIn, onRegi
           <button className="primary-btn" onClick={signedIn ? () => onRegister(session.id) : onSignIn}>
             {registered ? "Registered" : signedIn ? "Register for session" : "Sign in to register"}
           </button>
+          {attended ? (
+            <p className="attendance-recorded"><CheckCircle2 size={16} /> Attendance recorded</p>
+          ) : canMarkAttended ? (
+            <button className="attendance-button" onClick={() => onMarkAttended(session)}>
+              <CheckCircle2 size={16} /> Mark attended
+            </button>
+          ) : null}
           {registered && <a href={session.meetLink} target="_blank" rel="noopener noreferrer">Open Google Meet <ChevronRight size={15} /></a>}
         </div>
       </div>
@@ -47,7 +57,7 @@ function SessionList({ sessions, onSelect }) {
   );
 }
 
-export function SessionsPage({ sessions, selectedSession, signedIn, registeredSessionIds, onSelect, onBack, onSignIn, onRegister }) {
+export function SessionsPage({ sessions, selectedSession, signedIn, registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended }) {
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
 
   return (
@@ -56,7 +66,16 @@ export function SessionsPage({ sessions, selectedSession, signedIn, registeredSe
         <div><p className="eyebrow">LEARNING PLAN</p><h2>Sessions</h2><p>Open a session to see its learning plan and join when it is time.</p></div>
       </div>
       {selectedSession ? (
-        <SessionDetail session={selectedSession} signedIn={signedIn} registered={registered} onBack={onBack} onSignIn={onSignIn} onRegister={onRegister} />
+        <SessionDetail
+          session={selectedSession}
+          signedIn={signedIn}
+          registered={registered}
+          attended={attendedSessionIds.has(String(selectedSession.id))}
+          onBack={onBack}
+          onSignIn={onSignIn}
+          onRegister={onRegister}
+          onMarkAttended={onMarkAttended}
+        />
       ) : (
         <SessionList sessions={sessions} onSelect={onSelect} />
       )}

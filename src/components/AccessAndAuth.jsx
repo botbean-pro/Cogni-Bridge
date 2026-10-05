@@ -177,7 +177,25 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
 
     window.google.accounts.id.initialize({
       client_id: googleClientId,
-      callback: () => onStudentSuccess(),
+      callback: ({ credential }) => {
+        try {
+          const encodedPayload = credential?.split(".")[1];
+          if (!encodedPayload) throw new Error("Missing Google identity claim.");
+
+          const normalizedPayload = encodedPayload
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+          const payload = JSON.parse(
+            window.atob(normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, "=")),
+          );
+          if (typeof payload.email !== "string" || !payload.email.trim()) {
+            throw new Error("Missing student email.");
+          }
+          onStudentSuccess(payload.email);
+        } catch {
+          setError("Google sign-in did not return a usable student account. Please try again.");
+        }
+      },
     });
     window.google.accounts.id.prompt();
   };

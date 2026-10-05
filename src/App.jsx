@@ -6,6 +6,7 @@ import { StudentProfileFlow } from "./components/StudentProfileFlow";
 import { HomePage, SessionsPage, FlowPage, MessagesPage } from "./components/LearningPages";
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
+import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
@@ -25,9 +26,28 @@ const App = () => {
   const [signupEmail, setSignupEmail] = useState("");
   const [studentProfile, setStudentProfile] = useState(null);
   const [studentEmail, setStudentEmail] = useState("");
+  const [activityVersion, setActivityVersion] = useState(0);
+  const [attendedSessionIds, setAttendedSessionIds] = useState(new Set());
   const [profileOpen, setProfileOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const studentName = studentProfile?.name?.trim()
+    || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+    || "Student";
+
+  useEffect(() => {
+    if (!signedIn || !studentEmail) {
+      setAttendedSessionIds(new Set());
+      return;
+    }
+    try {
+      setAttendedSessionIds(new Set(
+        readStudentActivities(studentEmail).map((activity) => activity.sessionId),
+      ));
+    } catch {
+      setAttendedSessionIds(new Set());
+    }
+  }, [signedIn, studentEmail, activityVersion]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--text-scale", textScale);
@@ -64,10 +84,29 @@ const App = () => {
     notify(`${session?.title || "Session"} registration confirmed`);
   };
 
+  const markSessionAttended = (session) => {
+    if (!signedIn || !studentEmail) {
+      notify("Sign in with your student account email to save attendance.");
+      return;
+    }
+    try {
+      const recorded = recordStudentAttendance(studentEmail, session);
+      if (!recorded) {
+        notify("Attendance for this session is already recorded.");
+        return;
+      }
+      setActivityVersion((version) => version + 1);
+      notify("Session attendance recorded.");
+    } catch {
+      notify("Attendance could not be saved. Check browser storage and try again.");
+    }
+  };
+
   const logOut = () => {
     setSignedIn(false);
     setStudentProfile(null);
     setStudentEmail("");
+    setAttendedSessionIds(new Set());
     notify("You have been logged out");
   };
 
@@ -139,6 +178,7 @@ const App = () => {
         activeTab={activeTab}
         goToTab={goToTab}
         signedIn={signedIn}
+        studentName={studentName}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
         showIntro={showIntro}
@@ -163,6 +203,9 @@ const App = () => {
               subjectFilter={subjectFilter}
               setSubjectFilter={setSubjectFilter}
               signedIn={signedIn}
+              studentEmail={studentEmail}
+              studentName={studentName}
+              activityVersion={activityVersion}
               registeredSessionIds={registeredSessionIds}
               onSignIn={() => setLoginOpen(true)}
               onRegister={registerForSession}
@@ -175,10 +218,12 @@ const App = () => {
               selectedSession={selectedSession}
               signedIn={signedIn}
               registeredSessionIds={registeredSessionIds}
+              attendedSessionIds={attendedSessionIds}
               onSelect={setSelectedSession}
               onBack={() => setSelectedSession(null)}
               onSignIn={() => setLoginOpen(true)}
               onRegister={registerForSession}
+              onMarkAttended={markSessionAttended}
             />
           ),
           flow: <FlowPage />,
@@ -195,7 +240,7 @@ const App = () => {
             const savedStudent = normalizedEmail
               ? readStudents().find((student) => student.email.toLowerCase() === normalizedEmail)
               : null;
-            setStudentProfile(savedStudent?.handwritingType ? savedStudent : null);
+            setStudentProfile(savedStudent || null);
             setStudentEmail(normalizedEmail);
             setSignedIn(true);
           }}

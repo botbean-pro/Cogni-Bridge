@@ -8,6 +8,9 @@ export function HomePage({
   subjectFilter,
   setSubjectFilter,
   signedIn,
+  studentEmail,
+  studentName,
+  activityVersion,
   registeredSessionIds,
   onSignIn,
   onRegister,
@@ -56,7 +59,14 @@ export function HomePage({
         )}
       </section>
 
-      {signedIn && <StudentStats sessions={sessions} />}
+      {signedIn && (
+        <StudentStats
+          key={studentEmail}
+          studentEmail={studentEmail}
+          studentName={studentName}
+          activityVersion={activityVersion}
+        />
+      )}
     </section>
   );
 }
