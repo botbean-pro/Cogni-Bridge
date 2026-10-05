@@ -9,6 +9,7 @@ export function SessionCard({
   onSignIn,
   onRegister,
   onOpen,
+  t,
 }) {
   return (
     <article
@@ -27,28 +28,28 @@ export function SessionCard({
         <Clock3 size={15} /> {formatSession(session)}
       </p>
       <p className="session-learners">
-        <Users size={15} /> {session.attendees + (registered ? 1 : 0)} learners signed up
+        <Users size={15} /> {session.attendees + (registered ? 1 : 0)} {t("learnersSignedUp")}
       </p>
 
       <div className="session-card-footer" onClick={(event) => event.stopPropagation()}>
         {registered ? (
           <a className="meet-status meet-link" href={session.meetLink} target="_blank" rel="noopener noreferrer">
-            Join Google Meet <ChevronRight size={15} />
+            {t("joinGoogleMeet")} <ChevronRight size={15} />
           </a>
         ) : (
           <span className="meet-status">
-            {signedIn ? "Meet link unlocks after registration" : "Sign in to register"}
+            {signedIn ? t("linkUnlocks") : t("signInToRegister")}
           </span>
         )}
         <button
           className={classNames("secondary-btn", registered && "registered-button")}
           onClick={signedIn ? onRegister : onSignIn}
         >
-          {registered ? "Registered" : signedIn ? "Register" : "Sign in"}
+          {registered ? t("registered") : signedIn ? t("register") : t("signIn")}
         </button>
       </div>
       <span className="card-detail-hint">
-        View learning plan <ChevronRight size={14} />
+        {t("viewLearningPlan")} <ChevronRight size={14} />
       </span>
     </article>
   );

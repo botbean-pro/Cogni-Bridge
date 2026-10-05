@@ -23,7 +23,7 @@ const readImage = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
-export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile }) => {
+export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile, t }) => {
   const [profile, setProfile] = useState(existingProfile || { name: "", studentClass: "", age: "", section: "", school: "" });
   const [image, setImage] = useState("");
   const [imageName, setImageName] = useState("");
@@ -35,7 +35,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile 
     const file = event.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image of the child's handwriting.");
+      setError("chooseHandwritingImage");
       return;
     }
     try {
@@ -43,14 +43,14 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile 
       setImageName(file.name);
       setError("");
     } catch {
-      setError("We couldn't read that image. Please choose another one.");
+      setError("handwritingReadError");
     }
   };
 
   const submit = (event) => {
     event.preventDefault();
     if (!image) {
-      setError("Upload a clear picture of the child's handwriting to continue.");
+      setError("uploadClearImage");
       return;
     }
     const result = {
@@ -79,7 +79,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile 
     return (
       <main className="handwriting-loading" role="status" aria-live="polite">
         <div className="handwriting-loader"><LogoImage size={62} /><Loader2 size={104} aria-hidden="true" /></div>
-        <p>Determining type of handwriting</p>
+        <p>{t("analyzingHandwriting")}</p>
       </main>
     );
   }
@@ -89,12 +89,12 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile 
       <main className="profile-flow-page">
         <section className="profile-flow-card handwriting-result">
           <div className="profile-result-mark"><CheckCircle2 size={26} /></div>
-          <p className="eyebrow">HANDWRITING ANALYSIS COMPLETE</p>
-          <h1>{profile.name || "Your profile"}</h1>
+          <p className="eyebrow">{t("handwritingAnalysis")}</p>
+          <h1>{profile.name || t("profileYourProfile")}</h1>
           <p className="handwriting-type">{profile.handwritingType}</p>
           {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt="Uploaded handwriting sample" />}
-          <p className="profile-result-copy">Your handwriting type has been added to your student profile.</p>
-          <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? "Back to account" : "Continue to CogniBridge"}</button>
+          <p className="profile-result-copy">{t("profileCompleteCopy")}</p>
+          <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? t("backToAccount") : t("continueToCogniBridge")}</button>
         </section>
       </main>
     );
@@ -102,35 +102,35 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile 
 
   return (
     <main className="profile-flow-page">
-      <button className="profile-flow-back" onClick={onBack}><ArrowLeft size={18} /> Back</button>
+      <button className="profile-flow-back" onClick={onBack}><ArrowLeft size={18} /> {t("back")}</button>
       <section className="profile-flow-card">
         <div className="profile-flow-icon"><ImagePlus size={24} /></div>
-        <p className="eyebrow">{existingProfile ? "STUDENT ACCOUNT" : "NEW STUDENT PROFILE"}</p>
-        <h1>{existingProfile ? "Update handwriting analysis" : "Set up your learning profile"}</h1>
-        <p className="profile-flow-copy">{existingProfile ? "Upload a new handwriting sample to run the analysis again." : <>Add the child's school details and a clear picture of their handwriting for analysis. Account: <strong>{email}</strong></>}</p>
+        <p className="eyebrow">{existingProfile ? t("studentAccount") : t("newStudentProfile")}</p>
+        <h1>{existingProfile ? t("updateHandwriting") : t("setUpLearningProfile")}</h1>
+        <p className="profile-flow-copy">{existingProfile ? t("analyzeNewImage") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
         {existingProfile && <>
-          <div className="profile-locked-name"><span>Student name</span><strong>{existingProfile.name}</strong></div>
-          <div className="current-handwriting-result"><span>Current handwriting type</span><strong>{existingProfile.handwritingType || "Not analyzed yet"}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt="Current handwriting sample" />}</div>
+          <div className="profile-locked-name"><span>{t("profileName")}</span><strong>{existingProfile.name}</strong></div>
+          <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{existingProfile.handwritingType || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
         </>}
         <form className="profile-details-form" onSubmit={submit}>
           {!existingProfile && <>
-            <label>Child's name<input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>
+            <label>{t("childName")}<input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>
             <div className="profile-form-row">
-              <label>Class<input value={profile.studentClass} onChange={(event) => setProfile({ ...profile, studentClass: event.target.value })} required /></label>
-              <label>Age<input type="number" min="5" max="25" value={profile.age} onChange={(event) => setProfile({ ...profile, age: event.target.value })} required /></label>
+              <label>{t("class")}<input value={profile.studentClass} onChange={(event) => setProfile({ ...profile, studentClass: event.target.value })} required /></label>
+              <label>{t("age")}<input type="number" min="5" max="25" value={profile.age} onChange={(event) => setProfile({ ...profile, age: event.target.value })} required /></label>
             </div>
             <div className="profile-form-row">
-              <label>Section<input value={profile.section} onChange={(event) => setProfile({ ...profile, section: event.target.value })} required /></label>
-              <label>School<input value={profile.school} onChange={(event) => setProfile({ ...profile, school: event.target.value })} required /></label>
+              <label>{t("section")}<input value={profile.section} onChange={(event) => setProfile({ ...profile, section: event.target.value })} required /></label>
+              <label>{t("school")}<input value={profile.school} onChange={(event) => setProfile({ ...profile, school: event.target.value })} required /></label>
             </div>
           </>}
           <input ref={fileRef} className="profile-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} />
           <button type="button" className="handwriting-upload" onClick={() => fileRef.current?.click()}>
             {image ? <img src={image} alt="Preview of handwriting sample" /> : <Upload size={22} />}
-            <span><strong>{image ? "Change handwriting image" : "Upload handwriting image"}</strong><small>{imageName || "Take or choose a clear photo of written text"}</small></span>
+            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("choosePhoto")}</small></span>
           </button>
-          {error && <p className="profile-flow-error" role="alert">{error}</p>}
-          <button className="primary-btn" type="submit">{existingProfile ? "Analyze new image" : "Analyze handwriting"}</button>
+          {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
+          <button className="primary-btn" type="submit">{existingProfile ? t("analyzeNewImageButton") : t("analyzeImage")}</button>
         </form>
       </section>
     </main>

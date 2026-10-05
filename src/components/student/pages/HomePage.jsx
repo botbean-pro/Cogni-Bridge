@@ -8,6 +8,7 @@ export function HomePage({
   subjectFilter,
   setSubjectFilter,
   signedIn,
+  t,
   studentEmail,
   studentName,
   activityVersion,
@@ -21,21 +22,21 @@ export function HomePage({
       <section className="sessions-section">
         <div className="section-title">
           <div>
-            <p className="eyebrow">PLAN AHEAD</p>
-            <h2>Upcoming sessions</h2>
-            <p>Choose a session to see exactly what you will learn.</p>
+            <p className="eyebrow">{t("planAhead")}</p>
+            <h2>{t("upcomingSessions")}</h2>
+            <p>{t("upcomingDescription")}</p>
           </div>
-          <span className="session-count">{sessions.length} sessions</span>
+          <span className="session-count">{sessions.length} {t("sessionsCount")}</span>
         </div>
 
-        <div className="filter-bar" aria-label="Filter sessions by subject">
-          <span>Filter by subject</span>
+        <div className="filter-bar" aria-label={t("filterBySubject")}>
+          <span>{t("filterBySubject")}</span>
           <button className={subjectFilter === "All subjects" ? "selected" : ""} onClick={() => setSubjectFilter("All subjects")}>
-            All subjects
+            {t("allSubjects")}
           </button>
           {subjects.map((subject) => (
             <button key={subject} className={subjectFilter === subject ? "selected" : ""} onClick={() => setSubjectFilter(subject)}>
-              {subject}
+              {t(`subject${subject === "SST" ? "SST" : subject}`)}
             </button>
           ))}
         </div>
@@ -46,6 +47,7 @@ export function HomePage({
               <SessionCard
                 key={session.id}
                 session={session}
+                t={t}
                 signedIn={signedIn}
                 registered={registeredSessionIds.includes(session.id)}
                 onSignIn={onSignIn}
@@ -55,7 +57,7 @@ export function HomePage({
             ))}
           </div>
         ) : (
-          <div className="empty-state">No sessions found for this subject.</div>
+          <div className="empty-state">{t("noSessions")}</div>
         )}
       </section>
 
@@ -65,6 +67,7 @@ export function HomePage({
           studentEmail={studentEmail}
           studentName={studentName}
           activityVersion={activityVersion}
+          t={t}
         />
       )}
     </section>
