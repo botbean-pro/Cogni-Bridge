@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Clock3, FileText, MessageCircle, Sparkles, UserRound, Users } from "lucide-react";
 import logoWithoutText from "../assets/logo without text.svg";
@@ -174,3 +175,12 @@ function MessagesPage() { return <section className="content feature-page"><div 
 function StudentStats({ sessions }) { return <section className="stats-section"><div className="section-title"><div><p className="eyebrow">YOUR PROGRESS</p><h2>Student stats</h2><p>Small steps add up. Keep going, Alex.</p></div></div><div className="stats-grid"><article><span className="stat-icon"><CheckCircle2 size={21} /></span><strong>8</strong><span>Sessions attended</span></article><article><span className="stat-icon"><Clock3 size={21} /></span><strong>6.5h</strong><span>Learning time</span></article><article><span className="stat-icon"><BookOpen size={21} /></span><strong>{new Set(sessions.map((s) => s.subject)).size}</strong><span>Subjects explored</span></article><article><span className="stat-icon"><Sparkles size={21} /></span><strong>4</strong><span>Day learning streak</span></article></div></section>; }
 export { HomePage, SessionCard, SessionsPage, FlowPage, MessagesPage, StudentStats };
 
+=======
+// Compatibility exports for the page components used by the app shell.
+export { HomePage } from "./student/pages/HomePage";
+export { SessionsPage } from "./student/pages/SessionsPage";
+export { FlowPage } from "./student/pages/FlowPage";
+export { MessagesPage } from "./student/pages/MessagesPage";
+export { SessionCard } from "./student/shared/SessionCard";
+export { StudentStats } from "./student/shared/StudentStats";
+>>>>>>> fe448521350dbcb7e161304ae8bd61cdc94c5f79

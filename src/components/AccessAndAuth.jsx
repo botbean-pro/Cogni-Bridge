@@ -145,7 +145,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
       normalizedEmail === DEMO_STUDENT_EMAIL &&
       password === DEMO_STUDENT_PASSWORD
     ) {
-      onStudentSuccess();
+      onStudentSuccess(normalizedEmail);
       return;
     }
 
@@ -155,7 +155,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
     );
 
     if (student) {
-      onStudentSuccess();
+      onStudentSuccess(normalizedEmail);
       return;
     }
 

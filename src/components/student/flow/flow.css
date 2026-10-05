@@ -1,0 +1,128 @@
+.ai-learning-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ai-learning-tools button,
+.practice-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--surface);
+  color: var(--teal);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-learning-tools button:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+.ai-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 24px;
+  color: #9c2f2f;
+  background: #fff1f1;
+  font-size: 13px;
+}
+
+.ai-error button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.practice-question {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  min-width: min(100%, 440px);
+}
+
+.practice-question h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.practice-options {
+  display: grid;
+  gap: 7px;
+}
+
+.practice-option {
+  display: flex;
+  gap: 8px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.practice-option span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.practice-option:hover:not(:disabled),
+.practice-option.selected {
+  border-color: var(--teal);
+}
+
+.practice-option.correct {
+  border-color: #28835c;
+  background: #edf9f2;
+}
+
+.practice-option:disabled {
+  cursor: default;
+}
+
+.practice-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.practice-feedback.is-correct { color: #21704d; }
+.practice-feedback.is-incorrect { color: #9c5e1c; }
+
+.practice-reset {
+  justify-self: start;
+  padding: 6px 9px;
+  font-size: 12px;
+}
+
+.theme-dark .practice-option.correct { background: #203b32; }
+.theme-dark .ai-error { background: #3d2020; color: #f8b4b4; }
+
+@media (max-width: 600px) {
+  .ai-learning-tools { align-items: flex-start; flex-direction: column; padding: 12px 16px; }
+  .ai-error { padding: 10px 16px; }
+  .practice-question { min-width: 0; }
+}
