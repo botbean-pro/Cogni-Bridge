@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BookOpen, CheckCircle2, Clock3, Sparkles } from "lucide-react";
 import { calculateStudentStats, readStudentActivities } from "../../../studentActivity";
 
-export function StudentStats({ studentEmail, studentName, activityVersion }) {
+export function StudentStats({ studentEmail, studentName, activityVersion, t }) {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -16,7 +16,7 @@ export function StudentStats({ studentEmail, studentName, activityVersion }) {
       const activities = readStudentActivities(studentEmail);
       if (isCurrent) setStats(calculateStudentStats(activities));
     } catch {
-      if (isCurrent) setError("We couldn't load your learning stats. Check browser storage and try again.");
+      if (isCurrent) setError(t("statsError"));
     }
 
     const refreshFromStorage = (event) => {
@@ -33,42 +33,42 @@ export function StudentStats({ studentEmail, studentName, activityVersion }) {
       isCurrent = false;
       window.removeEventListener("storage", refreshFromStorage);
     };
-  }, [studentEmail, activityVersion, retry]);
+  }, [studentEmail, activityVersion, retry, t]);
 
   const cards = stats && [
-    [CheckCircle2, stats.sessionsAttended, "Sessions attended", "Completed learning sessions"],
-    [Clock3, stats.learningTime, "Learning time", "Time in attended sessions"],
-    [BookOpen, stats.subjectsExplored, "Subjects explored", "Unique session subjects"],
-    [Sparkles, `${stats.learningStreak} days`, "Learning streak", "Consecutive active days"],
+    [CheckCircle2, stats.sessionsAttended, "sessionsAttended", "completedSessions"],
+    [Clock3, stats.learningTime, "learningTime", "attendedTime"],
+    [BookOpen, stats.subjectsExplored, "subjectsExplored", "uniqueSubjects"],
+    [Sparkles, `${stats.learningStreak} ${t("days")}`, "learningStreak", "consecutiveDays"],
   ];
 
   return (
     <section className="stats-section">
       <div className="section-title">
         <div>
-          <p className="eyebrow">YOUR PROGRESS</p>
-          <h2>Student stats</h2>
-          <p>Small steps add up. Keep going, {studentName}.</p>
+          <p className="eyebrow">{t("yourProgress")}</p>
+          <h2>{t("studentStats")}</h2>
+          <p>{t("greeting", { name: studentName })}</p>
         </div>
       </div>
       {error ? (
         <div className="stats-error" role="alert">
           <span>{error}</span>
-          <button type="button" onClick={() => setRetry((value) => value + 1)}>Try again</button>
+          <button type="button" onClick={() => setRetry((value) => value + 1)}>{t("tryAgain")}</button>
         </div>
       ) : stats ? (
         <div className="stats-grid">
-          {cards.map(([Icon, value, label, description]) => (
-            <article key={label}>
+          {cards.map(([Icon, value, labelKey, descriptionKey]) => (
+            <article key={labelKey}>
               <span className="stat-icon"><Icon size={21} aria-hidden="true" /></span>
               <strong>{value}</strong>
-              <span>{label}</span>
-              <small>{description}</small>
+              <span>{t(labelKey)}</span>
+              <small>{t(descriptionKey)}</small>
             </article>
           ))}
         </div>
       ) : (
-        <div className="stats-grid stats-grid-loading" role="status" aria-label="Loading student stats">
+        <div className="stats-grid stats-grid-loading" role="status" aria-label={t("loading")}>
           {Array.from({ length: 4 }, (_, index) => (
             <article key={index} aria-hidden="true">
               <span className="stat-skeleton stat-skeleton-icon" />

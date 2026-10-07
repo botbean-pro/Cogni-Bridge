@@ -7,6 +7,7 @@ import { HomePage, SessionsPage, FlowPage, MessagesPage } from "./components/Lea
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
+import { translate } from "./i18n";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
@@ -31,6 +32,10 @@ const App = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const t = useMemo(
+    () => (key, values) => translate(studentLanguage, key, values),
+    [studentLanguage],
+  );
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
@@ -52,6 +57,21 @@ const App = () => {
   useEffect(() => {
     document.documentElement.style.setProperty("--text-scale", textScale);
   }, [textScale]);
+
+  useEffect(() => {
+    document.documentElement.lang = ({
+      English: "en",
+      Hindi: "hi",
+      Bengali: "bn",
+      Telugu: "te",
+      Marathi: "mr",
+      Tamil: "ta",
+      Gujarati: "gu",
+      Kannada: "kn",
+      Malayalam: "ml",
+      Punjabi: "pa",
+    })[studentLanguage] || "en";
+  }, [studentLanguage]);
 
   useEffect(() => {
     const exitTimer = setTimeout(() => setIntroExiting(true), 1250);
@@ -81,24 +101,24 @@ const App = () => {
     setRegisteredSessionIds((ids) => (
       ids.includes(sessionId) ? ids : [...ids, sessionId]
     ));
-    notify(`${session?.title || "Session"} registration confirmed`);
+    notify(t("registrationConfirmed", { title: session?.title || "Session" }));
   };
 
   const markSessionAttended = (session) => {
     if (!signedIn || !studentEmail) {
-      notify("Sign in with your student account email to save attendance.");
+      notify(t("signInToSaveAttendance"));
       return;
     }
     try {
       const recorded = recordStudentAttendance(studentEmail, session);
       if (!recorded) {
-        notify("Attendance for this session is already recorded.");
+        notify(t("attendanceAlreadyRecorded"));
         return;
       }
       setActivityVersion((version) => version + 1);
-      notify("Session attendance recorded.");
+      notify(t("attendanceRecordedToast"));
     } catch {
-      notify("Attendance could not be saved. Check browser storage and try again.");
+      notify(t("attendanceSaveError"));
     }
   };
 
@@ -107,7 +127,7 @@ const App = () => {
     setStudentProfile(null);
     setStudentEmail("");
     setAttendedSessionIds(new Set());
-    notify("You have been logged out");
+    notify(t("loggedOut"));
   };
 
   const openSession = (session) => {
@@ -135,6 +155,7 @@ const App = () => {
     return (
       <StudentProfileFlow
         email={signupEmail}
+        t={t}
         onBack={() => setSignupEmail("")}
         onComplete={(profile) => {
           setSignupEmail("");
@@ -151,6 +172,7 @@ const App = () => {
       <StudentProfileFlow
         email={studentProfile?.email || studentEmail}
         existingProfile={studentProfile}
+        t={t}
         onBack={() => setProfileOpen(false)}
         onComplete={(profile) => {
           setStudentProfile(profile);
@@ -163,6 +185,7 @@ const App = () => {
   if (createAccountOpen) {
     return (
       <CreateAccountPage
+        t={t}
         onBack={() => setCreateAccountOpen(false)}
         onComplete={(email) => {
           setCreateAccountOpen(false);
@@ -179,6 +202,7 @@ const App = () => {
         goToTab={goToTab}
         signedIn={signedIn}
         studentName={studentName}
+        t={t}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
         showIntro={showIntro}
@@ -193,6 +217,7 @@ const App = () => {
             setAppearance={setAppearance}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
+            t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
         )}
@@ -203,6 +228,7 @@ const App = () => {
               subjectFilter={subjectFilter}
               setSubjectFilter={setSubjectFilter}
               signedIn={signedIn}
+              t={t}
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
@@ -217,6 +243,7 @@ const App = () => {
               sessions={sessions}
               selectedSession={selectedSession}
               signedIn={signedIn}
+              t={t}
               registeredSessionIds={registeredSessionIds}
               attendedSessionIds={attendedSessionIds}
               onSelect={setSelectedSession}
@@ -226,13 +253,14 @@ const App = () => {
               onMarkAttended={markSessionAttended}
             />
           ),
-          flow: <FlowPage />,
-          messages: <MessagesPage />,
+          flow: <FlowPage t={t} />,
+          messages: <MessagesPage t={t} />,
         }}
       />
-      {signedIn && <button className="student-account-button" onClick={() => setProfileOpen(true)}><UserRound size={17} /> My account</button>}
+      {signedIn &&       <button className="student-account-button" onClick={() => setProfileOpen(true)}><UserRound size={17} /> {t("myAccount")}</button>}
       {loginOpen && (
         <AuthModal
+          t={t}
           onClose={() => setLoginOpen(false)}
           onStudentSuccess={(email) => {
             setLoginOpen(false);

@@ -10,6 +10,7 @@ export const StudentPage = ({
   goToTab,
   signedIn,
   studentName,
+  t,
   onLogin,
   onLogout,
   showIntro,
@@ -22,19 +23,19 @@ export const StudentPage = ({
   <>
     <MouseTrail />
     {showIntro && (
-      <div className={classNames("intro-screen", introExiting && "is-exiting")} aria-label="Loading CogniBridge">
+      <div className={classNames("intro-screen", introExiting && "is-exiting")} aria-label={t("loadingCogniBridge")}>
         <AnimatedLogo />
         <p>CogniBridge</p>
       </div>
     )}
     <header className="sidebar">
-      <StudentSidebar activeTab={activeTab} onNavigate={goToTab} />
-      <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} />
+      <StudentSidebar activeTab={activeTab} onNavigate={goToTab} t={t} />
+      <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} t={t} />
     </header>
     <main className="main">{pageContent[activeTab]}</main>
-    <button className="accessibility-tab" aria-label="Open accessibility options" onClick={onToggleAccessibility}>
+    <button className="accessibility-tab" aria-label={t("openAccessibility")} onClick={onToggleAccessibility}>
       <Accessibility size={21} />
-      <span>Accessibility</span>
+      <span>{t("accessibility")}</span>
     </button>
     {accessibilityOpen && accessibilityPanel}
   </>

@@ -6,15 +6,15 @@ import { QuickPrompts } from "../flow/QuickPrompts";
 import { askLearningAssistant, parseQuiz } from "../flow/flowApi";
 import "../flow/flow.css";
 
-const welcomeMessage = {
+const welcomeMessage = (t) => ({
   id: "welcome",
   role: "assistant",
-  content: "Hi! I'm Cogni-Flow AI, your learning buddy. Ask me about a topic, a homework question, or a study plan.",
+  content: t("chatWelcome"),
   timestamp: new Date(),
-};
+});
 
-export function FlowPage() {
-  const [messages, setMessages] = useState([welcomeMessage]);
+export function FlowPage({ t }) {
+  const [messages, setMessages] = useState(() => [welcomeMessage(t)]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,6 +24,14 @@ export function FlowPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    setMessages((current) => current.map((message) => (
+      message.id === "welcome"
+        ? { ...message, content: t("chatWelcome") }
+        : message
+    )));
+  }, [t]);
 
   const requestAssistant = async (conversation, task = "chat") => {
     setIsLoading(true);
@@ -37,7 +45,7 @@ export function FlowPage() {
         {
           id: `${Date.now()}-${task}`,
           role: "assistant",
-          content: quiz ? "Here's a multiple-choice question based on what you asked:" : answer,
+          content: quiz ? t("quizIntro") : answer,
           quiz,
           timestamp: new Date(),
         },
@@ -76,24 +84,25 @@ export function FlowPage() {
   return (
     <section className="content ai-chat-page">
       <div className="ai-chat-container">
-        <ChatHeader />
+        <ChatHeader t={t} />
         <ChatMessages
           messages={messages}
           isLoading={isLoading}
           messagesEndRef={messagesEndRef}
+          t={t}
         />
         {error && (
           <div className="ai-error" role="alert">
             {error}
-            <button type="button" onClick={() => setError("")}>Dismiss</button>
+            <button type="button" onClick={() => setError("")}>{t("dismiss")}</button>
           </div>
         )}
-        {!hasAskedQuestion && <QuickPrompts onSelect={selectPrompt} />}
+        {!hasAskedQuestion && <QuickPrompts onSelect={selectPrompt} t={t} />}
         {hasAskedQuestion && (
           <div className="ai-learning-tools">
-            <span>Keep learning from your question</span>
+            <span>{t("keepLearning")}</span>
             <button type="button" onClick={createQuestion} disabled={isLoading}>
-              Make an MCQ from this topic
+              {t("makeMcq")}
             </button>
           </div>
         )}
@@ -102,6 +111,7 @@ export function FlowPage() {
           isLoading={isLoading}
           onChange={setInput}
           onSubmit={sendMessage}
+          t={t}
         />
       </div>
     </section>

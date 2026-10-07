@@ -20,16 +20,16 @@ import {
   readStudents,
 } from "../constants";
 
-const LanguagePicker = ({ value, onChange }) => (
+const LanguagePicker = ({ value, onChange, t }) => (
   <label className="language-picker">
     <span>
       <Languages size={18} />
-      <strong>Language</strong>
+      <strong>{t("language")}</strong>
     </span>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      aria-label="Choose learning language"
+      aria-label={t("chooseLearningLanguage")}
     >
       {indianLanguages.map(([native, english]) => (
         <option key={english} value={english}>
@@ -37,7 +37,7 @@ const LanguagePicker = ({ value, onChange }) => (
         </option>
       ))}
     </select>
-    <small>Choose the language used for learning support.</small>
+    <small>{t("languageHint")}</small>
   </label>
 );
 
@@ -79,7 +79,7 @@ const SocialIcon = ({ provider }) => {
   );
 };
 
-const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => {
+const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) => {
   const [tab, setTab] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -126,18 +126,18 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
       if (normalizedEmail === MENTOR_EMAIL && password === MENTOR_PASSWORD) {
         onMentor();
       } else {
-        setError("Incorrect mentor email or password.");
+        setError("invalidCredentials");
       }
       return;
     }
 
     if (tab === "admin") {
-      setError("Admin access is not enabled in this prototype yet.");
+      setError("adminNotEnabled");
       return;
     }
 
     if (!normalizedEmail || !password.trim()) {
-      setError("Please enter your email and password to continue.");
+      setError("enterEmailPassword");
       return;
     }
 
@@ -159,19 +159,17 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
       return;
     }
 
-    setError("Account not found. Please create an account first.");
+    setError("accountNotFound");
   };
 
   const googleSignIn = () => {
     if (!googleClientId) {
-      setError(
-        "Add VITE_GOOGLE_CLIENT_ID to .env.local, then restart the dev server.",
-      );
+      setError("googleClientMissing");
       return;
     }
 
     if (!window.google?.accounts?.id) {
-      setError("Google sign-in is still loading. Please try again.");
+      setError("googleLoading");
       return;
     }
 
@@ -193,7 +191,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
           }
           onStudentSuccess(payload.email);
         } catch {
-          setError("Google sign-in did not return a usable student account. Please try again.");
+          setError("googleIdentityError");
         }
       },
     });
@@ -201,15 +199,15 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
   };
 
   const tabLabels = [
-    ["student", "Student login"],
-    ["mentor", "Mentor login"],
-    ["admin", "Admin login"],
+    ["student", "studentLogin"],
+    ["mentor", "mentorLogin"],
+    ["admin", "adminLogin"],
   ];
 
   const description = {
-    student: "Sign in with your email, or continue with Google, Apple or others.",
-    mentor: "Priya Sharma's Maths sessions are managed from the mentor space.",
-    admin: "Admin tools will be connected after the admin API is provided.",
+    student: t("studentLoginDescription"),
+    mentor: t("mentorDescription"),
+    admin: t("adminDescription"),
   }[tab];
 
   return (
@@ -224,15 +222,15 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
         <button
           className="modal-close-btn"
           onClick={onClose}
-          aria-label="Close sign in"
+          aria-label={t("closeSignIn")}
         >
           <X size={20} />
         </button>
 
-        <h2 id="login-title">Welcome back</h2>
+        <h2 id="login-title">{t("welcomeBack")}</h2>
 
         <div className="auth-tabs" role="tablist">
-          {tabLabels.map(([key, label]) => (
+          {tabLabels.map(([key, labelKey]) => (
             <button
               key={key}
               className={classNames("auth-tab", tab === key && "active")}
@@ -240,7 +238,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
               role="tab"
               aria-selected={tab === key}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>
@@ -249,71 +247,71 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
 
         <form className="auth-form" onSubmit={submit}>
           <label className="input-label">
-            Email
+            {t("email")}
             <input
               type="email"
               className="auth-input"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               required
             />
           </label>
 
           <label className="input-label">
-            Password
+            {t("password")}
             <div className="password-input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
                 className="auth-input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter your password"
+                placeholder={t("enterPassword")}
                 required
               />
               <button
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword((isVisible) => !isVisible)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={t(showPassword ? "hidePassword" : "showPassword")}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             <button type="button" className="forgot-password">
-              Forgot password?
+              {t("forgotPassword")}
             </button>
           </label>
 
           {error && (
             <div className="error-popup" role="alert">
               <ShieldCheck size={18} />
-              {error}
+              {t(error)}
             </div>
           )}
 
           {tab === "student" ? (
             <div className="auth-button-group">
               <button className="auth-login-btn" type="submit">
-                Log in <ChevronRight size={18} />
+                {t("logIn")} <ChevronRight size={18} />
               </button>
               <div className="create-account-prompt">
-                <span>Don't have an account?</span>
+                <span>{t("noAccount")}</span>
                 <button
                   type="button"
                   className="create-account-link"
                   onClick={onCreateAccount}
                 >
-                  Create account
+                  {t("createAccount")}
                 </button>
               </div>
-              <div className="auth-divider">or continue with</div>
+              <div className="auth-divider">{t("continueWith")}</div>
               <div className="social-buttons-grid">
                 {[
                   ["Google", googleSignIn],
-                  ["Apple", () => setError("Social login will be implemented soon.")],
-                  ["Microsoft", () => setError("Social login will be implemented soon.")],
-                  ["GitHub", () => setError("Social login will be implemented soon.")],
+                  ["Apple", () => setError("socialLoginSoon")],
+                  ["Microsoft", () => setError("socialLoginSoon")],
+                  ["GitHub", () => setError("socialLoginSoon")],
                 ].map(([label, onClick]) => (
                   <button
                     key={label}
@@ -327,12 +325,12 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor }) => 
                 ))}
               </div>
               <small className="demo-login">
-                Demo: student@cognibridge.com / student123
+                {t("demo")}: student@cognibridge.com / student123
               </small>
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">
-              {tab === "mentor" ? "Enter mentor space" : "Continue"}
+              {tab === "mentor" ? t("enterMentorSpace") : t("continue")}
               <ChevronRight size={18} />
             </button>
           )}
@@ -350,14 +348,15 @@ const AccessibilityPanel = ({
   language,
   setLanguage,
   onClose,
+  t,
 }) => (
-  <aside className="accessibility-panel" aria-label="Accessibility options">
+  <aside className="accessibility-panel" aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
-      <strong>Accessibility</strong>
+      <strong>{t("accessibility")}</strong>
       <button
         className="icon-btn"
         onClick={onClose}
-        aria-label="Close accessibility options"
+        aria-label={t("close")}
       >
         <X size={18} />
       </button>
@@ -365,7 +364,7 @@ const AccessibilityPanel = ({
 
     <label className="range-row">
       <span>
-        <Eye size={17} /> Text size
+        <Eye size={17} /> {t("textSize")}
       </span>
       <input
         type="range"
@@ -377,26 +376,26 @@ const AccessibilityPanel = ({
       />
     </label>
 
-    <LanguagePicker value={language} onChange={setLanguage} />
+    <LanguagePicker value={language} onChange={setLanguage} t={t} />
 
     <label className="appearance-row">
-      <strong>Appearance</strong>
+      <strong>{t("appearance")}</strong>
       <select
         value={appearance}
         onChange={(event) => setAppearance(event.target.value)}
       >
-        <option value="light">Light mode</option>
-        <option value="dark">Dark mode</option>
+        <option value="light">{t("lightMode")}</option>
+        <option value="dark">{t("darkMode")}</option>
       </select>
     </label>
 
     <button className="reset-button" onClick={() => setTextScale(1)}>
-      Reset text size
+      {t("resetTextSize")}
     </button>
   </aside>
 );
 
-const SignupPage = ({ email, onBack, onComplete }) => {
+const SignupPage = ({ email, onBack, onComplete, t }) => {
   const [form, setForm] = useState({ name: "", studentClass: "", age: "" });
 
   const submit = (event) => {
@@ -420,52 +419,51 @@ const SignupPage = ({ email, onBack, onComplete }) => {
   return (
     <main className="signup-page">
       <button className="mentor-back" onClick={onBack}>
-        <ArrowLeft size={18} /> Back to sign in
+        <ArrowLeft size={18} /> {t("backToSignIn")}
       </button>
 
       <section className="signup-card">
         <div className="auth-icon">
           <UserRound size={24} />
         </div>
-        <p className="eyebrow">NEW STUDENT PROFILE</p>
-        <h1>Let's set up your learning space</h1>
+        <p className="eyebrow">{t("newStudentProfile")}</p>
+        <h1>{t("setUpLearningProfile")}</h1>
         <p className="modal-copy">
-          We couldn't find <strong>{email}</strong> yet. Add a few details so
-          CogniBridge can personalise your experience.
+          {t("studentProfileNotFound")} <strong>{email}</strong> {t("studentProfileNotFoundTail")}
         </p>
 
         <form className="auth-form" onSubmit={submit}>
           <label>
-            Full name
+            {t("fullName")}
             <input
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
-              placeholder="Your name"
+              placeholder={t("enterFullName")}
               required
             />
           </label>
 
           <div className="signup-columns">
             <label>
-              Class
+              {t("class")}
               <input
                 value={form.studentClass}
                 onChange={(event) =>
                   setForm({ ...form, studentClass: event.target.value })
                 }
-                placeholder="e.g. 8"
+                placeholder={t("classPlaceholder")}
                 required
               />
             </label>
             <label>
-              Age
+              {t("age")}
               <input
                 type="number"
                 min="5"
                 max="25"
                 value={form.age}
                 onChange={(event) => setForm({ ...form, age: event.target.value })}
-                placeholder="e.g. 13"
+                placeholder={t("agePlaceholder")}
                 required
               />
             </label>
@@ -474,16 +472,13 @@ const SignupPage = ({ email, onBack, onComplete }) => {
           <div className="quiz-placeholder">
             <Sparkles size={19} />
             <div>
-              <strong>Learning-style quiz - coming next</strong>
-              <p>
-                We'll use a short quiz later to suggest the best notes and study
-                formats for you.
-              </p>
+              <strong>{t("learningStyleQuiz")}</strong>
+              <p>{t("learningStyleQuizDescription")}</p>
             </div>
           </div>
 
           <button className="primary-btn" type="submit">
-            Create student profile <ChevronRight size={18} />
+            {t("createStudentProfile")} <ChevronRight size={18} />
           </button>
         </form>
       </section>
@@ -491,7 +486,7 @@ const SignupPage = ({ email, onBack, onComplete }) => {
   );
 };
 
-const CreateAccountPage = ({ onBack, onComplete }) => {
+const CreateAccountPage = ({ onBack, onComplete, t }) => {
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -516,17 +511,17 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
       !form.password ||
       !form.confirmPassword
     ) {
-      setError("Please fill in all required fields.");
+      setError("completeFields");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      setError("passwordsMismatch");
       return;
     }
 
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError("passwordTooShort");
       return;
     }
 
@@ -537,7 +532,7 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
     );
 
     if (existingStudent) {
-      setError("An account with this email already exists. Please sign in instead.");
+      setError("accountExists");
       return;
     }
 
@@ -557,12 +552,12 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
       );
       onComplete(normalizedEmail);
     } catch {
-      setError("Unable to create account. Please try again.");
+      setError("accountCreateError");
     }
   };
 
   const showSocialLoginMessage = () => {
-    setError("Social login will be implemented soon.");
+    setError("socialLoginSoon");
   };
 
   return (
@@ -571,68 +566,68 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
         className="create-account-modal"
         onClick={(event) => event.stopPropagation()}
       >
-        <button className="modal-close-btn" onClick={onBack} aria-label="Close">
+        <button className="modal-close-btn" onClick={onBack} aria-label={t("close")}>
           <X size={20} />
         </button>
 
         <div className="create-account-content">
-          <h1 className="create-account-heading">Create your account</h1>
+          <h1 className="create-account-heading">{t("createYourAccount")}</h1>
           <p className="create-account-subtitle">
-            Join CogniBridge and start your learning journey today.
+            {t("joinLearning")}
           </p>
 
           <form className="create-account-form" onSubmit={submit}>
             <label className="create-account-label">
-              <span>Full Name</span>
+              <span>{t("fullName")}</span>
               <input
                 type="text"
                 className="create-account-input"
                 value={form.name}
                 onChange={(event) => updateField("name", event.target.value)}
-                placeholder="Enter your full name"
+                placeholder={t("enterFullName")}
                 required
               />
             </label>
 
             <label className="create-account-label">
-              <span>Email</span>
+              <span>{t("email")}</span>
               <input
                 type="email"
                 className="create-account-input"
                 value={form.email}
                 onChange={(event) => updateField("email", event.target.value)}
-                placeholder="you@example.com"
+                placeholder={t("emailPlaceholder")}
                 required
               />
             </label>
 
             <label className="create-account-label">
-              <span>Password</span>
+              <span>{t("password")}</span>
               <div className="password-input-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
                   className="create-account-input"
                   value={form.password}
                   onChange={(event) => updateField("password", event.target.value)}
-                  placeholder="Create a password"
+                  placeholder={t("createPassword")}
                   required
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword((isVisible) => !isVisible)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={t(showPassword ? "hidePassword" : "showPassword")}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               <small className="password-hint">
-                Use at least 8 characters with a mix of letters, numbers and symbols.
+                {t("passwordRequirement")}
               </small>
             </label>
 
             <label className="create-account-label">
-              <span>Confirm Password</span>
+              <span>{t("confirmPassword")}</span>
               <div className="password-input-wrapper">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -641,7 +636,7 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
                   onChange={(event) =>
                     updateField("confirmPassword", event.target.value)
                   }
-                  placeholder="Re-enter your password"
+                  placeholder={t("reenterPassword")}
                   required
                 />
                 <button
@@ -651,7 +646,7 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
                     setShowConfirmPassword((isVisible) => !isVisible)
                   }
                   aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
+                    t(showConfirmPassword ? "hidePassword" : "showPassword")
                   }
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -662,15 +657,15 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
             {error && (
               <div className="error-popup" role="alert">
                 <ShieldCheck size={18} />
-                {error}
+                {t(error)}
               </div>
             )}
 
             <button className="create-account-btn" type="submit">
-              Create account <ChevronRight size={18} />
+              {t("createAccount")} <ChevronRight size={18} />
             </button>
 
-            <div className="auth-divider">or continue with</div>
+            <div className="auth-divider">{t("continueWith")}</div>
 
             <div className="social-buttons-grid">
               {["Google", "Apple", "Microsoft", "GitHub"].map((provider) => (
@@ -687,9 +682,9 @@ const CreateAccountPage = ({ onBack, onComplete }) => {
             </div>
 
             <div className="login-link-section">
-              <span>Already have an account?</span>
+              <span>{t("alreadyHaveAccount")}</span>
               <button type="button" className="login-link-btn" onClick={onBack}>
-                Log in
+                {t("logIn")}
               </button>
             </div>
           </form>

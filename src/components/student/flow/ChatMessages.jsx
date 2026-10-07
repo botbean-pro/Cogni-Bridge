@@ -2,7 +2,7 @@ import React from "react";
 import { Sparkles, UserRound } from "lucide-react";
 import { PracticeQuestion } from "./PracticeQuestion";
 
-function Message({ message }) {
+function Message({ message, t }) {
   const isAssistant = message.role === "assistant";
 
   return (
@@ -12,7 +12,7 @@ function Message({ message }) {
       </div>
       <div className="message-content">
         <div className="message-text">{message.content}</div>
-        {message.quiz && <PracticeQuestion quiz={message.quiz} />}
+        {message.quiz && <PracticeQuestion quiz={message.quiz} t={t} />}
         <time className="message-time">
           {message.timestamp.toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -24,12 +24,12 @@ function Message({ message }) {
   );
 }
 
-export function ChatMessages({ messages, isLoading, messagesEndRef }) {
+export function ChatMessages({ messages, isLoading, messagesEndRef, t }) {
   return (
     <div className="ai-chat-messages" aria-live="polite">
-      {messages.map((message) => <Message key={message.id} message={message} />)}
+      {messages.map((message) => <Message key={message.id} message={message} t={t} />)}
       {isLoading && (
-        <div className="ai-message assistant" aria-label="Cogni-Flow is thinking">
+        <div className="ai-message assistant" aria-label={t("aiThinking")}>
           <div className="message-avatar"><Sparkles size={18} /></div>
           <div className="message-content">
             <div className="typing-indicator"><span /><span /><span /></div>
