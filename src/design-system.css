@@ -153,7 +153,7 @@ select {
 .home-about-scroll {
   position: absolute;
   z-index: 2;
-  bottom: 38px;
+  bottom: 60px;
   left: 50%;
   display: grid;
   width: 54px;
