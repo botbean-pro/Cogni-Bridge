@@ -282,7 +282,7 @@ const App = () => {
               onMarkAttended={markSessionAttended}
             />
           ),
-          flow: <FlowPage t={t} />,
+          flow: <FlowPage t={t} language={studentLanguage} />,
           messages: <MessagesPage t={t} />,
         }}
       />

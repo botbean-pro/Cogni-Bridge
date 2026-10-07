@@ -13,7 +13,7 @@ const welcomeMessage = (t) => ({
   timestamp: new Date(),
 });
 
-export function FlowPage({ t }) {
+export function FlowPage({ t, language }) {
   const [messages, setMessages] = useState(() => [welcomeMessage(t)]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -38,14 +38,16 @@ export function FlowPage({ t }) {
     setError("");
 
     try {
-      const answer = await askLearningAssistant(conversation, task);
+      const answer = await askLearningAssistant(conversation, task, language);
+      const answerText = task === "mcq" ? answer : answer.content;
       const quiz = task === "mcq" ? parseQuiz(answer) : null;
       setMessages((current) => [
         ...current,
         {
           id: `${Date.now()}-${task}`,
           role: "assistant",
-          content: quiz ? t("quizIntro") : answer,
+          content: quiz ? t("quizIntro") : answerText,
+          relatedQuestions: task === "chat" ? answer.relatedQuestions : [],
           quiz,
           timestamp: new Date(),
         },
@@ -57,9 +59,7 @@ export function FlowPage({ t }) {
     }
   };
 
-  const sendMessage = async (event) => {
-    event.preventDefault();
-    const question = input.trim();
+  const askQuestion = async (question) => {
     if (!question || isLoading) return;
 
     const userMessage = {
@@ -72,6 +72,11 @@ export function FlowPage({ t }) {
     setMessages(conversation);
     setInput("");
     await requestAssistant(conversation);
+  };
+
+  const sendMessage = async (event) => {
+    event.preventDefault();
+    await askQuestion(input.trim());
   };
 
   const createQuestion = () => {
@@ -90,6 +95,7 @@ export function FlowPage({ t }) {
           isLoading={isLoading}
           messagesEndRef={messagesEndRef}
           t={t}
+          onAskRelated={askQuestion}
         />
         {error && (
           <div className="ai-error" role="alert">

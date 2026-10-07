@@ -1,9 +1,10 @@
-export async function askLearningAssistant(conversation, task = "chat") {
+export async function askLearningAssistant(conversation, task = "chat", language = "English") {
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       task,
+      language,
       messages: conversation
         .filter((message) => message.role === "user" || message.role === "assistant")
         .map(({ role, content }) => ({ role, content })),
@@ -15,7 +16,9 @@ export async function askLearningAssistant(conversation, task = "chat") {
     throw new Error(data.error || "Cogni-Flow couldn't respond. Please try again.");
   }
 
-  return data.content;
+  return task === "chat"
+    ? { content: data.content, relatedQuestions: data.relatedQuestions || [] }
+    : data.content;
 }
 
 export function parseQuiz(responseText) {

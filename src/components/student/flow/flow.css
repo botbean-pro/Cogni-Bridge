@@ -50,6 +50,19 @@
   cursor: pointer;
 }
 
+.formatted-answer { display:grid; gap:9px; }
+.formatted-answer p { margin:0; white-space:pre-wrap; }
+.formatted-answer h3 { margin:7px 0 0; color:var(--text); font-size:1.08em; line-height:1.4; }
+.answer-list-item { display:grid; grid-template-columns:auto 1fr; gap:8px; padding-left:2px; }
+.answer-list-item > span:first-child { color:var(--teal); font-weight:800; }
+.answer-spacer { height:3px; }
+.formatted-answer code { padding:2px 5px; border-radius:5px; background:var(--surface-2); font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.92em; }
+.related-question-cards { display:grid; gap:8px; margin-top:7px; }
+.related-question-cards button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--text); font:inherit; text-align:left; line-height:1.4; cursor:pointer; transition:border-color .2s, transform .2s, background .2s; }
+.related-question-cards button:hover { transform:translateY(-1px); border-color:var(--teal); background:#e9f6f4; }
+.related-question-cards svg { flex:0 0 auto; color:var(--teal); }
+.theme-dark .related-question-cards button:hover { background:#294444; }
+
 .practice-question {
   display: grid;
   gap: 10px;

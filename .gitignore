@@ -5,3 +5,4 @@ folder/
 .env
 .env.*
 !.env.example
+.vercel
