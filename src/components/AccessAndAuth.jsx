@@ -395,7 +395,7 @@ const AccessibilityPanel = ({
   </aside>
 );
 
-const SignupPage = ({ email, onBack, onComplete }) => {
+const SignupPage = ({ email, onBack, onComplete, t }) => {
   const [form, setForm] = useState({ name: "", studentClass: "", age: "" });
 
   const submit = (event) => {
@@ -419,52 +419,51 @@ const SignupPage = ({ email, onBack, onComplete }) => {
   return (
     <main className="signup-page">
       <button className="mentor-back" onClick={onBack}>
-        <ArrowLeft size={18} /> Back to sign in
+        <ArrowLeft size={18} /> {t("backToSignIn")}
       </button>
 
       <section className="signup-card">
         <div className="auth-icon">
           <UserRound size={24} />
         </div>
-        <p className="eyebrow">NEW STUDENT PROFILE</p>
-        <h1>Let's set up your learning space</h1>
+        <p className="eyebrow">{t("newStudentProfile")}</p>
+        <h1>{t("setUpLearningProfile")}</h1>
         <p className="modal-copy">
-          We couldn't find <strong>{email}</strong> yet. Add a few details so
-          CogniBridge can personalise your experience.
+          {t("studentProfileNotFound")} <strong>{email}</strong> {t("studentProfileNotFoundTail")}
         </p>
 
         <form className="auth-form" onSubmit={submit}>
           <label>
-            Full name
+            {t("fullName")}
             <input
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
-              placeholder="Your name"
+              placeholder={t("enterFullName")}
               required
             />
           </label>
 
           <div className="signup-columns">
             <label>
-              Class
+              {t("class")}
               <input
                 value={form.studentClass}
                 onChange={(event) =>
                   setForm({ ...form, studentClass: event.target.value })
                 }
-                placeholder="e.g. 8"
+                placeholder={t("classPlaceholder")}
                 required
               />
             </label>
             <label>
-              Age
+              {t("age")}
               <input
                 type="number"
                 min="5"
                 max="25"
                 value={form.age}
                 onChange={(event) => setForm({ ...form, age: event.target.value })}
-                placeholder="e.g. 13"
+                placeholder={t("agePlaceholder")}
                 required
               />
             </label>
@@ -473,16 +472,13 @@ const SignupPage = ({ email, onBack, onComplete }) => {
           <div className="quiz-placeholder">
             <Sparkles size={19} />
             <div>
-              <strong>Learning-style quiz - coming next</strong>
-              <p>
-                We'll use a short quiz later to suggest the best notes and study
-                formats for you.
-              </p>
+              <strong>{t("learningStyleQuiz")}</strong>
+              <p>{t("learningStyleQuizDescription")}</p>
             </div>
           </div>
 
           <button className="primary-btn" type="submit">
-            Create student profile <ChevronRight size={18} />
+            {t("createStudentProfile")} <ChevronRight size={18} />
           </button>
         </form>
       </section>
