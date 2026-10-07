@@ -1,6 +1,6 @@
 import React from "react";
 import { CalendarDays, ChevronRight, Clock3, Users } from "lucide-react";
-import { classNames, formatSession } from "../../../constants";
+import { classNames, formatSession, getSessionSubjectLabel } from "../../../constants";
 
 export function SessionCard({
   session,
@@ -11,6 +11,10 @@ export function SessionCard({
   onOpen,
   t,
 }) {
+  const sessionTitle = session.titleKey ? t(session.titleKey) : session.title;
+  const sessionDescription = session.descriptionKey ? t(session.descriptionKey) : session.description;
+  const learnItems = session.learnKeys ? session.learnKeys.map((key) => t(key)) : session.learn;
+
   return (
     <article
       className="session-card"
@@ -19,11 +23,11 @@ export function SessionCard({
       onKeyDown={(event) => event.key === "Enter" && onOpen()}
     >
       <div className="session-card-top">
-        <span className="subject-pill">{session.subject}</span>
+        <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
         <CalendarDays size={21} />
       </div>
-      <h3>{session.title}</h3>
-      <p className="session-description">{session.description}</p>
+      <h3>{sessionTitle}</h3>
+      <p className="session-description">{sessionDescription}</p>
       <p className="session-time">
         <Clock3 size={15} /> {formatSession(session)}
       </p>

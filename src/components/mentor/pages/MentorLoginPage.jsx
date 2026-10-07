@@ -11,26 +11,27 @@ export function MentorLoginPage({
   onPasswordChange,
   onSubmit,
   onBack,
+  t,
 }) {
   return (
     <main className="mentor-login-page">
       <header className="sidebar mentor-login-topbar">
         <button className="mentor-wordmark" onClick={onBack}>
           <span><LogoImage size={23} /></span>
-          <strong>CogniBridge <small>Mentor space</small></strong>
+          <strong>CogniBridge <small>{t("mentorSpace")}</small></strong>
         </button>
         <button className="mentor-login-back" onClick={onBack}>
-          <ArrowLeft size={18} /> Back to learner view
+          <ArrowLeft size={18} /> {t("backToLearnerView")}
         </button>
       </header>
 
       <section className="mentor-login-card">
         <p className="mentor-kicker">COGNIBRIDGE</p>
-        <h1>Mentor login</h1>
-        <p>Only mentors can access the protected mentor space.</p>
+        <h1>{t("mentorLogin")}</h1>
+        <p>{t("mentorLoginProtection")}</p>
         <form className="mentor-login-form" onSubmit={onSubmit}>
           <label>
-            Email
+            {t("email")}
             <input
               type="email"
               value={email}
@@ -40,7 +41,7 @@ export function MentorLoginPage({
             />
           </label>
           <label>
-            Password
+            {t("password")}
             <input
               type="password"
               value={password}
@@ -49,12 +50,12 @@ export function MentorLoginPage({
               required
             />
           </label>
-          {error && <div className="error-popup" role="alert">{error}</div>}
+          {error && <div className="error-popup" role="alert">{t(error)}</div>}
           <button className="primary-btn" type="submit">
-            Enter mentor space <ChevronRight size={18} />
+            {t("enterMentorSpace")} <ChevronRight size={18} />
           </button>
         </form>
-        <small>Demo login: {MENTOR_EMAIL} / {MENTOR_PASSWORD}</small>
+        <small>{t("demoLogin")}: {MENTOR_EMAIL} / {MENTOR_PASSWORD}</small>
       </section>
     </main>
   );

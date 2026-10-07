@@ -13,8 +13,8 @@ const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
-  const [subjectFilter, setSubjectFilter] = useState("All subjects");
   const [activeTab, setActiveTab] = useState("home");
+  const [scrollToAbout, setScrollToAbout] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mentorOpen, setMentorOpen] = useState(false);
@@ -59,6 +59,13 @@ const App = () => {
   }, [textScale]);
 
   useEffect(() => {
+    if (activeTab !== "about" || !scrollToAbout) return;
+
+    document.getElementById("about-us")?.scrollIntoView({ behavior: "smooth" });
+    setScrollToAbout(false);
+  }, [activeTab, scrollToAbout]);
+
+  useEffect(() => {
     document.documentElement.lang = ({
       English: "en",
       Hindi: "hi",
@@ -82,12 +89,6 @@ const App = () => {
       clearTimeout(removeTimer);
     };
   }, []);
-
-  const filteredSessions = useMemo(() => (
-    subjectFilter === "All subjects"
-      ? sessions
-      : sessions.filter((session) => session.subject === subjectFilter)
-  ), [sessions, subjectFilter]);
 
   const notify = (message) => {
     setToast(message);
@@ -130,24 +131,54 @@ const App = () => {
     notify(t("loggedOut"));
   };
 
-  const openSession = (session) => {
-    setSelectedSession(session);
-    setActiveTab("sessions");
-  };
-
   const goToTab = (tab) => {
+    if (tab === "about") {
+      setActiveTab("about");
+      setScrollToAbout(true);
+      setSelectedSession(null);
+      return;
+    }
+
+    if (tab === "home" && activeTab === "about") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     setActiveTab(tab);
     if (tab !== "sessions") setSelectedSession(null);
   };
 
   if (mentorOpen) {
     return (
-      <MentorPortal
-        sessions={sessions}
-        initialLoggedIn
-        onAddSession={(session) => setSessions((items) => [session, ...items])}
-        onBack={() => setMentorOpen(false)}
-      />
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <MentorPortal
+          sessions={sessions}
+          initialLoggedIn
+          t={t}
+          onAddSession={(session) => setSessions((items) => [session, ...items])}
+          onBack={() => setMentorOpen(false)}
+        />
+        <button
+          className="accessibility-tab"
+          aria-label={t("openAccessibility")}
+          aria-expanded={accessibilityOpen}
+          onClick={() => setAccessibilityOpen((isOpen) => !isOpen)}
+        >
+          <Accessibility size={21} />
+          <span>{t("accessibility")}</span>
+        </button>
+        {accessibilityOpen && (
+          <AccessibilityPanel
+            textScale={textScale}
+            setTextScale={setTextScale}
+            appearance={appearance}
+            setAppearance={setAppearance}
+            language={studentLanguage}
+            setLanguage={setStudentLanguage}
+            t={t}
+            onClose={() => setAccessibilityOpen(false)}
+          />
+        )}
+      </div>
     );
   }
 
@@ -224,18 +255,13 @@ const App = () => {
         pageContent={{
           home: (
             <HomePage
-              sessions={filteredSessions}
-              subjectFilter={subjectFilter}
-              setSubjectFilter={setSubjectFilter}
               signedIn={signedIn}
               t={t}
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
-              registeredSessionIds={registeredSessionIds}
               onSignIn={() => setLoginOpen(true)}
-              onRegister={registerForSession}
-              onOpenSession={openSession}
+              onExploreSessions={() => goToTab("sessions")}
             />
           ),
           sessions: (
