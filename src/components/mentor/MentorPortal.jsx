@@ -14,7 +14,7 @@ const createSessionForm = () => ({
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
-export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, onBack }) {
+export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, onBack, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +30,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
       email.trim().toLowerCase() === MENTOR_EMAIL && password === MENTOR_PASSWORD;
 
     if (!validCredentials) {
-      setError("Incorrect mentor email or password.");
+      setError("invalidCredentials");
       return;
     }
 
@@ -77,6 +77,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
         email={email}
         password={password}
         error={error}
+        t={t}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onSubmit={signIn}
@@ -98,6 +99,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
       onPublishSession={publishSession}
       onUploadNote={uploadNote}
       onBack={onBack}
+      t={t}
     />
   );
 }

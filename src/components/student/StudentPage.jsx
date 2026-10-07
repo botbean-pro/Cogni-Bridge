@@ -32,8 +32,13 @@ export const StudentPage = ({
       <StudentSidebar activeTab={activeTab} onNavigate={goToTab} t={t} />
       <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} t={t} />
     </header>
-    <main className="main">{pageContent[activeTab]}</main>
-    <button className="accessibility-tab" aria-label={t("openAccessibility")} onClick={onToggleAccessibility}>
+    <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
+    <button
+      className="accessibility-tab"
+      aria-label={t("openAccessibility")}
+      aria-expanded={accessibilityOpen}
+      onClick={onToggleAccessibility}
+    >
       <Accessibility size={21} />
       <span>{t("accessibility")}</span>
     </button>

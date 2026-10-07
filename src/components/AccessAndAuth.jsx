@@ -131,11 +131,6 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
       return;
     }
 
-    if (tab === "admin") {
-      setError("adminNotEnabled");
-      return;
-    }
-
     if (!normalizedEmail || !password.trim()) {
       setError("enterEmailPassword");
       return;
@@ -201,13 +196,11 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
   const tabLabels = [
     ["student", "studentLogin"],
     ["mentor", "mentorLogin"],
-    ["admin", "adminLogin"],
   ];
 
   const description = {
     student: t("studentLoginDescription"),
     mentor: t("mentorDescription"),
-    admin: t("adminDescription"),
   }[tab];
 
   return (

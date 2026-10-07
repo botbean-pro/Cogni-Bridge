@@ -1,65 +1,54 @@
 import React from "react";
-import { subjects } from "../../../constants";
-import { SessionCard } from "../shared/SessionCard";
+import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import { AboutPage } from "./AboutPage";
 import { StudentStats } from "../shared/StudentStats";
 
+function HomeHero({ onSignIn, onExploreSessions, t }) {
+  return (
+    <section className="home-hero">
+      <div className="home-hero-copy">
+        <p className="hero-eyebrow">{t("learnBeyondBorders")}</p>
+        <h1>{t("bigIdeasGrow")}<br />{t("weLearn")} <span>{t("together")}</span></h1>
+        <p className="hero-description">{t("homeHeroDescription")}</p>
+        <div className="hero-actions">
+          <button className="hero-primary" onClick={onSignIn}>
+            {t("joinCommunity")} <ArrowRight size={19} />
+          </button>
+          <button className="hero-secondary" onClick={onExploreSessions}>
+            {t("exploreSessions")}
+          </button>
+        </div>
+        <p className="hero-footnote"><span aria-hidden="true" />{t("friendlyLearningPlace")}</p>
+      </div>
+      <div className="home-hero-art-wrap">
+        <div className="home-hero-art" aria-hidden="true">
+          <span className="hero-orbit hero-orbit-one" />
+          <span className="hero-orbit hero-orbit-two" />
+          <span className="hero-orbit hero-orbit-three" />
+          <span className="hero-orb hero-orb-book"><BookOpen size={76} strokeWidth={1.5} /></span>
+          <span className="hero-float hero-float-coral"><Sparkles size={20} fill="currentColor" /></span>
+          <span className="hero-float hero-float-yellow"><Sparkles size={20} fill="currentColor" /></span>
+          <span className="hero-float hero-float-mint"><Sparkles size={20} fill="currentColor" /></span>
+        </div>
+        <span className="hero-art-label">{t("curiosityConnects")}</span>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage({
-  sessions,
-  subjectFilter,
-  setSubjectFilter,
   signedIn,
   t,
   studentEmail,
   studentName,
   activityVersion,
-  registeredSessionIds,
   onSignIn,
-  onRegister,
-  onOpenSession,
+  onExploreSessions,
 }) {
   return (
     <section className="content home-content">
-      <section className="sessions-section">
-        <div className="section-title">
-          <div>
-            <p className="eyebrow">{t("planAhead")}</p>
-            <h2>{t("upcomingSessions")}</h2>
-            <p>{t("upcomingDescription")}</p>
-          </div>
-          <span className="session-count">{sessions.length} {t("sessionsCount")}</span>
-        </div>
-
-        <div className="filter-bar" aria-label={t("filterBySubject")}>
-          <span>{t("filterBySubject")}</span>
-          <button className={subjectFilter === "All subjects" ? "selected" : ""} onClick={() => setSubjectFilter("All subjects")}>
-            {t("allSubjects")}
-          </button>
-          {subjects.map((subject) => (
-            <button key={subject} className={subjectFilter === subject ? "selected" : ""} onClick={() => setSubjectFilter(subject)}>
-              {t(`subject${subject === "SST" ? "SST" : subject}`)}
-            </button>
-          ))}
-        </div>
-
-        {sessions.length ? (
-          <div className="session-card-grid">
-            {sessions.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                t={t}
-                signedIn={signedIn}
-                registered={registeredSessionIds.includes(session.id)}
-                onSignIn={onSignIn}
-                onRegister={() => onRegister(session.id)}
-                onOpen={() => onOpenSession(session)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">{t("noSessions")}</div>
-        )}
-      </section>
+      <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} t={t} />
+      <AboutPage t={t} onExploreSessions={onExploreSessions} />
 
       {signedIn && (
         <StudentStats
