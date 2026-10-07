@@ -54,8 +54,10 @@ function MentorNavigation({ tab, setTab, t }) {
   );
 }
 
-function OverviewPage({ sessions, notes, setTab, t }) {
-  const upcomingSessions = sessions.filter((session) => session.date >= "2026-09-18");
+function OverviewPage({ sessions, notes, setTab, onEditSession, t }) {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const upcomingSessions = sessions.filter((session) => session.date >= today);
   const attendeeCount = upcomingSessions.reduce(
     (total, session) => total + session.attendees,
     0,
@@ -80,9 +82,9 @@ function OverviewPage({ sessions, notes, setTab, t }) {
         <article><FileText size={21} /><strong>{notes.length}</strong><span>{t("notesUploaded")}</span></article>
       </div>
 
-      <h2 className="mentor-title">{t("onlyUpcomingSessions")}</h2>
+      <h2 className="mentor-title">Sessions</h2>
       <div className="mentor-session-grid">
-        {upcomingSessions.map((session) => (
+        {sessions.map((session) => (
           <article className="mentor-session-card" key={session.id}>
             <span className="mentor-subject">{getSessionSubjectLabel(session.subject, t)}</span>
             <p className="mentor-time"><Clock3 size={14} /> {formatSession(session)}</p>
@@ -93,6 +95,7 @@ function OverviewPage({ sessions, notes, setTab, t }) {
             <a href={session.meetLink} target="_blank" rel="noopener noreferrer">
               {t("openGoogleMeet")} <ChevronRight size={15} />
             </a>
+            <button type="button" className="mentor-edit-session" onClick={() => onEditSession(session)}>Edit session</button>
           </article>
         ))}
       </div>
@@ -100,13 +103,13 @@ function OverviewPage({ sessions, notes, setTab, t }) {
   );
 }
 
-function SchedulePage({ form, setForm, onSubmit, t }) {
+function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
     <>
-      <p className="mentor-kicker">{t("newSession")}</p>
-      <h1 className="mentor-title">{t("scheduleSession")}</h1>
+      <p className="mentor-kicker">{editing ? "EDIT SESSION" : t("newSession")}</p>
+      <h1 className="mentor-title">{editing ? "Edit session" : t("scheduleSession")}</h1>
       <p className="mentor-subtitle">{t("publishedSessionsHome")}</p>
       <form className="schedule-form" onSubmit={onSubmit}>
         <label>
@@ -128,7 +131,10 @@ function SchedulePage({ form, setForm, onSubmit, t }) {
           {t("googleMeetUrl")}
           <input type="url" value={form.meetLink} onChange={(event) => updateField("meetLink", event.target.value)} placeholder="https://meet.google.com/..." required />
         </label>
-        <button className="mentor-primary" type="submit"><CalendarDays size={18} /> {t("publishSession")}</button>
+        <div className="mentor-form-actions">
+          <button className="mentor-primary" type="submit"><CalendarDays size={18} /> {editing ? "Save changes" : t("publishSession")}</button>
+          {editing && <button type="button" className="mentor-cancel-edit" onClick={onCancelEdit}>Cancel</button>}
+        </div>
       </form>
     </>
   );
@@ -191,6 +197,9 @@ export function MentorDashboard({
   noteForm,
   setNoteForm,
   onPublishSession,
+  onEditSession,
+  editingSessionId,
+  onCancelEdit,
   onUploadNote,
   onBack,
   t,
@@ -201,8 +210,8 @@ export function MentorDashboard({
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} t={t} />
         <section className="mentor-content">
-          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} t={t} />}
-          {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} t={t} />}
+          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
         </section>
       </div>

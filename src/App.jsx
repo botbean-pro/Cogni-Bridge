@@ -155,6 +155,9 @@ const App = () => {
           initialLoggedIn
           t={t}
           onAddSession={(session) => setSessions((items) => [session, ...items])}
+          onUpdateSession={(updatedSession) => setSessions((items) => items.map((session) => (
+            session.id === updatedSession.id ? { ...session, ...updatedSession } : session
+          )))}
           onBack={() => setMentorOpen(false)}
         />
         <button

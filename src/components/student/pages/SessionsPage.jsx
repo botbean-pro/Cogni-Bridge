@@ -1,15 +1,8 @@
-import React, { useRef } from "react";
-import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, ChevronRight, Clock3, Earth, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react";
+﻿import React from "react";
+import { ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel } from "../../../constants";
 import { isSessionComplete } from "../../../studentActivity";
 import "./SessionsPage.css";
-
-const values = [
-  { icon: Earth, title: "A wider world", description: <>Meet ideas, people and perspectives<br className="sessions-desktop-break" /> from beyond your own classroom.</>, tone: "mint" },
-  { icon: ShieldCheck, title: "A safe space", description: <>Learn and share in a welcoming<br className="sessions-desktop-break" /> community built around respect.</>, tone: "cream" },
-  { icon: HeartHandshake, title: "Here to support", description: <>Teachers and mentors help every<br className="sessions-desktop-break" /> learner find their next step.</>, tone: "blue" },
-  { icon: Sparkles, title: "Open to everyone", description: <>Curiosity is all you need. Learning<br className="sessions-desktop-break" /> together is free.</>, tone: "peach" },
-];
 
 function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const canMarkAttended = signedIn && isSessionComplete(session) && !attended;
@@ -70,57 +63,27 @@ function SessionList({ sessions, onSelect, t }) {
 
 export function SessionsPage({ sessions, selectedSession, signedIn, registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
-  const sessionsRef = useRef(null);
-  const scrollToSessions = () => sessionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <div className="sessions-page">
-      <section className="sessions-values" aria-labelledby="sessions-values-title">
-        <div className="sessions-values-inner">
-          <p className="sessions-eyebrow">What makes us, us</p>
-          <h1 id="sessions-values-title">Learning with people at heart</h1>
-          <div className="sessions-values-grid">
-            {values.map(({ icon: Icon, title, description, tone }) => (
-              <article className="sessions-value" key={title}>
-                <span className={`sessions-value-icon ${tone}`}><Icon size={25} strokeWidth={2} /></span>
-                <h2>{title}</h2>
-                <p>{description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-        <button className="sessions-scroll-cue" onClick={scrollToSessions} aria-label="Scroll to upcoming sessions" />
-      </section>
-
-      <section className="sessions-approach" aria-labelledby="sessions-approach-title">
-        <div className="sessions-approach-copy">
-          <p className="sessions-eyebrow">A little about our approach</p>
-          <h2 id="sessions-approach-title">Every voice adds something.</h2>
-          <p>We believe learning is richer when people bring their experiences, questions and ideas to the same table.</p>
-        </div>
-        <button className="sessions-cta" onClick={scrollToSessions}>See what we’re learning <ArrowRight size={19} /></button>
-      </section>
-
-      <section className="content sessions-listing" ref={sessionsRef} aria-labelledby="upcoming-sessions-title">
-        <div className="section-title">
-          <div><p className="eyebrow">{t("learningPlan")}</p><h2 id="upcoming-sessions-title">{t("sessions")}</h2><p>{t("sessionsDescription")}</p></div>
-        </div>
-        {selectedSession ? (
-          <SessionDetail
-            session={selectedSession}
-            signedIn={signedIn}
-            registered={registered}
-            attended={attendedSessionIds.has(String(selectedSession.id))}
-            onBack={onBack}
-            onSignIn={onSignIn}
-            onRegister={onRegister}
-            onMarkAttended={onMarkAttended}
-            t={t}
-          />
-        ) : (
-          <SessionList sessions={sessions} onSelect={onSelect} t={t} />
-        )}
-      </section>
-    </div>
+    <section className="content sessions-page">
+      <div className="section-title">
+        <div><p className="eyebrow">{t("learningPlan")}</p><h2>{t("sessions")}</h2><p>{t("sessionsDescription")}</p></div>
+      </div>
+      {selectedSession ? (
+        <SessionDetail
+          session={selectedSession}
+          signedIn={signedIn}
+          registered={registered}
+          attended={attendedSessionIds.has(String(selectedSession.id))}
+          onBack={onBack}
+          onSignIn={onSignIn}
+          onRegister={onRegister}
+          onMarkAttended={onMarkAttended}
+          t={t}
+        />
+      ) : (
+        <SessionList sessions={sessions} onSelect={onSelect} t={t} />
+      )}
+    </section>
   );
 }

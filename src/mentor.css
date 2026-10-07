@@ -34,9 +34,15 @@
 .schedule-form label:first-child,
 .schedule-form > .form-columns,
 .schedule-form > label:nth-last-of-type(1),
-.schedule-form > .mentor-primary {
+.schedule-form > .mentor-primary,
+.schedule-form > .mentor-form-actions {
   grid-column: 1 / -1;
 }
+
+.mentor-form-actions { display:flex; align-items:center; gap:12px; }
+.mentor-edit-session,
+.mentor-cancel-edit { margin-top:12px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--teal-dark); font-weight:800; cursor:pointer; }
+.mentor-cancel-edit { margin-top:0; background:transparent; }
 
 .schedule-form input,
 .schedule-form select {
