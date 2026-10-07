@@ -149,6 +149,38 @@ select {
     linear-gradient(112deg, #123f4d 0%, #155b68 56%, #328c8d 100%);
 }
 
+.home-about-scroll {
+  position: absolute;
+  z-index: 2;
+  bottom: 38px;
+  left: 50%;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(207, 255, 247, .62);
+  border-radius: 50%;
+  color: #eafffc;
+  background: rgba(8, 127, 119, .3);
+  transform: translateX(-50%);
+  transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.home-about-scroll:hover {
+  color: #123f4d;
+  background: #a9eee4;
+  transform: translate(-50%, -3px);
+}
+
+.home-about-scroll svg {
+  animation: homeScrollNudge 1.6s ease-in-out infinite;
+}
+
+@keyframes homeScrollNudge {
+  0%, 100% { transform: translateY(-2px); }
+  50% { transform: translateY(3px); }
+}
+
 .home-hero::before,
 .home-hero::after {
   position: absolute;
@@ -849,7 +881,7 @@ select {
   .home-hero {
     grid-template-columns: 1fr;
     min-height: 0;
-    padding: 54px 24px 30px;
+    padding: 54px 24px 88px;
     border-radius: 0 0 25px 25px;
   }
 

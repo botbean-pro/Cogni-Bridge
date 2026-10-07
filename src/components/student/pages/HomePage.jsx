@@ -1,9 +1,9 @@
 import React from "react";
-import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { AboutPage } from "./AboutPage";
 import { StudentStats } from "../shared/StudentStats";
 
-function HomeHero({ onSignIn, onExploreSessions, t }) {
+function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
   return (
     <section className="home-hero">
       <div className="home-hero-copy">
@@ -32,6 +32,14 @@ function HomeHero({ onSignIn, onExploreSessions, t }) {
         </div>
         <span className="hero-art-label">{t("curiosityConnects")}</span>
       </div>
+      <button
+        className="home-about-scroll"
+        type="button"
+        onClick={onScrollToAbout}
+        aria-label={t("aboutUs")}
+      >
+        <ArrowDown size={27} strokeWidth={1.8} aria-hidden="true" />
+      </button>
     </section>
   );
 }
@@ -44,10 +52,11 @@ export function HomePage({
   activityVersion,
   onSignIn,
   onExploreSessions,
+  onScrollToAbout,
 }) {
   return (
     <section className="content home-content">
-      <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} t={t} />
+      <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} onScrollToAbout={onScrollToAbout} t={t} />
       <AboutPage t={t} onExploreSessions={onExploreSessions} />
 
       {signedIn && (

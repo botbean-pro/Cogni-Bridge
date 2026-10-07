@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Info, MessageCircle, Sparkles } from "lucide-react";
+import { CalendarDays, Home, Info, Sparkles } from "lucide-react";
 
 export const MENTOR_EMAIL = "mentor@cognibridge.com";
 export const MENTOR_PASSWORD = "password123";
@@ -10,7 +10,7 @@ export const initialSessions = [
   { id: "fractions-workshop", subject: "Maths", title: "Fractions Workshop", date: "2026-09-26", time: "10:00", endTime: "11:00", meetLink: "https://meet.google.com/fractions-workshop", attendees: 8, titleKey: "fractionsWorkshopTitle", descriptionKey: "fractionsWorkshopDescription", learnKeys: ["fractionsLearnCompare", "fractionsLearnAddSubtract", "fractionsLearnApply"], description: "Use visual models and practical examples to compare and work with fractions.", learn: ["Compare fractions using visual models", "Add and subtract like fractions", "Apply fractions to everyday problems"] }
 ];
 
-export const navigation = [[Home, "Home", "home"], [Info, "About Us", "about"], [CalendarDays, "Sessions", "sessions"], [Sparkles, "Cogni-Flow AI", "flow"], [MessageCircle, "Messages", "messages"]];
+export const navigation = [[Home, "Home", "home"], [Info, "About Us", "about"], [CalendarDays, "Sessions", "sessions"], [Sparkles, "Cogni-Flow AI", "flow"]];
 export const subjects = ["Maths", "Science", "English", "SST", "Languages"];
 export const sessionSubjectTranslations = {
   Maths: "subjectMaths",

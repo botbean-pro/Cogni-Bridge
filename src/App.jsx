@@ -3,7 +3,7 @@ import { Accessibility, CheckCircle2, UserRound } from "lucide-react";
 import { classNames, initialSessions, readStudents } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
-import { HomePage, SessionsPage, FlowPage, MessagesPage } from "./components/LearningPages";
+import { HomePage, AboutPage, SessionsPage, FlowPage, MessagesPage } from "./components/LearningPages";
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
@@ -14,7 +14,7 @@ const App = () => {
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
   const [activeTab, setActiveTab] = useState("home");
-  const [scrollToAbout, setScrollToAbout] = useState(false);
+  const [scrollToAboutOnHome, setScrollToAboutOnHome] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mentorOpen, setMentorOpen] = useState(false);
@@ -40,6 +40,18 @@ const App = () => {
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
 
+  const scrollToAbout = () => {
+    const aboutSection = document.getElementById("about-us");
+    aboutSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    if (activeTab !== "home" || !scrollToAboutOnHome) return;
+
+    scrollToAbout();
+    setScrollToAboutOnHome(false);
+  }, [activeTab, scrollToAboutOnHome]);
+
   useEffect(() => {
     if (!signedIn || !studentEmail) {
       setAttendedSessionIds(new Set());
@@ -57,13 +69,6 @@ const App = () => {
   useEffect(() => {
     document.documentElement.style.setProperty("--text-scale", textScale);
   }, [textScale]);
-
-  useEffect(() => {
-    if (activeTab !== "about" || !scrollToAbout) return;
-
-    document.getElementById("about-us")?.scrollIntoView({ behavior: "smooth" });
-    setScrollToAbout(false);
-  }, [activeTab, scrollToAbout]);
 
   useEffect(() => {
     document.documentElement.lang = ({
@@ -134,8 +139,8 @@ const App = () => {
   const goToTab = (tab) => {
     if (tab === "about") {
       setActiveTab("about");
-      setScrollToAbout(true);
       setSelectedSession(null);
+      scrollToAbout();
       return;
     }
 
@@ -265,8 +270,10 @@ const App = () => {
               activityVersion={activityVersion}
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}
+              onScrollToAbout={scrollToAbout}
             />
           ),
+          about: <AboutPage t={t} onExploreSessions={() => goToTab("sessions")} />,
           sessions: (
             <SessionsPage
               sessions={sessions}

@@ -150,8 +150,6 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .password-input-wrapper .auth-input { padding-right:44px; }
 .password-toggle { position:absolute; right:10px; top:50%; transform:translateY(-50%); display:grid; place-items:center; padding:5px; border:none; background:transparent; color:#64748b; cursor:pointer; transition:color 0.2s ease; }
 .password-toggle:hover { color:#334155; }
-.forgot-password { justify-self:end; margin-top:3px; padding:0; border:none; background:transparent; color:var(--teal-dark); font-size:calc(12px * var(--text-scale, 1)); font-weight:600; cursor:pointer; transition:color 0.2s ease; }
-.forgot-password:hover { color:var(--teal); text-decoration:underline; }
 .auth-button-group { display:grid; gap:12px; margin-top:6px; }
 .auth-login-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px 20px; border:none; border-radius:11px; background:var(--teal); color:white; font-size:calc(14px * var(--text-scale, 1)); font-weight:700; cursor:pointer; transition:all 0.2s ease; box-shadow:0 4px 14px rgba(8,169,150,.3); }
 .auth-login-btn:hover { background:#0a9a8a; box-shadow:0 6px 20px rgba(8,169,150,.4); transform:translateY(-1px); }

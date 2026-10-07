@@ -271,9 +271,6 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <button type="button" className="forgot-password">
-              {t("forgotPassword")}
-            </button>
           </label>
 
           {error && (

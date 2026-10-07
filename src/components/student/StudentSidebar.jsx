@@ -7,7 +7,6 @@ const navigationLabels = {
   about: "aboutUs",
   sessions: "sessions",
   flow: "flow",
-  messages: "messages",
 };
 
 export const StudentSidebar = ({ activeTab, onNavigate, t }) => {
@@ -22,7 +21,12 @@ export const StudentSidebar = ({ activeTab, onNavigate, t }) => {
       </div>
       <nav className="nav" aria-label={t("mainNavigation")}>
         {navigation.map(([Icon, , tab]) => (
-          <button key={tab} className={classNames("nav-item", activeTab === tab && "active")} onClick={() => onNavigate(tab)}>
+          <button
+            key={tab}
+            className={classNames("nav-item", activeTab === tab && "active")}
+            aria-current={activeTab === tab ? "page" : undefined}
+            onClick={() => onNavigate(tab)}
+          >
             <Icon size={20} />
             <span>{t(navigationLabels[tab])}</span>
           </button>
