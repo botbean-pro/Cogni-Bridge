@@ -17,7 +17,7 @@ export function MentorLoginPage({
     <main className="mentor-login-page">
       <header className="sidebar mentor-login-topbar">
         <button className="mentor-wordmark" onClick={onBack}>
-          <span><LogoImage size={23} /></span>
+          <span><LogoImage size={38} /></span>
           <strong>CogniBridge <small>{t("mentorSpace")}</small></strong>
         </button>
         <button className="mentor-login-back" onClick={onBack}>

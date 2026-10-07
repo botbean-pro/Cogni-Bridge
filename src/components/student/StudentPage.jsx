@@ -29,7 +29,7 @@ export const StudentPage = ({
       </div>
     )}
     <header className="sidebar">
-      <StudentSidebar activeTab={activeTab} onNavigate={goToTab} t={t} />
+      <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} t={t} />
       <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} t={t} />
     </header>
     <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>

@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { ArrowDown, ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { AboutPage } from "./AboutPage";
-import { StudentStats } from "../shared/StudentStats";
+import { StudyPage } from "./SessionsPage";
 
 function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
   return (
@@ -50,24 +50,92 @@ export function HomePage({
   studentEmail,
   studentName,
   activityVersion,
+  sessions,
   onSignIn,
   onExploreSessions,
   onScrollToAbout,
+  onOpenSession,
 }) {
+  const flightInProgress = useRef(false);
+  const [bookLanded, setBookLanded] = useState(false);
+
+  if (signedIn) {
+    return (
+      <StudyPage
+        sessions={sessions}
+        studentEmail={studentEmail}
+        studentName={studentName}
+        activityVersion={activityVersion}
+        onOpenSession={onOpenSession}
+        eyebrow={t("welcomeBack")}
+        heading={studentName}
+        t={t}
+      />
+    );
+  }
+
+  const flyBookToGlobe = () => {
+    const book = document.querySelector(".hero-orb-book");
+    const globe = document.querySelector(".about-value-1 .about-value-icon");
+    const start = book?.getBoundingClientRect();
+
+    if (
+      !book
+      || !globe
+      || !start
+      || flightInProgress.current
+      || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      onScrollToAbout();
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setBookLanded(true);
+      }
+      return;
+    }
+
+    flightInProgress.current = true;
+    const flight = book.cloneNode(true);
+    Object.assign(flight.style, {
+      position: "fixed",
+      top: `${start.top}px`,
+      left: `${start.left}px`,
+      width: `${start.width}px`,
+      height: `${start.height}px`,
+      zIndex: "50",
+      margin: "0",
+      animation: "none",
+      pointerEvents: "none",
+    });
+    flight.classList.add("hero-book-flight");
+    document.body.appendChild(flight);
+    const globePageTop = globe.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, Math.max(0, globePageTop - window.innerHeight * 0.72));
+
+    window.setTimeout(() => {
+      const end = globe.getBoundingClientRect();
+      const offsetX = end.left + end.width / 2 - (start.left + start.width / 2);
+      const offsetY = end.top + end.height / 2 - (start.top + start.height / 2);
+      const scale = end.width / start.width;
+      const animation = flight.animate(
+        [
+          { transform: "translate(0, 0) scale(1)" },
+          { transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})` },
+        ],
+        { duration: 1050, easing: "cubic-bezier(.22,.75,.22,1)", fill: "forwards" },
+      );
+      animation.onfinish = () => {
+        flight.remove();
+        setBookLanded(true);
+        flightInProgress.current = false;
+      };
+    }, 120);
+  };
+
   return (
     <section className="content home-content">
-      <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} onScrollToAbout={onScrollToAbout} t={t} />
-      <AboutPage t={t} onExploreSessions={onExploreSessions} />
+      <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} onScrollToAbout={flyBookToGlobe} t={t} />
+      <AboutPage t={t} onExploreSessions={onExploreSessions} bookLanded={bookLanded} />
 
-      {signedIn && (
-        <StudentStats
-          key={studentEmail}
-          studentEmail={studentEmail}
-          studentName={studentName}
-          activityVersion={activityVersion}
-          t={t}
-        />
-      )}
     </section>
   );
 }

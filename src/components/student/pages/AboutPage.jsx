@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowRight, Globe2, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Globe2, HeartHandshake, ShieldCheck, Sparkles } from "lucide-react";
 
 const principles = [
   ["aboutWiderWorld", Globe2],
@@ -8,7 +8,7 @@ const principles = [
   ["aboutOpenToEveryone", Sparkles],
 ];
 
-export function AboutPage({ t, onExploreSessions }) {
+export function AboutPage({ t, onExploreSessions, bookLanded = false }) {
   return (
     <div className="about-page" id="about-us">
       <section className="about-values-section">
@@ -17,7 +17,9 @@ export function AboutPage({ t, onExploreSessions }) {
         <div className="about-values-grid">
           {principles.map(([key, Icon], index) => (
             <article className={`about-value about-value-${index + 1}`} key={key}>
-              <span className="about-value-icon"><Icon size={23} /></span>
+              <span className={`about-value-icon${bookLanded && index === 0 ? " book-landed" : ""}`}>
+                {bookLanded && index === 0 ? <BookOpen size={25} /> : <Icon size={23} />}
+              </span>
               <h2>{t(`${key}Title`)}</h2>
               <p>{t(`${key}Description`)}</p>
             </article>

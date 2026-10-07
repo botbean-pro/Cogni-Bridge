@@ -16,7 +16,7 @@ import {
   MENTOR_EMAIL,
   MENTOR_PASSWORD,
   classNames,
-  indianLanguages,
+  learningLanguages,
   readStudents,
 } from "../constants";
 
@@ -31,7 +31,7 @@ const LanguagePicker = ({ value, onChange, t }) => (
       onChange={(event) => onChange(event.target.value)}
       aria-label={t("chooseLearningLanguage")}
     >
-      {indianLanguages.map(([native, english]) => (
+      {learningLanguages.map(([native, english]) => (
         <option key={english} value={english}>
           {native}
         </option>
@@ -337,6 +337,7 @@ const AccessibilityPanel = ({
   setAppearance,
   language,
   setLanguage,
+  showLanguage = true,
   onClose,
   t,
 }) => (
@@ -366,7 +367,7 @@ const AccessibilityPanel = ({
       />
     </label>
 
-    <LanguagePicker value={language} onChange={setLanguage} t={t} />
+    {showLanguage && <LanguagePicker value={language} onChange={setLanguage} t={t} />}
 
     <label className="appearance-row">
       <strong>{t("appearance")}</strong>

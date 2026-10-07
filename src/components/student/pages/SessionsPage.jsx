@@ -2,6 +2,7 @@
 import { ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel } from "../../../constants";
 import { isSessionComplete } from "../../../studentActivity";
+import { StudentStats } from "../shared/StudentStats";
 import "./SessionsPage.css";
 
 function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended, t }) {
@@ -84,6 +85,41 @@ export function SessionsPage({ sessions, selectedSession, signedIn, registeredSe
       ) : (
         <SessionList sessions={sessions} onSelect={onSelect} t={t} />
       )}
+    </section>
+  );
+}
+
+export function StudyPage({ sessions, studentEmail, studentName, activityVersion, onOpenSession, eyebrow, heading, t }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingFractions = sessions
+    .filter((session) => session.id === "fractions-workshop" && session.date >= today)
+    .sort((first, second) => `${first.date}T${first.time}`.localeCompare(`${second.date}T${second.time}`));
+
+  return (
+    <section className="content study-page">
+      <div className="section-title">
+        <div><p className="eyebrow">{eyebrow || t("planAhead")}</p><h2>{heading || t("study")}</h2></div>
+      </div>
+      <section className="study-upcoming">
+        <div className="study-section-heading"><h3>{t("upcomingSessions")}</h3></div>
+        {upcomingFractions.length ? (
+          <div className="my-session-list">
+            {upcomingFractions.map((session) => (
+              <button key={session.id} className="my-session-row" onClick={() => onOpenSession(session)}>
+                <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
+                <span><strong>{session.titleKey ? t(session.titleKey) : session.title}</strong><small>{formatSession(session)}</small></span>
+                <ChevronRight size={18} />
+              </button>
+            ))}
+          </div>
+        ) : <p className="study-empty">{t("noSessions")}</p>}
+      </section>
+      <StudentStats
+        studentEmail={studentEmail}
+        studentName={studentName}
+        activityVersion={activityVersion}
+        t={t}
+      />
     </section>
   );
 }

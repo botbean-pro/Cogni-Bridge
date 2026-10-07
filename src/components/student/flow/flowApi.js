@@ -17,7 +17,11 @@ export async function askLearningAssistant(conversation, task = "chat", language
   }
 
   return task === "chat"
-    ? { content: data.content, relatedQuestions: data.relatedQuestions || [] }
+    ? {
+      content: data.content,
+      translatedQuestion: data.translatedQuestion || "",
+      relatedQuestions: data.relatedQuestions || [],
+    }
     : data.content;
 }
 

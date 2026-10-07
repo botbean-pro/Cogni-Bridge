@@ -1,14 +1,14 @@
 .mentor-header .mentor-wordmark > span,
 .mentor-login-topbar .mentor-wordmark > span {
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   border-radius: 14px;
   background: #fff;
 }
 
 .mentor-wordmark img {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
 }
 
 .schedule-form {

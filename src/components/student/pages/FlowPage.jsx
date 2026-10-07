@@ -3,7 +3,7 @@ import { ChatHeader } from "../flow/ChatHeader";
 import { ChatMessages } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
 import { QuickPrompts } from "../flow/QuickPrompts";
-import { askLearningAssistant, parseQuiz } from "../flow/flowApi";
+import { askLearningAssistant } from "../flow/flowApi";
 import "../flow/flow.css";
 
 const welcomeMessage = (t) => ({
@@ -33,25 +33,32 @@ export function FlowPage({ t, language }) {
     )));
   }, [t]);
 
-  const requestAssistant = async (conversation, task = "chat") => {
+  const requestAssistant = async (conversation, userMessageId = null) => {
     setIsLoading(true);
     setError("");
 
     try {
-      const answer = await askLearningAssistant(conversation, task, language);
-      const answerText = task === "mcq" ? answer : answer.content;
-      const quiz = task === "mcq" ? parseQuiz(answer) : null;
-      setMessages((current) => [
-        ...current,
-        {
-          id: `${Date.now()}-${task}`,
+      const answer = await askLearningAssistant(conversation, "chat", language);
+      setMessages((current) => {
+        const translatedMessages = answer.translatedQuestion
+          ? current.map((message) => (
+            message.id === userMessageId
+              ? { ...message, content: answer.translatedQuestion }
+              : message
+          ))
+          : current;
+
+        return [
+          ...translatedMessages,
+          {
+            id: `${Date.now()}-chat`,
           role: "assistant",
-          content: quiz ? t("quizIntro") : answerText,
-          relatedQuestions: task === "chat" ? answer.relatedQuestions : [],
-          quiz,
+            content: answer.content,
+            relatedQuestions: answer.relatedQuestions,
           timestamp: new Date(),
-        },
-      ]);
+          },
+        ];
+      });
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -71,17 +78,12 @@ export function FlowPage({ t, language }) {
     const conversation = [...messages, userMessage];
     setMessages(conversation);
     setInput("");
-    await requestAssistant(conversation);
+    await requestAssistant(conversation, "chat", userMessage.id);
   };
 
   const sendMessage = async (event) => {
     event.preventDefault();
     await askQuestion(input.trim());
-  };
-
-  const createQuestion = () => {
-    if (isLoading) return;
-    requestAssistant(messages, "mcq");
   };
 
   const selectPrompt = (prompt) => setInput(prompt);
@@ -104,14 +106,6 @@ export function FlowPage({ t, language }) {
           </div>
         )}
         {!hasAskedQuestion && <QuickPrompts onSelect={selectPrompt} t={t} />}
-        {hasAskedQuestion && (
-          <div className="ai-learning-tools">
-            <span>{t("keepLearning")}</span>
-            <button type="button" onClick={createQuestion} disabled={isLoading}>
-              {t("makeMcq")}
-            </button>
-          </div>
-        )}
         <ChatComposer
           input={input}
           isLoading={isLoading}

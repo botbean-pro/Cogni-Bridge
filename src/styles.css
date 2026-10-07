@@ -54,6 +54,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .brand-mark,.mentor-wordmark > span { width:48px; height:48px; display:grid; place-items:center; flex:none; border-radius:14px; color:white; background:var(--teal); overflow:hidden; }
 .brand-mark { background:#fff; }
 .brand-mark img,.mentor-wordmark img,.mentor-logo-mark img { object-fit:contain; }
+@media (max-width:760px) { .brand-mark img { width:32px; height:32px; } }
 .brand strong { display:block; font-family:var(--font-body); font-size:calc(19px * var(--text-scale, 1)); font-weight:800; letter-spacing:-.04em; color:#fff; }
 .brand span { display:block; margin-top:3px; font-size:calc(13px * var(--text-scale, 1)); color:#a8c2c3; }
 .nav { display:flex; align-items:center; justify-content:flex-end; flex:1; gap:6px; }
@@ -106,6 +107,10 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .card-detail-hint { display:flex; align-items:center; gap:3px; margin-top:13px; color:var(--teal-dark); font-size:calc(12px * var(--text-scale, 1)); font-weight:800; }
 .empty-state { padding:40px; border:1px dashed var(--line); border-radius:16px; color:var(--muted); text-align:center; background:var(--surface); }
 .stats-section { margin-top:40px; }
+.study-upcoming { margin-top:28px; }
+.study-section-heading { margin-bottom:14px; }
+.study-section-heading h3 { margin:0; font-size:calc(19px * var(--text-scale, 1)); }
+.study-empty { margin:0; padding:18px 0; color:var(--muted); }
 .stats-section .section-title h2 { font-size:calc(21px * var(--text-scale, 1)); }
 .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:17px; }
 .stats-grid article { display:grid; align-content:start; gap:7px; min-width:0; padding:18px; border:1px solid var(--line); border-radius:16px; background:var(--surface); transition:transform .18s ease, box-shadow .18s ease; }

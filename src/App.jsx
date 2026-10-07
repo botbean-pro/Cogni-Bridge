@@ -3,7 +3,7 @@ import { Accessibility, CheckCircle2, UserRound } from "lucide-react";
 import { classNames, initialSessions, readStudents } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
-import { HomePage, AboutPage, SessionsPage, FlowPage, MessagesPage } from "./components/LearningPages";
+import { HomePage, AboutPage, SessionsPage, StudyPage, FlowPage, MessagesPage } from "./components/LearningPages";
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
@@ -82,6 +82,8 @@ const App = () => {
       Kannada: "kn",
       Malayalam: "ml",
       Punjabi: "pa",
+      French: "fr",
+      German: "de",
     })[studentLanguage] || "en";
   }, [studentLanguage]);
 
@@ -130,6 +132,7 @@ const App = () => {
 
   const logOut = () => {
     setSignedIn(false);
+    setActiveTab("home");
     setStudentProfile(null);
     setStudentEmail("");
     setAttendedSessionIds(new Set());
@@ -182,6 +185,7 @@ const App = () => {
             setAppearance={setAppearance}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
+            showLanguage={false}
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
@@ -192,45 +196,51 @@ const App = () => {
 
   if (signupEmail) {
     return (
-      <StudentProfileFlow
-        email={signupEmail}
-        t={t}
-        onBack={() => setSignupEmail("")}
-        onComplete={(profile) => {
-          setSignupEmail("");
-          setStudentProfile(profile);
-          setStudentEmail(profile.email);
-          setSignedIn(true);
-        }}
-      />
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <StudentProfileFlow
+          email={signupEmail}
+          t={t}
+          onBack={() => setSignupEmail("")}
+          onComplete={(profile) => {
+            setSignupEmail("");
+            setStudentProfile(profile);
+            setStudentEmail(profile.email);
+            setSignedIn(true);
+          }}
+        />
+      </div>
     );
   }
 
   if (profileOpen) {
     return (
-      <StudentProfileFlow
-        email={studentProfile?.email || studentEmail}
-        existingProfile={studentProfile}
-        t={t}
-        onBack={() => setProfileOpen(false)}
-        onComplete={(profile) => {
-          setStudentProfile(profile);
-          setProfileOpen(false);
-        }}
-      />
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <StudentProfileFlow
+          email={studentProfile?.email || studentEmail}
+          existingProfile={studentProfile}
+          t={t}
+          onBack={() => setProfileOpen(false)}
+          onComplete={(profile) => {
+            setStudentProfile(profile);
+            setProfileOpen(false);
+          }}
+        />
+      </div>
     );
   }
 
   if (createAccountOpen) {
     return (
-      <CreateAccountPage
-        t={t}
-        onBack={() => setCreateAccountOpen(false)}
-        onComplete={(email) => {
-          setCreateAccountOpen(false);
-          setSignupEmail(email);
-        }}
-      />
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <CreateAccountPage
+          t={t}
+          onBack={() => setCreateAccountOpen(false)}
+          onComplete={(email) => {
+            setCreateAccountOpen(false);
+            setSignupEmail(email);
+          }}
+        />
+      </div>
     );
   }
 
@@ -265,12 +275,17 @@ const App = () => {
             <HomePage
               signedIn={signedIn}
               t={t}
+              sessions={sessions}
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}
               onScrollToAbout={scrollToAbout}
+              onOpenSession={(session) => {
+                setSelectedSession(session);
+                setActiveTab("sessions");
+              }}
             />
           ),
           about: <AboutPage t={t} onExploreSessions={() => goToTab("sessions")} />,
@@ -287,6 +302,19 @@ const App = () => {
               onSignIn={() => setLoginOpen(true)}
               onRegister={registerForSession}
               onMarkAttended={markSessionAttended}
+            />
+          ),
+          study: (
+            <StudyPage
+              sessions={sessions}
+              studentEmail={studentEmail}
+              studentName={studentName}
+              activityVersion={activityVersion}
+              t={t}
+              onOpenSession={(session) => {
+                setSelectedSession(session);
+                setActiveTab("sessions");
+              }}
             />
           ),
           flow: <FlowPage t={t} language={studentLanguage} />,

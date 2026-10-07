@@ -2,6 +2,7 @@
 export { HomePage } from "./student/pages/HomePage";
 export { AboutPage } from "./student/pages/AboutPage";
 export { SessionsPage } from "./student/pages/SessionsPage";
+export { StudyPage } from "./student/pages/SessionsPage";
 export { FlowPage } from "./student/pages/FlowPage";
 export { MessagesPage } from "./student/pages/MessagesPage";
 export { SessionCard } from "./student/shared/SessionCard";

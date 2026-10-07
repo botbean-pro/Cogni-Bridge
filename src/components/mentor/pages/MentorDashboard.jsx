@@ -18,7 +18,7 @@ function MentorHeader({ onBack, t }) {
   return (
     <header className="mentor-header">
       <button className="mentor-wordmark" onClick={onBack}>
-        <span><LogoImage size={23} /></span>
+        <span><LogoImage size={38} /></span>
         <strong>CogniBridge <small>{t("mentorSpace")}</small></strong>
       </button>
       <div>
@@ -119,7 +119,7 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
         <label>
           {t("subject")}
           <select value={form.subject} onChange={(event) => updateField("subject", event.target.value)}>
-            <option>Maths</option>
+            {subjects.map((subject) => <option key={subject} value={subject}>{getSessionSubjectLabel(subject, t)}</option>)}
           </select>
         </label>
         <div className="form-columns">
