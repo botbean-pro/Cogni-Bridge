@@ -49,15 +49,11 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
 
   const submit = (event) => {
     event.preventDefault();
-    if (!image) {
-      setError("uploadClearImage");
-      return;
-    }
     const result = {
       ...profile,
       email,
       handwritingImage: image,
-      handwritingImageName: imageName,
+      handwritingImageName: imageName || "Demo sample",
       handwritingType: `Type ${1 + Math.floor(Math.random() * 4)}`,
       analyzedAt: new Date().toISOString(),
     };
@@ -88,6 +84,14 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
     return (
       <main className="profile-flow-page">
         <section className="profile-flow-card handwriting-result">
+          <div className="analysis-burst" aria-hidden="true">
+            <span className="burst-shape burst-triangle burst-one" />
+            <span className="burst-shape burst-circle burst-two" />
+            <span className="burst-shape burst-square burst-three" />
+            <span className="burst-shape burst-triangle burst-four" />
+            <span className="burst-shape burst-circle burst-five" />
+            <span className="burst-shape burst-square burst-six" />
+          </div>
           <div className="profile-result-mark"><CheckCircle2 size={26} /></div>
           <p className="eyebrow">{t("handwritingAnalysis")}</p>
           <h1>{profile.name || t("profileYourProfile")}</h1>
@@ -127,7 +131,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
           <input ref={fileRef} className="profile-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} />
           <button type="button" className="handwriting-upload" onClick={() => fileRef.current?.click()}>
             {image ? <img src={image} alt="Preview of handwriting sample" /> : <Upload size={22} />}
-            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("choosePhoto")}</small></span>
+            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("optionalHandwritingHint")}</small></span>
           </button>
           {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
           <button className="primary-btn" type="submit">{existingProfile ? t("analyzeNewImageButton") : t("analyzeImage")}</button>

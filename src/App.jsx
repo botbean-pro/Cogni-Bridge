@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Accessibility, CheckCircle2, UserRound } from "lucide-react";
-import { classNames, initialSessions, readStudents } from "./constants";
+import { classNames, demoStudents, initialSessions, readStudents } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
 import { HomePage, AboutPage, SessionsPage, StudyPage, FlowPage, MessagesPage } from "./components/LearningPages";
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
+import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { translate } from "./i18n";
 
@@ -44,6 +45,17 @@ const App = () => {
     const aboutSection = document.getElementById("about-us");
     aboutSection?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    const students = readStudents();
+    const existingEmails = new Set(students.map((student) => student.email?.toLowerCase()));
+    const missingDemoStudents = demoStudents
+      .filter((student) => !existingEmails.has(student.email))
+      .map((student) => ({ ...student, createdAt: new Date().toISOString() }));
+    if (missingDemoStudents.length) {
+      localStorage.setItem("cognibridge_students", JSON.stringify([...students, ...missingDemoStudents]));
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab !== "home" || !scrollToAboutOnHome) return;
@@ -185,7 +197,7 @@ const App = () => {
             setAppearance={setAppearance}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
-            showLanguage={false}
+            showLanguage
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
@@ -206,6 +218,7 @@ const App = () => {
             setStudentProfile(profile);
             setStudentEmail(profile.email);
             setSignedIn(true);
+            setActiveTab("study");
           }}
         />
       </div>
@@ -288,7 +301,7 @@ const App = () => {
               }}
             />
           ),
-          about: <AboutPage t={t} onExploreSessions={() => goToTab("sessions")} />,
+          leaderboard: <LeaderboardPage t={t} />,
           sessions: (
             <SessionsPage
               sessions={sessions}
@@ -335,6 +348,7 @@ const App = () => {
             setStudentProfile(savedStudent || null);
             setStudentEmail(normalizedEmail);
             setSignedIn(true);
+            setActiveTab("study");
           }}
           onCreateAccount={() => {
             setLoginOpen(false);

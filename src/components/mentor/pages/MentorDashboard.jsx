@@ -82,7 +82,7 @@ function OverviewPage({ sessions, notes, setTab, onEditSession, t }) {
         <article><FileText size={21} /><strong>{notes.length}</strong><span>{t("notesUploaded")}</span></article>
       </div>
 
-      <h2 className="mentor-title">Sessions</h2>
+      <h2 className="mentor-title">{t("sessions")}</h2>
       <div className="mentor-session-grid">
         {sessions.map((session) => (
           <article className="mentor-session-card" key={session.id}>
@@ -95,7 +95,7 @@ function OverviewPage({ sessions, notes, setTab, onEditSession, t }) {
             <a href={session.meetLink} target="_blank" rel="noopener noreferrer">
               {t("openGoogleMeet")} <ChevronRight size={15} />
             </a>
-            <button type="button" className="mentor-edit-session" onClick={() => onEditSession(session)}>Edit session</button>
+            <button type="button" className="mentor-edit-session" onClick={() => onEditSession(session)}>{t("editSession")}</button>
           </article>
         ))}
       </div>
@@ -108,13 +108,13 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
 
   return (
     <>
-      <p className="mentor-kicker">{editing ? "EDIT SESSION" : t("newSession")}</p>
-      <h1 className="mentor-title">{editing ? "Edit session" : t("scheduleSession")}</h1>
+      <p className="mentor-kicker">{editing ? t("editSession").toUpperCase() : t("newSession")}</p>
+      <h1 className="mentor-title">{editing ? t("editSession") : t("scheduleSession")}</h1>
       <p className="mentor-subtitle">{t("publishedSessionsHome")}</p>
       <form className="schedule-form" onSubmit={onSubmit}>
         <label>
           {t("sessionTitle")}
-          <input value={form.title} onChange={(event) => updateField("title", event.target.value)} placeholder="e.g. Geometry foundations" required />
+          <input value={form.title} onChange={(event) => updateField("title", event.target.value)} placeholder={t("geometryPlaceholder")} required />
         </label>
         <label>
           {t("subject")}
@@ -123,7 +123,7 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
           </select>
         </label>
         <div className="form-columns">
-          <label>Date<input type="date" value={form.date} onChange={(event) => updateField("date", event.target.value)} required /></label>
+          <label>{t("date")}<input type="date" value={form.date} onChange={(event) => updateField("date", event.target.value)} required /></label>
           <label>{t("startTime")}<input type="time" value={form.time} onChange={(event) => updateField("time", event.target.value)} required /></label>
           <label>{t("endTime")}<input type="time" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required /></label>
         </div>
@@ -132,8 +132,8 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
           <input type="url" value={form.meetLink} onChange={(event) => updateField("meetLink", event.target.value)} placeholder="https://meet.google.com/..." required />
         </label>
         <div className="mentor-form-actions">
-          <button className="mentor-primary" type="submit"><CalendarDays size={18} /> {editing ? "Save changes" : t("publishSession")}</button>
-          {editing && <button type="button" className="mentor-cancel-edit" onClick={onCancelEdit}>Cancel</button>}
+          <button className="mentor-primary" type="submit"><CalendarDays size={18} /> {editing ? t("saveChanges") : t("publishSession")}</button>
+          {editing && <button type="button" className="mentor-cancel-edit" onClick={onCancelEdit}>{t("cancel")}</button>}
         </div>
       </form>
     </>
@@ -151,7 +151,7 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
       <form className="schedule-form notes-form" onSubmit={onSubmit}>
         <label>
           {t("notesTitle")}
-          <input value={form.title} onChange={(event) => updateField("title", event.target.value)} placeholder="e.g. Algebra practice sheet" required />
+          <input value={form.title} onChange={(event) => updateField("title", event.target.value)} placeholder={t("algebraPlaceholder")} required />
         </label>
         <label>
           {t("subject")}

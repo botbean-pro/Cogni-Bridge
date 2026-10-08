@@ -138,6 +138,21 @@
   color: var(--muted);
 }
 
+.theme-dark .file-upload {
+  border-color: var(--line);
+  background: #294444;
+  color: #55d4c3 !important;
+}
+
+.theme-dark .mentor-edit-session,
+.theme-dark .mentor-cancel-edit {
+  background: var(--surface-2);
+  color: #55d4c3;
+  border-color: var(--line);
+}
+
+.theme-dark .mentor-cancel-edit { background: transparent; }
+
 @media (max-width: 760px) {
   .schedule-form {
     grid-template-columns: 1fr;

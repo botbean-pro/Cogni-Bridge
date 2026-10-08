@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Info, Sparkles } from "lucide-react";
+import { CalendarDays, Home, Sparkles, Trophy } from "lucide-react";
 
 export const MENTOR_EMAIL = "mentor@cognibridge.com";
 export const MENTOR_PASSWORD = "password123";
@@ -10,7 +10,12 @@ export const initialSessions = [
   { id: "fractions-workshop", subject: "Maths", title: "Fractions Workshop", date: "2026-10-26", time: "10:00", endTime: "11:00", meetLink: "https://meet.google.com/fractions-workshop", attendees: 8, titleKey: "fractionsWorkshopTitle", descriptionKey: "fractionsWorkshopDescription", learnKeys: ["fractionsLearnCompare", "fractionsLearnAddSubtract", "fractionsLearnApply"], description: "Use visual models and practical examples to compare and work with fractions.", learn: ["Compare fractions using visual models", "Add and subtract like fractions", "Apply fractions to everyday problems"] }
 ];
 
-export const navigation = [[Home, "Home", "home"], [Info, "About Us", "about"], [CalendarDays, "Sessions", "sessions"], [Sparkles, "Cogni-Flow AI", "flow"]];
+export const navigation = [[Home, "Home", "home"], [CalendarDays, "Sessions", "sessions"], [Trophy, "Leaderboard", "leaderboard"], [Sparkles, "Cogni-Flow AI", "flow"]];
+export const demoStudents = [
+  { name: "Harsh", email: "harsh@cognibridge.com", password: "cognibridge123", role: "Student" },
+  { name: "Samar", email: "samar@cognibridge.com", password: "cognibridge123", role: "Student" },
+  { name: "Vardaan", email: "vardaan@cognibridge.com", password: "cognibridge123", role: "Student" },
+];
 export const subjects = ["Maths", "Science", "English", "SST", "Languages"];
 export const sessionSubjectTranslations = {
   Maths: "subjectMaths",
@@ -24,7 +29,7 @@ export const indianLanguages = [["English", "English"], ["हिन्दी", "
 
 export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"]];
 export const classNames = (...names) => names.filter(Boolean).join(" ");
-export const formatSession = (s) => `${new Date(`${s.date}T${s.time}`).toLocaleDateString("en-IN", { weekday: "short", month: "short", day: "numeric" })}, ${s.time} – ${s.endTime}`;
+export const formatSession = (s) => `${new Date(`${s.date}T${s.time}`).toLocaleDateString(typeof document !== "undefined" ? (document.documentElement.lang || "en-IN") : "en-IN", { weekday: "short", month: "short", day: "numeric" })}, ${s.time} – ${s.endTime}`;
 export const readStudents = () => {
   try {
     const value = JSON.parse(localStorage.getItem("cognibridge_students") || "[]");

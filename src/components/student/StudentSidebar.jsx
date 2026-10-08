@@ -5,15 +5,15 @@ import { BookOpen } from "lucide-react";
 
 const navigationLabels = {
   home: "home",
-  about: "aboutUs",
   sessions: "sessions",
+  leaderboard: "leaderboard",
   study: "study",
   flow: "flow",
 };
 
 export const StudentSidebar = ({ activeTab, onNavigate, signedIn, t }) => {
   const items = signedIn
-    ? [...navigation.slice(0, 1), [BookOpen, "Study", "study"], ...navigation.slice(1)]
+    ? [[BookOpen, "Study", "study"], ...navigation.slice(1)]
     : navigation;
 
   return (

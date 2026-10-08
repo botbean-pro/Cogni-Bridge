@@ -114,6 +114,23 @@ export function StudyPage({ sessions, studentEmail, studentName, activityVersion
           </div>
         ) : <p className="study-empty">{t("noSessions")}</p>}
       </section>
+      <section className="study-profile-card">
+        <div className="study-profile-glow" aria-hidden="true" />
+        <div>
+          <p className="eyebrow">{t("yourLearningStyle")}</p>
+          <h3>{t("handwritingType")}</h3>
+          <p>{t("handwritingTypeStudyCopy")}</p>
+        </div>
+        <strong>{(() => {
+          try {
+            const profile = JSON.parse(localStorage.getItem("cognibridge_students") || "[]")
+              .find((student) => student.email?.toLowerCase() === studentEmail?.toLowerCase());
+            return profile?.handwritingType || t("notAnalyzed");
+          } catch {
+            return t("notAnalyzed");
+          }
+        })()}</strong>
+      </section>
       <StudentStats
         studentEmail={studentEmail}
         studentName={studentName}
