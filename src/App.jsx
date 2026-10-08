@@ -10,6 +10,7 @@ import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
 import { SettingsPage } from "./components/student/pages/SettingsPage";
 import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
+import { fetchSessions } from "./mentorContent";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { translate } from "./i18n";
 
@@ -133,6 +134,19 @@ const App = () => {
       isCurrent = false;
     };
   }, [authSession, authReady]);
+
+  useEffect(() => {
+    if (!supabaseConfigured) return;
+    let isCurrent = true;
+    fetchSessions()
+      .then((rows) => {
+        if (isCurrent) setSessions(rows);
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (activeTab !== "home" || !scrollToAboutOnHome) return;

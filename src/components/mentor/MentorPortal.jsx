@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MENTOR_EMAIL, MENTOR_PASSWORD } from "../../constants";
+import { createSession, loadMentorNotes, updateSession, uploadMentorNote } from "../../mentorContent";
+import { supabaseConfigured } from "../../supabaseClient";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MentorLoginPage } from "./pages/MentorLoginPage";
 
@@ -24,6 +26,20 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
   const [form, setForm] = useState(createSessionForm);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [noteForm, setNoteForm] = useState(createNoteForm);
+  const [actionError, setActionError] = useState("");
+
+  useEffect(() => {
+    if (!supabaseConfigured || !mentorId) return undefined;
+    let isCurrent = true;
+    loadMentorNotes(mentorId)
+      .then((rows) => {
+        if (isCurrent) setNotes(rows);
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, [mentorId]);
 
   const signIn = (event) => {
     event.preventDefault();
@@ -39,11 +55,37 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
     setError("");
   };
 
-  const publishSession = (event) => {
+  const publishSession = async (event) => {
     event.preventDefault();
     const existingSession = editingSessionId
       ? sessions.find((item) => item.id === editingSessionId)
       : null;
+
+    if (supabaseConfigured && mentorId) {
+      try {
+        const saved = editingSessionId
+          ? await updateSession(editingSessionId, form)
+          : await createSession(mentorId, {
+            ...form,
+            description: existingSession?.description || "A focused Maths session led by Priya Sharma.",
+            learn: existingSession?.learn || [
+              "Understand the core idea",
+              "Work through guided examples",
+              "Practise independently",
+            ],
+          });
+        if (editingSessionId) onUpdateSession({ ...existingSession, ...saved });
+        else onAddSession(saved);
+        setActionError("");
+        setEditingSessionId(null);
+        setForm(createSessionForm());
+        setTab("overview");
+      } catch {
+        setActionError("Couldn't save the session. Please try again.");
+      }
+      return;
+    }
+
     const session = {
       ...existingSession,
       ...form,
@@ -78,13 +120,26 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
     setTab("schedule");
   };
 
-  const uploadNote = (event) => {
+  const uploadNote = async (event) => {
     event.preventDefault();
     if (!noteForm.file) return;
 
     const allowedFileType = /\.(pdf|doc|docx|png|jpe?g)$/i.test(noteForm.file.name);
     const withinSizeLimit = noteForm.file.size <= 10 * 1024 * 1024;
     if (!allowedFileType || !withinSizeLimit) return;
+
+    if (supabaseConfigured && mentorId) {
+      try {
+        const saved = await uploadMentorNote(mentorId, noteForm);
+        setNotes((items) => [saved, ...items]);
+        setActionError("");
+        setNoteForm(createNoteForm());
+        event.target.reset();
+      } catch {
+        setActionError("Couldn't upload the note. Please try again.");
+      }
+      return;
+    }
 
     setNotes((items) => [
       { ...noteForm, id: String(Date.now()), fileName: noteForm.file.name },
@@ -114,8 +169,9 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
       sessions={sessions}
       mentorId={mentorId}
       notes={notes}
+      actionError={actionError}
       tab={tab}
-      setTab={setTab}
+      setTab={(nextTab) => { setActionError(""); setTab(nextTab); }}
       form={form}
       setForm={setForm}
       noteForm={noteForm}

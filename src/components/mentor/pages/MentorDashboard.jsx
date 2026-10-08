@@ -194,6 +194,7 @@ export function MentorDashboard({
   sessions,
   mentorId,
   notes,
+  actionError,
   tab,
   setTab,
   form,
@@ -214,6 +215,7 @@ export function MentorDashboard({
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} t={t} />
         <section className="mentor-content">
+          {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
