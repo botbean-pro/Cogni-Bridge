@@ -9,6 +9,7 @@ export const StudentPage = ({
   activeTab,
   goToTab,
   signedIn,
+  sensoryTrackerEnabled,
   studentName,
   t,
   onLogin,
@@ -29,8 +30,22 @@ export const StudentPage = ({
       </div>
     )}
     <header className="sidebar">
-      <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} t={t} />
-      <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} t={t} />
+      <StudentSidebar
+        activeTab={activeTab}
+        onNavigate={goToTab}
+        signedIn={signedIn}
+        sensoryTrackerEnabled={sensoryTrackerEnabled}
+        t={t}
+      />
+      <StudentTopBar
+        signedIn={signedIn}
+        activeTab={activeTab}
+        studentName={studentName}
+        onLogin={onLogin}
+        onLogout={onLogout}
+        onSettings={() => goToTab("settings")}
+        t={t}
+      />
     </header>
     <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
     <button

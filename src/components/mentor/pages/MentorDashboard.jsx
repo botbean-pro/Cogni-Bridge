@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Clock3,
   FileText,
+  HeartPulse,
   Home,
   LogOut,
   Plus,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, subjects } from "../../../constants";
 import { LogoImage } from "../../Brand";
+import { SensorySupportInbox } from "../SensorySupportInbox";
 
 function MentorHeader({ onBack, t }) {
   return (
@@ -31,11 +33,12 @@ function MentorHeader({ onBack, t }) {
   );
 }
 
-function MentorNavigation({ tab, setTab, t }) {
+function MentorNavigation({ tab, setTab, mentorId, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
+    ...(mentorId ? [["sensory-support", HeartPulse, t("studentSupport")]] : []),
   ];
 
   return (
@@ -189,6 +192,7 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
 
 export function MentorDashboard({
   sessions,
+  mentorId,
   notes,
   tab,
   setTab,
@@ -208,11 +212,12 @@ export function MentorDashboard({
     <main className="mentor-page">
       <MentorHeader onBack={onBack} t={t} />
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} t={t} />
+        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} t={t} />
         <section className="mentor-content">
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
+          {tab === "sensory-support" && mentorId && <SensorySupportInbox mentorId={mentorId} />}
         </section>
       </div>
     </main>

@@ -71,6 +71,8 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .top-actions { display:flex; align-items:center; gap:12px; flex:0 0 auto; }
 .login-button,.primary-btn,.mentor-primary { display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:11px; background:var(--teal); color:white; font-weight:800; box-shadow:0 7px 16px rgba(8,169,150,.2); --wave-color:#fff; }
 .login-button { min-width:116px; }
+.settings-button { width:40px; height:40px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.25); border-radius:11px; background:transparent; color:#f4fbfb; }
+.settings-button:hover,.settings-button.active { border-color:var(--teal); background:var(--teal); color:#fff; }
 .profile-chip { display:flex; align-items:center; gap:8px; padding:7px 12px 7px 7px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); --wave-color:#153f62; }
 .avatar-small { width:31px; height:31px; display:grid; place-items:center; border-radius:50%; color:white; background:var(--teal); font-weight:800; }
 .login-button,.primary-btn,.mentor-primary,.secondary-btn,.google-button,.profile-chip,.filter-bar button,.accessibility-tab { position:relative; isolation:isolate; overflow:hidden; }
@@ -107,6 +109,16 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .card-detail-hint { display:flex; align-items:center; gap:3px; margin-top:13px; color:var(--teal-dark); font-size:calc(12px * var(--text-scale, 1)); font-weight:800; }
 .empty-state { padding:40px; border:1px dashed var(--line); border-radius:16px; color:var(--muted); text-align:center; background:var(--surface); }
 .stats-section { margin-top:40px; }
+.settings-page .section-title { align-items:center; }
+.settings-details { margin-top:28px; }
+.settings-details h3 { margin:0 0 10px; font-size:calc(19px * var(--text-scale, 1)); }
+.settings-details dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; border-top:1px solid var(--line); }
+.settings-details dl > div { display:flex; justify-content:space-between; gap:18px; min-width:0; padding:15px 12px; border-bottom:1px solid var(--line); }
+.settings-details dt { color:var(--muted); }
+.settings-details dd { margin:0; overflow-wrap:anywhere; font-weight:700; text-align:right; }
+.settings-edit { margin-top:18px; }
+.settings-page .stats-section { margin-top:36px; }
+@media (max-width:620px) { .settings-details dl { grid-template-columns:1fr; } }
 .study-upcoming { margin-top:28px; }
 .study-section-heading { margin-bottom:14px; }
 .study-section-heading h3 { margin:0; font-size:calc(19px * var(--text-scale, 1)); }

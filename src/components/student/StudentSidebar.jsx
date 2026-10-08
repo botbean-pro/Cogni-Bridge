@@ -1,7 +1,7 @@
 import React from "react";
 import { navigation, classNames } from "../../constants";
 import { LogoImage } from "../Brand";
-import { BookOpen } from "lucide-react";
+import { BookOpen, HeartPulse } from "lucide-react";
 
 const navigationLabels = {
   home: "home",
@@ -9,11 +9,16 @@ const navigationLabels = {
   leaderboard: "leaderboard",
   study: "study",
   flow: "flow",
+  sensory: "sensoryTracker",
 };
 
-export const StudentSidebar = ({ activeTab, onNavigate, signedIn, t }) => {
+export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, t }) => {
   const items = signedIn
-    ? [[BookOpen, "Study", "study"], ...navigation.slice(1)]
+    ? [
+      [BookOpen, "Study", "study"],
+      ...navigation.slice(1),
+      ...(sensoryTrackerEnabled ? [[HeartPulse, "Sensory Tracker", "sensory"]] : []),
+    ]
     : navigation;
 
   return (

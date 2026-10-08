@@ -14,7 +14,7 @@ const createSessionForm = () => ({
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
-export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, onUpdateSession, onBack, t }) {
+export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAddSession, onUpdateSession, onBack, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,6 +112,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
   return (
     <MentorDashboard
       sessions={sessions}
+      mentorId={mentorId}
       notes={notes}
       tab={tab}
       setTab={setTab}

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Accessibility, CheckCircle2, UserRound } from "lucide-react";
+import { Accessibility, CheckCircle2 } from "lucide-react";
 import { classNames, demoStudents, initialSessions, readStudents } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
@@ -7,7 +7,10 @@ import { HomePage, AboutPage, SessionsPage, StudyPage, FlowPage, MessagesPage } 
 import { MentorPortal } from "./components/MentorPortal";
 import { StudentPage } from "./components/student/StudentPage";
 import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
+import { SettingsPage } from "./components/student/pages/SettingsPage";
+import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
+import { supabase, supabaseConfigured } from "./supabaseClient";
 import { translate } from "./i18n";
 
 const App = () => {
@@ -28,6 +31,10 @@ const App = () => {
   const [signupEmail, setSignupEmail] = useState("");
   const [studentProfile, setStudentProfile] = useState(null);
   const [studentEmail, setStudentEmail] = useState("");
+  const [authUserId, setAuthUserId] = useState(null);
+  const [authRole, setAuthRole] = useState(null);
+  const [authSession, setAuthSession] = useState(null);
+  const [authReady, setAuthReady] = useState(!supabaseConfigured);
   const [activityVersion, setActivityVersion] = useState(0);
   const [attendedSessionIds, setAttendedSessionIds] = useState(new Set());
   const [profileOpen, setProfileOpen] = useState(false);
@@ -40,6 +47,9 @@ const App = () => {
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
+  const sensoryTrackerEnabled = Boolean(
+    signedIn && supabaseConfigured && authUserId && authRole === "student",
+  );
 
   const scrollToAbout = () => {
     const aboutSection = document.getElementById("about-us");
@@ -47,6 +57,7 @@ const App = () => {
   };
 
   useEffect(() => {
+    if (supabaseConfigured) return;
     const students = readStudents();
     const existingEmails = new Set(students.map((student) => student.email?.toLowerCase()));
     const missingDemoStudents = demoStudents
@@ -58,11 +69,81 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    if (!supabaseConfigured) return undefined;
+    let isCurrent = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isCurrent) {
+        setAuthSession(session);
+        setAuthReady(true);
+      }
+    });
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (isCurrent && !error) {
+        setAuthSession(data.session);
+        setAuthReady(true);
+      }
+    });
+    return () => {
+      isCurrent = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabaseConfigured || !authReady) return undefined;
+    if (!authSession?.user) {
+      setAuthUserId(null);
+      setAuthRole(null);
+      setSignedIn(false);
+      setStudentProfile(null);
+      setStudentEmail("");
+      setMentorOpen(false);
+      if (activeTab === "sensory") setActiveTab("home");
+      return undefined;
+    }
+
+    let isCurrent = true;
+    const user = authSession.user;
+    supabase.from("profiles")
+      .select("id, display_name, role")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data: profile, error }) => {
+        if (!isCurrent) return;
+        if (error || !profile) {
+          supabase.auth.signOut();
+          return;
+        }
+        setAuthUserId(user.id);
+        setAuthRole(profile.role);
+        if (profile.role === "student") {
+          setMentorOpen(false);
+          setSignedIn(true);
+          setStudentEmail(user.email || "");
+          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name });
+          setActiveTab((currentTab) => currentTab === "home" ? "study" : currentTab);
+        } else if (profile.role === "mentor") {
+          setSignedIn(false);
+          setMentorOpen(true);
+        } else {
+          supabase.auth.signOut();
+        }
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [authSession, authReady]);
+
+  useEffect(() => {
     if (activeTab !== "home" || !scrollToAboutOnHome) return;
 
     scrollToAbout();
     setScrollToAboutOnHome(false);
   }, [activeTab, scrollToAboutOnHome]);
+
+  useEffect(() => {
+    if (!sensoryTrackerEnabled && activeTab === "sensory") setActiveTab("home");
+  }, [sensoryTrackerEnabled, activeTab]);
 
   useEffect(() => {
     if (!signedIn || !studentEmail) {
@@ -143,7 +224,10 @@ const App = () => {
   };
 
   const logOut = () => {
+    if (supabaseConfigured) supabase.auth.signOut();
     setSignedIn(false);
+    setAuthUserId(null);
+    setAuthRole(null);
     setActiveTab("home");
     setStudentProfile(null);
     setStudentEmail("");
@@ -152,6 +236,7 @@ const App = () => {
   };
 
   const goToTab = (tab) => {
+    if (tab === "sensory" && !sensoryTrackerEnabled) return;
     if (tab === "about") {
       setActiveTab("about");
       setSelectedSession(null);
@@ -173,12 +258,16 @@ const App = () => {
         <MentorPortal
           sessions={sessions}
           initialLoggedIn
+          mentorId={authRole === "mentor" ? authUserId : null}
           t={t}
           onAddSession={(session) => setSessions((items) => [session, ...items])}
           onUpdateSession={(updatedSession) => setSessions((items) => items.map((session) => (
             session.id === updatedSession.id ? { ...session, ...updatedSession } : session
           )))}
-          onBack={() => setMentorOpen(false)}
+          onBack={() => {
+            setMentorOpen(false);
+            if (supabaseConfigured) supabase.auth.signOut();
+          }}
         />
         <button
           className="accessibility-tab"
@@ -250,7 +339,16 @@ const App = () => {
           onBack={() => setCreateAccountOpen(false)}
           onComplete={(email) => {
             setCreateAccountOpen(false);
-            setSignupEmail(email);
+            if (typeof email === "object") {
+              setStudentEmail(email.email);
+              setStudentProfile({ id: email.id, email: email.email, name: email.name });
+              setAuthUserId(email.id);
+              setAuthRole("student");
+              setSignedIn(true);
+              setActiveTab("study");
+            } else {
+              setSignupEmail(email);
+            }
           }}
         />
       </div>
@@ -263,6 +361,7 @@ const App = () => {
         activeTab={activeTab}
         goToTab={goToTab}
         signedIn={signedIn}
+        sensoryTrackerEnabled={sensoryTrackerEnabled}
         studentName={studentName}
         t={t}
         onLogin={() => setLoginOpen(true)}
@@ -332,21 +431,41 @@ const App = () => {
           ),
           flow: <FlowPage t={t} language={studentLanguage} />,
           messages: <MessagesPage t={t} />,
+          settings: (
+            <SettingsPage
+              studentEmail={studentEmail}
+              studentName={studentName}
+              studentProfile={studentProfile}
+              activityVersion={activityVersion}
+              onEditProfile={() => setProfileOpen(true)}
+              t={t}
+            />
+          ),
+          sensory: sensoryTrackerEnabled ? (
+            <SensoryTrackerPage
+              studentId={authUserId}
+              studentName={studentName}
+              t={t}
+            />
+          ) : null,
         }}
       />
-      {signedIn &&       <button className="student-account-button" onClick={() => setProfileOpen(true)}><UserRound size={17} /> {t("myAccount")}</button>}
       {loginOpen && (
         <AuthModal
           t={t}
           onClose={() => setLoginOpen(false)}
-          onStudentSuccess={(email) => {
+          onStudentSuccess={(email, userId, profile) => {
             setLoginOpen(false);
             const normalizedEmail = email?.toLowerCase() || "";
-            const savedStudent = normalizedEmail
+            const savedStudent = profile
+              ? { id: userId, email: normalizedEmail, name: profile.display_name }
+              : normalizedEmail
               ? readStudents().find((student) => student.email.toLowerCase() === normalizedEmail)
               : null;
             setStudentProfile(savedStudent || null);
             setStudentEmail(normalizedEmail);
+            setAuthUserId(userId || null);
+            setAuthRole(profile?.role || null);
             setSignedIn(true);
             setActiveTab("study");
           }}

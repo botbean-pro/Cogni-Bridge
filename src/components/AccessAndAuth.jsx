@@ -19,6 +19,7 @@ import {
   learningLanguages,
   readStudents,
 } from "../constants";
+import { supabase, supabaseConfigured } from "../supabaseClient";
 
 const LanguagePicker = ({ value, onChange, t }) => (
   <label className="language-picker">
@@ -108,7 +109,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
     setTab(nextTab);
     setError("");
 
-    if (nextTab === "mentor") {
+    if (nextTab === "mentor" && !supabaseConfigured) {
       setEmail(MENTOR_EMAIL);
       setPassword(MENTOR_PASSWORD);
       return;
@@ -118,9 +119,36 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
     setPassword("");
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (supabaseConfigured) {
+      setError("");
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+      if (authError || !data.user) {
+        setError("invalidCredentials");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, display_name, role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profileError || !profile || profile.role !== (tab === "mentor" ? "mentor" : "student")) {
+        await supabase.auth.signOut();
+        setError(tab === "mentor" ? "mentorAccessDenied" : "studentAccessDenied");
+        return;
+      }
+
+      if (tab === "mentor") onMentor(data.user.id);
+      else onStudentSuccess(data.user.email, data.user.id, profile);
+      return;
+    }
 
     if (tab === "mentor") {
       if (normalizedEmail === MENTOR_EMAIL && password === MENTOR_PASSWORD) {
@@ -158,6 +186,16 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
   };
 
   const googleSignIn = () => {
+    if (supabaseConfigured) {
+      supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      }).then(({ error: authError }) => {
+        if (authError) setError("googleIdentityError");
+      });
+      return;
+    }
+
     if (!googleClientId) {
       setError("googleClientMissing");
       return;
@@ -314,9 +352,11 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
                   </button>
                 ))}
               </div>
-              <small className="demo-login">
-                {t("demo")}: student@cognibridge.com / student123
-              </small>
+              {!supabaseConfigured && (
+                <small className="demo-login">
+                  {t("demo")}: student@cognibridge.com / student123
+                </small>
+              )}
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">
@@ -492,7 +532,7 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
     setForm((currentForm) => ({ ...currentForm, [field]: value }));
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     setError("");
 
@@ -518,6 +558,24 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
 
     const students = readStudents();
     const normalizedEmail = form.email.trim().toLowerCase();
+    if (supabaseConfigured) {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password: form.password,
+        options: { data: { full_name: form.name.trim() } },
+      });
+      if (signUpError) {
+        setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "accountCreateError");
+        return;
+      }
+      if (data.session && data.user) {
+        onComplete({ email: data.user.email, id: data.user.id, name: form.name.trim() });
+      } else {
+        setError("checkEmailToConfirm");
+      }
+      return;
+    }
+
     const existingStudent = students.find(
       (student) => student.email.toLowerCase() === normalizedEmail,
     );
