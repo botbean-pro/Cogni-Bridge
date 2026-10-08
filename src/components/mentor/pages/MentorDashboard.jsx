@@ -5,6 +5,7 @@ import {
   Clock3,
   FileText,
   Home,
+  Heart,
   LogOut,
   Plus,
   Upload,
@@ -31,11 +32,12 @@ function MentorHeader({ onBack, t }) {
   );
 }
 
-function MentorNavigation({ tab, setTab, t }) {
+function MentorNavigation({ tab, setTab, unreadSupportCount, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
+    ["sensory", Heart, t("sensoryRequests")],
   ];
 
   return (
@@ -45,12 +47,48 @@ function MentorNavigation({ tab, setTab, t }) {
         <button
           key={key}
           className={tab === key ? "active" : ""}
+          aria-current={tab === key ? "page" : undefined}
+          title={label}
           onClick={() => setTab(key)}
         >
-          <Icon size={18} /> {label}
+          <Icon size={19} /><span className="mentor-nav-label">{label}</span>{key === "sensory" && unreadSupportCount > 0 && <span className="mentor-notification-count">{unreadSupportCount}</span>}
         </button>
       ))}
     </aside>
+  );
+}
+
+function SensorySupportPage({ entries, onUpdateEntry, t }) {
+  const [replies, setReplies] = React.useState({});
+  const sortedEntries = [...entries].filter((entry) => entry.shared)
+    .sort((a, b) => Number(b.helpRequest !== "No, I'm okay" && !b.addressed) - Number(a.helpRequest !== "No, I'm okay" && !a.addressed) || b.createdAt.localeCompare(a.createdAt));
+
+  return (
+    <>
+      <p className="mentor-kicker">STUDENT WELLBEING</p>
+      <h1 className="mentor-title">Shared check-ins</h1>
+      <p className="mentor-subtitle">Only check-ins students chose to share are shown here.</p>
+      {sortedEntries.length === 0 ? <p className="mentor-subtitle">No shared check-ins yet.</p> : <div className="mentor-sensory-list">
+        {sortedEntries.map((entry) => {
+          const requestsHelp = entry.helpRequest !== "No, I'm okay";
+          return <article className="mentor-sensory-card" key={entry.id}>
+            <div className="mentor-sensory-top"><div><strong>{entry.studentName}</strong><small>{new Date(entry.createdAt).toLocaleString()}</small></div>{requestsHelp && <span className={entry.addressed ? "addressed" : "support-requested"}>{entry.addressed ? "Addressed" : "Student requested support"}</span>}</div>
+            <p><strong>Mood:</strong> {entry.mood} · <strong>Emotions:</strong> {entry.emotions?.length ? entry.emotions.join(", ") : "Not listed"}</p>
+            <p><strong>Energy:</strong> {entry.energy}/5 · <strong>Comfort:</strong> {entry.comfort}/5</p>
+            {requestsHelp && <p><strong>Help requested:</strong> {entry.helpRequest}{entry.selectedMentor ? ` · ${entry.selectedMentor}` : ""}</p>}
+            {entry.mentorMessage && <blockquote>{entry.mentorMessage}</blockquote>}
+            {entry.daySummary && <p>{entry.daySummary}</p>}
+            {requestsHelp && <div className="mentor-sensory-actions">
+              <form onSubmit={(event) => { event.preventDefault(); if (replies[entry.id]?.trim()) onUpdateEntry(entry.id, { mentorReply: replies[entry.id].trim() }); }}>
+                <input value={replies[entry.id] ?? entry.mentorReply ?? ""} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder="Write an optional reply" aria-label={`Reply to ${entry.studentName}`} />
+                <button type="submit">Send reply</button>
+              </form>
+              {!entry.addressed && <button type="button" onClick={() => onUpdateEntry(entry.id, { addressed: true })}>Mark addressed</button>}
+            </div>}
+          </article>;
+        })}
+      </div>}
+    </>
   );
 }
 
@@ -179,6 +217,7 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
             <div key={note.id}>
               <FileText size={18} />
               <span><strong>{note.title}</strong><small>{getSessionSubjectLabel(note.subject, t)} · {note.fileName}</small></span>
+              <a href={note.dataUrl} target="_blank" rel="noopener noreferrer">{t("downloadNote")}</a>
             </div>
           ))}
         </div>
@@ -190,6 +229,7 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
 export function MentorDashboard({
   sessions,
   notes,
+  sensoryEntries = [],
   tab,
   setTab,
   form,
@@ -201,6 +241,7 @@ export function MentorDashboard({
   editingSessionId,
   onCancelEdit,
   onUploadNote,
+  onUpdateSensoryEntry,
   onBack,
   t,
 }) {
@@ -208,11 +249,12 @@ export function MentorDashboard({
     <main className="mentor-page">
       <MentorHeader onBack={onBack} t={t} />
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} t={t} />
+        <MentorNavigation tab={tab} setTab={setTab} unreadSupportCount={sensoryEntries.filter((entry) => entry.shared && entry.helpRequest !== "No, I'm okay" && !entry.viewedByMentor).length} t={t} />
         <section className="mentor-content">
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
+          {tab === "sensory" && <SensorySupportPage entries={sensoryEntries} onUpdateEntry={onUpdateSensoryEntry} t={t} />}
         </section>
       </div>
     </main>

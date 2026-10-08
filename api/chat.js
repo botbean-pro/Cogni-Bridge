@@ -5,8 +5,11 @@ const tutorInstructions =
   "use age-appropriate language, and guide students through their own reasoning.";
 
 const quizInstructions =
-  "Create one multiple-choice question about the topic in the conversation. Make the question " +
-  "and answer depend on the student's actual question and the preceding conversation. Return " +
+  "Create one multiple-choice question that checks a specific skill or subtopic from the student's latest question. " +
+  "Use the conversation to identify the student's level and the exact concept they asked about. " +
+  "For example, if they ask about algebra, ask about a relevant algebra skill such as simplifying a linear expression " +
+  "or solving a linear equation; do not switch to an unrelated math topic or ask a generic definition. " +
+  "Make all four options plausible and ensure exactly one is correct. Return " +
   "only valid JSON with this exact shape: {\"question\": string, \"options\": [string, string, string, string], " +
   "\"answerIndex\": number, \"explanation\": string}. answerIndex is zero-based. Do not use markdown.";
 
@@ -161,7 +164,24 @@ export default async function handler(request, response) {
       });
     }
 
-    return reply(response, 200, { content });
+    let quiz;
+    try {
+      quiz = JSON.parse(content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
+    } catch {
+      return reply(response, 502, { error: "The AI provider returned an invalid practice question." });
+    }
+    const validQuiz = typeof quiz.question === "string"
+      && Array.isArray(quiz.options)
+      && quiz.options.length === 4
+      && quiz.options.every((option) => typeof option === "string")
+      && Number.isInteger(quiz.answerIndex)
+      && quiz.answerIndex >= 0
+      && quiz.answerIndex < 4
+      && typeof quiz.explanation === "string";
+    if (!validQuiz) {
+      return reply(response, 502, { error: "The AI provider returned an invalid practice question." });
+    }
+    return reply(response, 200, { quiz });
   } catch (error) {
     const configurationError = error.message.startsWith("Cogni-Flow is not configured.");
     return reply(response, configurationError ? 503 : 502, {

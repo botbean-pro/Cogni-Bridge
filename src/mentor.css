@@ -171,3 +171,18 @@
     grid-column: auto;
   }
 }
+.mentor-notification-count { display:inline-grid; min-width:19px; height:19px; place-items:center; margin-left:auto; padding:0 5px; border-radius:99px; background:#c74f4f; color:white; font-size:11px; font-weight:800; }
+.mentor-sensory-list { display:grid; gap:12px; }
+.mentor-sensory-card { padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--surface); color:var(--text); }
+.mentor-sensory-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.mentor-sensory-top > div { display:grid; gap:4px; }
+.mentor-sensory-top small { color:var(--muted); font-size:12px; }
+.support-requested,.addressed { padding:6px 9px; border-radius:99px; background:#fff0eb; color:#a64a2c; font-size:11px; font-weight:800; }
+.addressed { background:#eaf6f1; color:#28724f; }
+.mentor-sensory-card p { margin:8px 0; color:var(--text); font-size:13px; line-height:1.5; }
+.mentor-sensory-card blockquote { margin:10px 0; padding:10px 12px; border-left:3px solid var(--teal); background:var(--surface-2); color:var(--text); font-size:13px; }
+.mentor-sensory-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.mentor-sensory-actions form { display:flex; flex:1 1 320px; gap:8px; }
+.mentor-sensory-actions input { flex:1; min-width:0; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; }
+.mentor-sensory-actions button { padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--teal); font:inherit; font-size:12px; font-weight:750; cursor:pointer; }
+.mentor-sensory-actions form button { border-color:var(--teal); background:var(--teal); color:white; }

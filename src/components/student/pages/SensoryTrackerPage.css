@@ -1,0 +1,65 @@
+.sensory-page { display:grid; gap:18px; max-width:1040px; margin:0 auto; padding-bottom:50px; }
+.sensory-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:3px; }
+.sensory-heading h1 { margin:2px 0 6px; color:var(--text); font-size:clamp(28px,4vw,38px); }
+.sensory-heading p:last-child { margin:0; color:var(--muted); }
+.sensory-heading > span { display:flex; align-items:center; gap:8px; padding:10px 13px; border:1px solid var(--line); border-radius:12px; color:var(--teal); font-size:13px; }
+.sensory-privacy,.sensory-status { display:flex; align-items:center; gap:9px; margin:0; padding:12px 15px; border-radius:12px; background:var(--surface-2); color:var(--muted); font-size:13px; }
+.sensory-status { border:1px solid #b9ded8; color:var(--teal); background:#eff9f7; }
+.sensory-card { padding:22px; border:1px solid var(--line); border-radius:17px; background:var(--surface); color:var(--text); box-shadow:0 6px 20px rgba(20,55,55,.035); }
+.sensory-card-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; color:var(--teal); }
+.sensory-card-title h2 { margin:4px 0 0; color:var(--text); font-size:20px; }
+.sensory-step { color:var(--teal); font-size:11px; font-weight:800; letter-spacing:.11em; }
+.sensory-view-switch { display:flex; gap:6px; width:max-content; max-width:100%; margin-bottom:20px; padding:4px; border-radius:11px; background:var(--surface-2); }
+.sensory-view-switch button { padding:9px 13px; border:0; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.sensory-view-switch button.active { background:var(--surface); color:var(--teal); box-shadow:0 2px 7px rgba(20,55,55,.08); }
+.sensory-field { display:grid; gap:10px; min-width:0; margin:18px 0; padding:0; border:0; }
+.sensory-field > label,.sensory-field > legend,.sensory-label { color:var(--text); font-size:14px; font-weight:700; }
+.sensory-field > label strong { float:right; color:var(--teal); }
+.sensory-field input:not([type=range]),.sensory-field textarea,.sensory-field select { width:100%; padding:12px 13px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:inherit; }
+.sensory-field textarea { resize:vertical; line-height:1.5; }
+.sensory-field input[type=range] { width:100%; accent-color:var(--teal); }
+.sensory-mood-options { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; }
+.sensory-mood-options button { display:grid; justify-items:center; gap:7px; padding:12px 6px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); font:inherit; font-size:13px; cursor:pointer; }
+.sensory-mood-options button span { font-size:23px; }
+.sensory-mood-options button.selected,.sensory-chips button.selected { border-color:var(--teal); background:#eaf6f3; color:#087f77; }
+.sensory-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.sensory-chips button { padding:9px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--text); font:inherit; font-size:13px; cursor:pointer; }
+.sensory-share { display:flex; align-items:flex-start; gap:12px; padding:15px; border:1px solid var(--line); border-radius:12px; cursor:pointer; }
+.sensory-share input { width:18px; height:18px; margin:2px 0 0; accent-color:var(--teal); }
+.sensory-share span { display:grid; gap:4px; color:var(--teal); }
+.sensory-share strong { color:var(--text); font-size:14px; }
+.sensory-share small,.sensory-share-note,.sensory-private-note { color:var(--muted); font-size:12px; }
+.sensory-share-note { margin:8px 0; }
+.sensory-private-note { display:flex; align-items:center; gap:7px; }
+.sensory-submit { display:block; margin:20px 0 0 auto; padding:12px 18px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-weight:750; cursor:pointer; }
+.sensory-submit:disabled { opacity:.45; cursor:not-allowed; }
+.sensory-suggestions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.sensory-suggestions span { padding:9px 12px; border-radius:999px; background:var(--surface-2); color:var(--text); font-size:13px; }
+.sensory-card > small { color:var(--muted); }
+.sensory-muted { color:var(--muted); font-size:14px; }
+.sensory-done { display:flex; align-items:flex-start; gap:12px; color:var(--teal); }
+.sensory-done h2 { margin:0 0 5px; color:var(--text); font-size:18px; }
+.sensory-done p { margin:0; color:var(--muted); }
+.sensory-chart-wrap { width:100%; }
+.sensory-chart-legend { display:flex; gap:17px; margin-bottom:5px; color:var(--muted); font-size:12px; }
+.sensory-chart-legend span::before { display:inline-block; width:15px; height:3px; margin:0 6px 3px 0; border-radius:2px; background:currentColor; content:""; }
+.mood-line { color:#368f89; fill:none; stroke:#368f89; }
+.energy-line { color:#d79a4a; fill:none; stroke:#d79a4a; }
+.comfort-line { color:#7785bb; fill:none; stroke:#7785bb; }
+.sensory-chart { display:block; width:100%; overflow:visible; }
+.sensory-chart line { stroke:var(--line); stroke-width:1; }
+.sensory-chart polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.sensory-chart-dates { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; }
+.sensory-insights { margin-top:16px; padding:13px; border-radius:11px; background:var(--surface-2); color:var(--text); font-size:13px; }
+.sensory-insights p { margin:5px 0; }
+.sensory-history { display:grid; }
+.sensory-history-entry { border-top:1px solid var(--line); }
+.sensory-history-entry > button { display:flex; align-items:center; justify-content:space-between; width:100%; padding:13px 2px; border:0; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+.sensory-history-entry > button > span { display:grid; gap:4px; }
+.sensory-history-entry small { color:var(--muted); }
+.sensory-history-entry em { width:max-content; padding:3px 7px; border-radius:99px; background:var(--surface-2); color:var(--muted); font-size:10px; font-style:normal; }
+.sensory-history-entry em.is-shared { background:#eaf6f3; color:var(--teal); }
+.sensory-entry-detail { padding:2px 2px 15px; color:var(--text); font-size:13px; line-height:1.5; }
+.sensory-delete { display:inline-flex; align-items:center; gap:6px; padding:7px 9px; border:1px solid #e7bebe; border-radius:8px; background:transparent; color:#9e4141; font:inherit; cursor:pointer; }
+.theme-dark .sensory-mood-options button.selected,.theme-dark .sensory-chips button.selected,.theme-dark .sensory-status,.theme-dark .sensory-history-entry em.is-shared { background:#203b3c; }
+@media (max-width:650px) { .sensory-heading { align-items:flex-start; flex-direction:column; } .sensory-heading > span { font-size:12px; } .sensory-card { padding:17px; } .sensory-mood-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .sensory-submit { width:100%; } }

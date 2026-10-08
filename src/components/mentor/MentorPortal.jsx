@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MENTOR_EMAIL, MENTOR_PASSWORD } from "../../constants";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MentorLoginPage } from "./pages/MentorLoginPage";
@@ -14,16 +14,21 @@ const createSessionForm = () => ({
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
-export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, onUpdateSession, onBack, t }) {
+export function MentorPortal({ sessions, notes, sensoryEntries, initialLoggedIn = false, onAddSession, onUpdateSession, onAddNote, onUpdateSensoryEntry, onBack, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("overview");
-  const [notes, setNotes] = useState([]);
   const [form, setForm] = useState(createSessionForm);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [noteForm, setNoteForm] = useState(createNoteForm);
+
+  useEffect(() => {
+    if (tab !== "sensory") return;
+    sensoryEntries.filter((entry) => entry.shared && entry.helpRequest !== "No, I'm okay" && !entry.viewedByMentor)
+      .forEach((entry) => onUpdateSensoryEntry(entry.id, { viewedByMentor: true }));
+  }, [tab]);
 
   const signIn = (event) => {
     event.preventDefault();
@@ -86,10 +91,15 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
     const withinSizeLimit = noteForm.file.size <= 10 * 1024 * 1024;
     if (!allowedFileType || !withinSizeLimit) return;
 
-    setNotes((items) => [
-      { ...noteForm, id: String(Date.now()), fileName: noteForm.file.name },
-      ...items,
-    ]);
+    const reader = new FileReader();
+    reader.onload = () => onAddNote({
+      title: noteForm.title,
+      subject: noteForm.subject,
+      id: String(Date.now()),
+      fileName: noteForm.file.name,
+      dataUrl: reader.result,
+    });
+    reader.readAsDataURL(noteForm.file);
     setNoteForm(createNoteForm());
     event.target.reset();
   };
@@ -113,6 +123,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
     <MentorDashboard
       sessions={sessions}
       notes={notes}
+      sensoryEntries={sensoryEntries}
       tab={tab}
       setTab={setTab}
       form={form}
@@ -124,6 +135,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, onAddSession, 
       editingSessionId={editingSessionId}
       onCancelEdit={() => { setEditingSessionId(null); setForm(createSessionForm()); }}
       onUploadNote={uploadNote}
+      onUpdateSensoryEntry={onUpdateSensoryEntry}
       onBack={onBack}
       t={t}
     />

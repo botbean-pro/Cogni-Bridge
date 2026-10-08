@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Accessibility, CheckCircle2, UserRound } from "lucide-react";
+import { Accessibility, CheckCircle2 } from "lucide-react";
 import { classNames, demoStudents, initialSessions, readStudents } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
@@ -9,9 +9,15 @@ import { StudentPage } from "./components/student/StudentPage";
 import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { translate } from "./i18n";
+import { readSensoryEntries, updateSensoryEntry } from "./sensoryTracker";
+import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
+import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
+import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
+  const [learningNotes, setLearningNotes] = useState([]);
+  const [sharedSensoryEntries, setSharedSensoryEntries] = useState(() => readSensoryEntries().filter((entry) => entry.shared));
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
   const [activeTab, setActiveTab] = useState("home");
@@ -33,6 +39,9 @@ const App = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [premiumCartPlan, setPremiumCartPlan] = useState(null);
+  const [premiumCheckoutOpen, setPremiumCheckoutOpen] = useState(false);
+  const [pendingPremiumLogin, setPendingPremiumLogin] = useState(false);
   const t = useMemo(
     () => (key, values) => translate(studentLanguage, key, values),
     [studentLanguage],
@@ -40,6 +49,8 @@ const App = () => {
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
+  const classLabel = String(studentProfile?.studentClass || "").trim().toLowerCase();
+  const isGrade12 = /(^|[^a-z0-9])(12(?:th)?|xii|twelfth)(?=$|[^a-z0-9])/.test(classLabel);
 
   const scrollToAbout = () => {
     const aboutSection = document.getElementById("about-us");
@@ -152,6 +163,8 @@ const App = () => {
   };
 
   const goToTab = (tab) => {
+    if (tab === "sensory" && !signedIn) return;
+    if (tab === "careers" && (!signedIn || !isGrade12)) return;
     if (tab === "about") {
       setActiveTab("about");
       setSelectedSession(null);
@@ -172,12 +185,19 @@ const App = () => {
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <MentorPortal
           sessions={sessions}
+          notes={learningNotes}
+          sensoryEntries={sharedSensoryEntries}
           initialLoggedIn
           t={t}
           onAddSession={(session) => setSessions((items) => [session, ...items])}
           onUpdateSession={(updatedSession) => setSessions((items) => items.map((session) => (
             session.id === updatedSession.id ? { ...session, ...updatedSession } : session
           )))}
+          onAddNote={(note) => setLearningNotes((items) => [note, ...items])}
+          onUpdateSensoryEntry={(id, changes) => {
+            updateSensoryEntry(id, changes);
+            setSharedSensoryEntries(readSensoryEntries().filter((entry) => entry.shared));
+          }}
           onBack={() => setMentorOpen(false)}
         />
         <button
@@ -218,7 +238,8 @@ const App = () => {
             setStudentProfile(profile);
             setStudentEmail(profile.email);
             setSignedIn(true);
-            setActiveTab("study");
+            setActiveTab(pendingPremiumLogin ? "premium" : "study");
+            setPendingPremiumLogin(false);
           }}
         />
       </div>
@@ -263,10 +284,12 @@ const App = () => {
         activeTab={activeTab}
         goToTab={goToTab}
         signedIn={signedIn}
+        isGrade12={isGrade12}
         studentName={studentName}
         t={t}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
+        onOpenAccount={() => setProfileOpen(true)}
         showIntro={showIntro}
         introExiting={introExiting}
         accessibilityOpen={accessibilityOpen}
@@ -305,6 +328,7 @@ const App = () => {
           sessions: (
             <SessionsPage
               sessions={sessions}
+              notes={learningNotes}
               selectedSession={selectedSession}
               signedIn={signedIn}
               t={t}
@@ -330,11 +354,34 @@ const App = () => {
               }}
             />
           ),
+          sensory: signedIn ? <SensoryTrackerPage
+            studentEmail={studentEmail}
+            studentName={studentName}
+            onSaved={() => setSharedSensoryEntries(readSensoryEntries().filter((entry) => entry.shared))}
+          /> : null,
+          careers: signedIn && isGrade12 ? <CareerOptionsPage /> : null,
           flow: <FlowPage t={t} language={studentLanguage} />,
+          premium: <PremiumFlowPage
+            t={t}
+            signedIn={signedIn}
+            studentEmail={studentEmail}
+            studentName={studentName}
+            cartPlan={premiumCartPlan}
+            checkoutOpen={premiumCheckoutOpen}
+            onAddToCart={setPremiumCartPlan}
+            onRemoveFromCart={() => setPremiumCartPlan(null)}
+            onBeginCheckout={() => {
+              setPremiumCheckoutOpen(true);
+              if (!signedIn) {
+                setPendingPremiumLogin(true);
+                setLoginOpen(true);
+              }
+            }}
+            onBackToPlans={() => setPremiumCheckoutOpen(false)}
+          />,
           messages: <MessagesPage t={t} />,
         }}
       />
-      {signedIn &&       <button className="student-account-button" onClick={() => setProfileOpen(true)}><UserRound size={17} /> {t("myAccount")}</button>}
       {loginOpen && (
         <AuthModal
           t={t}
@@ -348,7 +395,8 @@ const App = () => {
             setStudentProfile(savedStudent || null);
             setStudentEmail(normalizedEmail);
             setSignedIn(true);
-            setActiveTab("study");
+            setActiveTab(pendingPremiumLogin ? "premium" : "study");
+            setPendingPremiumLogin(false);
           }}
           onCreateAccount={() => {
             setLoginOpen(false);
