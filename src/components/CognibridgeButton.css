@@ -1,0 +1,125 @@
+.cognibridge-button {
+  position: relative;
+  display: inline-flex;
+  min-width: 120px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: radial-gradient(ellipse at bottom, #2d3746 0%, #080c12 60%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  transition:
+    transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.6s ease,
+    color 0.4s ease;
+}
+
+.cognibridge-button-text {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+}
+
+.cognibridge-button-glow {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2196f3;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+    height 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.6s ease;
+}
+
+.cognibridge-button::after {
+  position: absolute;
+  z-index: 3;
+  right: 15%;
+  bottom: 0;
+  left: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  content: "";
+  opacity: 0.2;
+  transition: opacity 0.6s ease;
+}
+
+.cognibridge-button:hover:not(:disabled),
+.cognibridge-button:focus-visible:not(:disabled) {
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 0 4px rgba(33, 150, 243, 0.15);
+}
+
+.cognibridge-button:hover:not(:disabled) .cognibridge-button-glow,
+.cognibridge-button:focus-visible:not(:disabled) .cognibridge-button-glow {
+  width: 300px;
+  height: 300px;
+  opacity: 1;
+}
+
+.cognibridge-button:hover:not(:disabled)::after,
+.cognibridge-button:focus-visible:not(:disabled)::after {
+  opacity: 0.9;
+}
+
+.cognibridge-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.cognibridge-button:focus-visible {
+  outline: 3px solid #79c6ff;
+  outline-offset: 3px;
+}
+
+.cognibridge-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.hero-primary.cognibridge-button {
+  min-height: 55px;
+  padding: 0 23px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cognibridge-button,
+  .cognibridge-button-glow,
+  .cognibridge-button::after {
+    transition: none;
+  }
+
+  .cognibridge-button:hover:not(:disabled),
+  .cognibridge-button:focus-visible:not(:disabled),
+  .cognibridge-button:active:not(:disabled) {
+    transform: none;
+  }
+
+  .cognibridge-button:hover:not(:disabled) .cognibridge-button-glow,
+  .cognibridge-button:focus-visible:not(:disabled) .cognibridge-button-glow {
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+  }
+}

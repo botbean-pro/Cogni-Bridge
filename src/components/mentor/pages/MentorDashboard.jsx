@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   CalendarDays,
   ChevronRight,
   Clock3,
   FileText,
-  HeartPulse,
   Home,
+  Heart,
   LogOut,
   Plus,
   Upload,
@@ -14,7 +14,14 @@ import {
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, subjects } from "../../../constants";
 import { LogoImage } from "../../Brand";
-import { SensorySupportInbox } from "../SensorySupportInbox";
+import {
+  emotionOptions,
+  loadMentorCheckins,
+  markMentorNotificationViewed,
+  mentorHelpOptions,
+  moodLabels,
+  respondToMentorRequest,
+} from "../../../studentSensory";
 
 function MentorHeader({ onBack, t }) {
   return (
@@ -33,12 +40,12 @@ function MentorHeader({ onBack, t }) {
   );
 }
 
-function MentorNavigation({ tab, setTab, mentorId, t }) {
+function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
-    ...(mentorId ? [["sensory-support", HeartPulse, t("studentSupport")]] : []),
+    ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
   ];
 
   return (
@@ -48,12 +55,128 @@ function MentorNavigation({ tab, setTab, mentorId, t }) {
         <button
           key={key}
           className={tab === key ? "active" : ""}
+          aria-current={tab === key ? "page" : undefined}
+          title={label}
           onClick={() => setTab(key)}
         >
-          <Icon size={18} /> {label}
+          <Icon size={19} /><span className="mentor-nav-label">{label}</span>{key === "sensory" && unreadSupportCount > 0 && <span className="mentor-notification-count">{unreadSupportCount}</span>}
         </button>
       ))}
     </aside>
+  );
+}
+
+const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
+
+// Loads shared check-ins for the mentor's assigned students; refreshes every 30s
+// so the nav badge stays current. Postgres RLS decides what the mentor can see.
+function useMentorSupport(mentorId) {
+  const [checkins, setCheckins] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let isCurrent = true;
+    const refresh = () => loadMentorCheckins(mentorId)
+      .then((result) => {
+        if (!isCurrent) return;
+        setCheckins(result.checkins);
+        setNotifications(result.notifications);
+        setStudents(result.students);
+        setError("");
+      })
+      .catch(() => {
+        if (isCurrent) setError("Shared check-ins couldn't be loaded.");
+      });
+    refresh();
+    const interval = window.setInterval(refresh, 30000);
+    return () => {
+      isCurrent = false;
+      window.clearInterval(interval);
+    };
+  }, [mentorId]);
+
+  const patchNotification = (id, changes) => setNotifications((current) => current.map((item) => (
+    item.id === id ? { ...item, ...changes } : item
+  )));
+
+  const markAllViewed = () => {
+    const now = new Date().toISOString();
+    notifications.filter((item) => !item.viewed_at).forEach((item) => {
+      markMentorNotificationViewed(mentorId, item.id)
+        .then(() => patchNotification(item.id, { viewed_at: now }))
+        .catch(() => {});
+    });
+  };
+
+  const respond = async (notificationId, message, addressed) => {
+    try {
+      await respondToMentorRequest(mentorId, notificationId, message);
+      const now = new Date().toISOString();
+      patchNotification(notificationId, { viewed_at: now, addressed_at: now, mentor_message: message.trim() });
+      setError("");
+    } catch {
+      setError(addressed ? "This request couldn't be marked addressed." : "Your reply couldn't be sent.");
+    }
+  };
+
+  return {
+    checkins,
+    notifications,
+    students,
+    error,
+    unreadCount: notifications.filter((item) => !item.viewed_at && !item.addressed_at).length,
+    markAllViewed,
+    respond,
+  };
+}
+
+function SensorySupportPage({ support }) {
+  const { checkins, notifications, students, error, markAllViewed, respond } = support;
+  const [replies, setReplies] = React.useState({});
+  const notificationFor = (entry) => notifications.find((item) => item.checkin_id === entry.id);
+  const needsSupport = (entry) => entry.mentor_help !== "none" && !notificationFor(entry)?.addressed_at;
+  const sortedEntries = [...checkins]
+    .sort((a, b) => Number(needsSupport(b)) - Number(needsSupport(a)) || b.created_at.localeCompare(a.created_at));
+
+  useEffect(() => {
+    markAllViewed();
+  }, [notifications.length]);
+
+  return (
+    <>
+      <p className="mentor-kicker">STUDENT WELLBEING</p>
+      <h1 className="mentor-title">Shared check-ins</h1>
+      <p className="mentor-subtitle">Only check-ins your assigned students chose to share are shown here.</p>
+      {error && <p className="error-popup">{error}</p>}
+      {sortedEntries.length === 0 ? <p className="mentor-subtitle">No shared check-ins yet.</p> : <div className="mentor-sensory-list">
+        {sortedEntries.map((entry) => {
+          const requestsHelp = entry.mentor_help !== "none";
+          const notification = notificationFor(entry);
+          const addressed = Boolean(notification?.addressed_at);
+          const studentName = students.find((student) => student.id === entry.student_id)?.display_name || "Student";
+          return <article className="mentor-sensory-card" key={entry.id}>
+            <div className="mentor-sensory-top"><div><strong>{studentName}</strong><small>{new Date(entry.created_at).toLocaleString()}</small></div>{requestsHelp && <span className={addressed ? "addressed" : "support-requested"}>{addressed ? "Addressed" : "Student requested support"}</span>}</div>
+            <p><strong>Mood:</strong> {moodLabels[entry.mood - 1]} · <strong>Emotions:</strong> {entry.emotions?.length ? entry.emotions.map((key) => labelFor(emotionOptions, key)).join(", ") : "Not listed"}</p>
+            {entry.energy != null && <p><strong>Energy:</strong> {entry.energy}/5 · <strong>Comfort:</strong> {entry.comfort}/5</p>}
+            {requestsHelp && <p><strong>Help requested:</strong> {labelFor(mentorHelpOptions, entry.mentor_help)}</p>}
+            {entry.mentor_message && <blockquote>{entry.mentor_message}</blockquote>}
+            {entry.day_note && <p>{entry.day_note}</p>}
+            {notification && (addressed ? (
+              notification.mentor_message && <p><strong>Your reply:</strong> {notification.mentor_message}</p>
+            ) : <div className="mentor-sensory-actions">
+              <form onSubmit={(event) => { event.preventDefault(); if (replies[entry.id]?.trim()) respond(notification.id, replies[entry.id], false); }}>
+                <input value={replies[entry.id] ?? ""} maxLength={2000} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder="Write an optional reply" aria-label={`Reply to ${studentName}`} />
+                <button type="submit">Send reply</button>
+              </form>
+              <button type="button" onClick={() => respond(notification.id, replies[entry.id] || "", true)}>Mark addressed</button>
+            </div>)}
+          </article>;
+        })}
+      </div>}
+    </>
   );
 }
 
@@ -182,6 +305,7 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
             <div key={note.id}>
               <FileText size={18} />
               <span><strong>{note.title}</strong><small>{getSessionSubjectLabel(note.subject, t)} · {note.fileName}</small></span>
+              <a href={note.dataUrl} target="_blank" rel="noopener noreferrer">{t("downloadNote")}</a>
             </div>
           ))}
         </div>
@@ -209,17 +333,18 @@ export function MentorDashboard({
   onBack,
   t,
 }) {
+  const support = useMentorSupport(mentorId);
   return (
     <main className="mentor-page">
       <MentorHeader onBack={onBack} t={t} />
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} t={t} />
+        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} t={t} />
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
-          {tab === "sensory-support" && mentorId && <SensorySupportInbox mentorId={mentorId} />}
+          {tab === "sensory" && mentorId && <SensorySupportPage support={support} />}
         </section>
       </div>
     </main>

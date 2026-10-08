@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Check, ChevronDown, HeartPulse, LockKeyhole, Send, Trash2 } from "lucide-react";
+import { Activity, Check, ChevronDown, ChevronUp, Heart, LockKeyhole, Share2, Trash2 } from "lucide-react";
 import {
   causeOptions,
   deleteStudentCheckin,
@@ -12,192 +12,77 @@ import {
   moodLabels,
   saveStudentCheckin,
 } from "../../../studentSensory";
-import "./sensoryTracker.css";
+import "./SensoryTrackerPage.css";
 
-const emptyCheckin = () => ({
-  mood: 0,
-  moodNote: "",
-  emotions: [],
-  emotionNote: "",
-  energy: 3,
-  comfort: 3,
-  dayNote: "",
-  causes: [],
-  causeNote: "",
-  overwhelmNote: "",
-  helpfulActions: [],
-  helpfulNote: "",
-  mentorHelp: "none",
-  selectedMentorId: "",
-  mentorMessage: "",
-  sharedWithMentor: false,
+const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
+const labelsFor = (options, keys = []) => keys.map((key) => labelFor(options, key));
+
+const todayString = () => new Date().toLocaleDateString("en-CA");
+const entryDay = (entry) => new Date(entry.created_at).toLocaleDateString("en-CA");
+const blankEntry = () => ({
+  mood: 0, moodCustom: "", emotions: [], energy: 3, comfort: 3, daySummary: "", causes: [],
+  overwhelm: "", helpful: [], helpRequest: "none", selectedMentorId: "", mentorMessage: "",
+  shared: false, quickReason: "",
 });
 
-const toggleValue = (values, value) => (
-  values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
-);
-
-const formatDate = (value) => new Intl.DateTimeFormat(undefined, {
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-}).format(new Date(value));
-
-const formatDateTime = (value) => new Intl.DateTimeFormat(undefined, {
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-}).format(new Date(value));
-
-function ToggleChips({ options, values, onChange, label }) {
+function TrendChart({ entries }) {
+  const data = entries.slice(0, 7).reverse();
+  if (data.length < 2) return <p className="sensory-muted">Add a few check-ins to see your mood, energy, and comfort trend.</p>;
+  // Quick check-ins have no energy/comfort rating, so those points are skipped.
+  const pointsFor = (field) => data
+    .map((entry, index) => entry[field] == null ? null : `${30 + index * (540 / (data.length - 1))},${155 - ((entry[field] - 1) / 4) * 125}`)
+    .filter(Boolean)
+    .join(" ");
   return (
-    <div className="sensory-chip-group" role="group" aria-label={label}>
-      {options.map(([value, text]) => (
-        <button
-          key={value}
-          type="button"
-          className={`sensory-chip${values.includes(value) ? " selected" : ""}`}
-          aria-pressed={values.includes(value)}
-          onClick={() => onChange(toggleValue(values, value))}
-        >
-          {values.includes(value) && <Check size={14} aria-hidden="true" />}
-          {text}
-        </button>
-      ))}
+    <div className="sensory-chart-wrap">
+      <div className="sensory-chart-legend"><span className="mood-line">Mood</span><span className="energy-line">Energy</span><span className="comfort-line">Comfort</span></div>
+      <svg className="sensory-chart" viewBox="0 0 600 180" role="img" aria-label="Your mood, energy, and comfort over your recent check-ins">
+        {[0, 1, 2, 3, 4].map((line) => <line key={line} x1="30" x2="570" y1={30 + line * 31} y2={30 + line * 31} />)}
+        <polyline className="mood-line" points={pointsFor("mood")} />
+        <polyline className="energy-line" points={pointsFor("energy")} />
+        <polyline className="comfort-line" points={pointsFor("comfort")} />
+      </svg>
+      <div className="sensory-chart-dates"><span>{new Date(data[0].created_at).toLocaleDateString()}</span><span>{new Date(data[data.length - 1].created_at).toLocaleDateString()}</span></div>
     </div>
   );
 }
 
-function Rating({ title, value, onChange, low, high, labels, name }) {
+function EntryDetail({ entry, reply, onDelete }) {
   return (
-    <fieldset className="sensory-rating">
-      <legend>{title}</legend>
-      <div className="rating-options">
-        {labels.map((label, index) => {
-          const score = index + 1;
-          return (
-            <label key={score} className={value === score ? "selected" : ""}>
-              <input
-                type="radio"
-                name={name}
-                value={score}
-                checked={value === score}
-                onChange={() => onChange(score)}
-              />
-              <span>{score}</span>
-              <small>{label}</small>
-            </label>
-          );
-        })}
-      </div>
-      <div className="rating-endpoints"><span>{low}</span><span>{high}</span></div>
-    </fieldset>
+    <div className="sensory-entry-detail">
+      <p>{entry.day_note || "No day summary added."}</p>
+      {entry.mood_note && <p><strong>Your words:</strong> {entry.mood_note}</p>}
+      {entry.causes?.length > 0 && <p><strong>Possible causes:</strong> {labelsFor(causeOptions, entry.causes).join(", ")}</p>}
+      {entry.overwhelm_note && <p><strong>What felt overwhelming:</strong> {entry.overwhelm_note}</p>}
+      {entry.helpful_actions?.length > 0 && <p><strong>What helped:</strong> {labelsFor(helpfulOptions, entry.helpful_actions).join(", ")}</p>}
+      {entry.mentor_help !== "none" && <p><strong>Mentor support:</strong> {labelFor(mentorHelpOptions, entry.mentor_help)}</p>}
+      {entry.mentor_message && <p><strong>Message for your mentor:</strong> {entry.mentor_message}</p>}
+      {reply && <p><strong>Mentor reply:</strong> {reply}</p>}
+      <button type="button" className="sensory-delete" onClick={() => onDelete(entry)}><Trash2 size={15} /> Delete this check-in</button>
+    </div>
   );
 }
 
-function TrendChart({ entries }) {
-  const points = useMemo(() => entries.slice(0, 7).reverse(), [entries]);
-  if (points.length < 2) return null;
-  const width = 560;
-  const height = 190;
-  const x = (index) => 30 + (index * (width - 60)) / (points.length - 1);
-  const y = (score) => height - 28 - ((score - 1) / 4) * (height - 52);
-  const line = (key) => points
-    .map((entry, index) => entry[key] === null ? null : `${x(index)},${y(entry[key])}`)
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <section className="sensory-panel trend-panel" aria-labelledby="trend-heading">
-      <div className="sensory-panel-heading">
-        <div><p className="eyebrow">YOUR RECENT ENTRIES</p><h3 id="trend-heading">A small look back</h3></div>
-        <Activity size={20} aria-hidden="true" />
-      </div>
-      <div className="trend-legend" aria-label="Chart legend">
-        <span className="mood-line">Mood</span><span className="energy-line">Energy</span><span className="comfort-line">Comfort</span>
-      </div>
-      <svg className="trend-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Mood, energy, and comfort ratings across your last check-ins">
-        {[1, 2, 3, 4, 5].map((score) => (
-          <g key={score}>
-            <line x1="30" x2={width - 30} y1={y(score)} y2={y(score)} className="trend-gridline" />
-            <text x="12" y={y(score) + 4} className="trend-axis-label">{score}</text>
-          </g>
-        ))}
-        {points.some((entry) => entry.energy !== null) && <polyline points={line("energy")} className="trend-path energy-path" />}
-        {points.some((entry) => entry.comfort !== null) && <polyline points={line("comfort")} className="trend-path comfort-path" />}
-        <polyline points={line("mood")} className="trend-path mood-path" />
-        {points.map((entry, index) => (
-          <g key={entry.id}>
-            <circle cx={x(index)} cy={y(entry.mood)} r="4" className="trend-dot mood-dot" />
-            {entry.energy !== null && <circle cx={x(index)} cy={y(entry.energy)} r="3" className="trend-dot energy-dot" />}
-            {entry.comfort !== null && <circle cx={x(index)} cy={y(entry.comfort)} r="3" className="trend-dot comfort-dot" />}
-            <text x={x(index)} y={height - 7} textAnchor="middle" className="trend-axis-label">{new Date(entry.created_at).toLocaleDateString(undefined, { month: "numeric", day: "numeric" })}</text>
-          </g>
-        ))}
-      </svg>
-    </section>
-  );
-}
-
-function makeInsights(entries) {
-  if (entries.length < 3) return [];
-  const recent = entries.slice(0, 7);
-  const insights = [];
-  const tiredCount = recent.filter((entry) => entry.emotions?.includes("tired")).length;
-  const stressCount = recent.filter((entry) => entry.emotions?.includes("stressed")).length;
-  if (tiredCount >= 2) insights.push("You reported feeling tired in a few recent entries.");
-  if (stressCount >= 2 && recent.some((entry) => entry.causes?.includes("school"))) {
-    insights.push("You reported feeling stressed on some school days.");
-  }
-  const withBreak = recent.filter((entry) => entry.helpful_actions?.includes("break"));
-  if (withBreak.length >= 2) {
-    const breakMood = withBreak.reduce((total, entry) => total + entry.mood, 0) / withBreak.length;
-    const otherEntries = recent.filter((entry) => !entry.helpful_actions?.includes("break"));
-    if (otherEntries.length && breakMood > otherEntries.reduce((total, entry) => total + entry.mood, 0) / otherEntries.length) {
-      insights.push("Your entries suggest your mood may be brighter on days you take a break.");
-    }
-  }
-  if (entries.length >= 6) {
-    const thisWeek = entries.slice(0, 3).reduce((total, entry) => total + entry.mood, 0) / 3;
-    const lastWeek = entries.slice(3, 6).reduce((total, entry) => total + entry.mood, 0) / 3;
-    if (thisWeek - lastWeek >= 0.75) insights.push("Your recent entries suggest this week may feel a little better than last week.");
-  }
-  return insights;
-}
-
-function suggestionsFor(checkin) {
-  const suggestions = [];
-  if (checkin.mood <= 2 || checkin.mentorHelp !== "none") suggestions.push("Talk to a trusted person");
-  if (checkin.energy <= 2) suggestions.push("Take a short break");
-  if (checkin.causes.includes("sensory") || checkin.emotions.includes("overwhelmed")) suggestions.push("Move somewhere quieter");
-  if (checkin.causes.includes("homework")) suggestions.push("Break homework into smaller tasks");
-  if (checkin.mentorHelp !== "none") suggestions.push("Talk to your mentor");
-  if (checkin.emotions.includes("anxious") || checkin.emotions.includes("stressed")) suggestions.push("Try a breathing exercise");
-  return [...new Set(suggestions)].slice(0, 3);
-}
-
-export function SensoryTrackerPage({ studentId, t }) {
-  const [checkin, setCheckin] = useState(emptyCheckin);
-  const [quickMood, setQuickMood] = useState(0);
-  const [quickNote, setQuickNote] = useState("");
+export function SensoryTrackerPage({ studentId }) {
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
   const [responses, setResponses] = useState([]);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [form, setForm] = useState(blankEntry);
+  const [view, setView] = useState("quick");
+  const [expandedId, setExpandedId] = useState(null);
+  const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
-  const [selectedEntryId, setSelectedEntryId] = useState(null);
+  const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
+  const todayEntry = sortedEntries.find((entry) => entryDay(entry) === todayString());
 
   const refresh = async () => {
-    const [history, availableMentors, mentorResponses] = await Promise.all([
+    const [history, assignedMentors, mentorResponses] = await Promise.all([
       loadStudentCheckins(studentId),
       loadAssignedMentors(studentId),
       loadStudentResponses(),
     ]);
     setEntries(history);
-    setMentors(availableMentors);
+    setMentors(assignedMentors);
     setResponses(mentorResponses);
   };
 
@@ -207,312 +92,143 @@ export function SensoryTrackerPage({ studentId, t }) {
       loadStudentCheckins(studentId),
       loadAssignedMentors(studentId),
       loadStudentResponses(),
-    ]).then(([history, availableMentors, mentorResponses]) => {
+    ]).then(([history, assignedMentors, mentorResponses]) => {
       if (!isCurrent) return;
       setEntries(history);
-      setMentors(availableMentors);
+      setMentors(assignedMentors);
       setResponses(mentorResponses);
     }).catch(() => {
-      if (isCurrent) setError("Your check-ins could not be loaded. Please try again.");
+      if (isCurrent) setStatus("Your check-ins couldn't be loaded. Please try again.");
     });
     return () => { isCurrent = false; };
   }, [studentId]);
 
-  const update = (field, value) => setCheckin((current) => ({ ...current, [field]: value }));
+  const updateForm = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+  const toggleArray = (field, value) => setForm((current) => ({
+    ...current,
+    [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value],
+  }));
 
-  const save = async (type, values) => {
-    if (!values.mood) {
-      setError("Choose how you feel before saving.");
+  const submit = async (event, quick = false) => {
+    event.preventDefault();
+    if (!form.mood) return;
+    const shared = !quick && form.shared;
+    const specificMentor = shared && form.helpRequest === "specific_mentor";
+    if (shared && mentors.length === 0) {
+      setStatus("No mentor is assigned to your account yet, so this check-in can't be shared.");
       return;
     }
-    if (values.sharedWithMentor && mentors.length === 0) {
-      setError("No mentor is assigned to your account, so this entry cannot be shared yet.");
+    if (specificMentor && !form.selectedMentorId) {
+      setStatus("Choose a mentor, or pick a different support option.");
       return;
     }
-    if (values.sharedWithMentor && values.mentorHelp === "specific_mentor" && !values.selectedMentorId) {
-      setError("Choose an assigned mentor, or select a different support option.");
-      return;
-    }
-
-    setSaving(true);
-    setError("");
-    setNotice("");
-    const data = type === "quick"
+    const checkin = quick
       ? {
         checkin_type: "quick",
-        mood: values.mood,
-        mood_note: "",
-        emotions: [],
-        emotion_note: "",
+        mood: form.mood,
+        day_note: form.quickReason.trim(),
         energy: null,
         comfort: null,
-        day_note: values.dayNote,
-        causes: [],
-        cause_note: "",
-        overwhelm_note: "",
-        helpful_actions: [],
-        helpful_note: "",
         mentor_help: "none",
-        selected_mentor_id: null,
-        mentor_message: "",
         shared_with_mentor: false,
       }
       : {
         checkin_type: "full",
-        mood: values.mood,
-        mood_note: values.moodNote.trim(),
-        emotions: values.emotions,
-        emotion_note: values.emotionNote.trim(),
-        energy: values.energy,
-        comfort: values.comfort,
-        day_note: values.dayNote.trim(),
-        causes: values.causes,
-        cause_note: values.causeNote.trim(),
-        overwhelm_note: values.overwhelmNote.trim(),
-        helpful_actions: values.helpfulActions,
-        helpful_note: values.helpfulNote.trim(),
-        mentor_help: values.mentorHelp,
-        selected_mentor_id: values.sharedWithMentor ? values.selectedMentorId || null : null,
-        mentor_message: values.mentorMessage.trim(),
-        shared_with_mentor: values.sharedWithMentor,
+        mood: form.mood,
+        mood_note: form.moodCustom.trim(),
+        emotions: form.emotions,
+        energy: Number(form.energy),
+        comfort: Number(form.comfort),
+        day_note: form.daySummary.trim(),
+        causes: form.causes,
+        overwhelm_note: form.overwhelm.trim(),
+        helpful_actions: form.helpful,
+        mentor_help: form.helpRequest,
+        selected_mentor_id: specificMentor ? form.selectedMentorId : null,
+        mentor_message: form.helpRequest === "none" ? "" : form.mentorMessage.trim(),
+        shared_with_mentor: shared,
       };
+    setSaving(true);
     try {
-      await saveStudentCheckin(studentId, data);
+      await saveStudentCheckin(studentId, checkin);
       await refresh();
-      if (type === "quick") {
-        setQuickMood(0);
-        setQuickNote("");
-      } else {
-        setCheckin(emptyCheckin());
-      }
-      setNotice(values.sharedWithMentor
-        ? "Saved and shared with your assigned mentor(s)."
-        : "Saved privately. Only you can see this check-in.");
+      setForm(blankEntry());
+      setStatus(shared ? "Saved and shared with your mentor." : "Saved privately. Only you can see this check-in.");
     } catch {
-      setError("Your check-in could not be saved. Please try again.");
+      setStatus("This check-in couldn't be saved. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
-  const removeEntry = async (entryId) => {
-    if (!window.confirm("Delete this check-in? This cannot be undone.")) return;
-    setError("");
+  const removeEntry = async (entry) => {
     try {
-      await deleteStudentCheckin(studentId, entryId);
-      await refresh();
-      setSelectedEntryId(null);
-      setNotice("Check-in deleted.");
+      await deleteStudentCheckin(studentId, entry.id);
+      setEntries((current) => current.filter((item) => item.id !== entry.id));
+      setExpandedId(null);
+      setStatus("Check-in deleted.");
     } catch {
-      setError("This check-in could not be deleted. Please try again.");
+      setStatus("This check-in couldn't be deleted. Please try again.");
     }
   };
 
-  const insights = makeInsights(entries);
-  const recentSuggestions = entries[0] ? suggestionsFor({
-    mood: entries[0].mood,
-    energy: entries[0].energy || 3,
-    causes: entries[0].causes || [],
-    emotions: entries[0].emotions || [],
-    mentorHelp: entries[0].mentor_help,
-  }) : [];
+  const suggestions = form.mood === 1 || form.mood === 2
+    ? ["Talk to someone you trust", "Try a short breathing break", "Move somewhere quieter"]
+    : form.causes.includes("homework")
+      ? ["Break homework into smaller tasks", "Take a short break", "Talk to your mentor"]
+      : ["Take a short break", "Try a breathing exercise", "Talk to someone you trust"];
+
+  const tiredCount = sortedEntries.slice(0, 7).filter((entry) => entry.emotions?.includes("tired")).length;
+  const stressedCount = sortedEntries.slice(0, 7).filter((entry) => entry.emotions?.includes("stressed") && entry.causes?.includes("school")).length;
 
   return (
-    <main className="content sensory-page">
-      <header className="sensory-welcome">
-        <div>
-          <p className="eyebrow">A MOMENT FOR YOU</p>
-          <h1>{t("sensoryTracker")}</h1>
-          <p>Check in at your own pace. There are no right or wrong answers.</p>
-        </div>
-        <span className="sensory-welcome-icon"><HeartPulse size={28} aria-hidden="true" /></span>
-      </header>
+    <section className="content sensory-page">
+      <header className="sensory-heading"><div><p className="eyebrow">A private space for you</p><h1>Sensory Tracker</h1><p>Check in with yourself. Share only what you choose.</p></div><span><Heart size={18} /> No judgement, just your own notes</span></header>
+      <div className="sensory-privacy"><LockKeyhole size={17} /> Your check-ins are private by default. You'll see a clear label when you choose to share one.</div>
+      {status && <p className="sensory-status" role="status">{status}</p>}
 
-      {error && <p className="sensory-alert" role="alert">{error}</p>}
-      {notice && <p className="sensory-notice" role="status">{notice}</p>}
-
-      <section className="sensory-panel quick-panel" aria-labelledby="quick-checkin-heading">
-        <div className="sensory-panel-heading">
-          <div><p className="eyebrow">A FEW SECONDS</p><h2 id="quick-checkin-heading">How are you feeling right now?</h2></div>
-          <span className="quick-time">Quick check-in</span>
-        </div>
-        <p className="quick-privacy"><LockKeyhole size={15} /> Quick check-ins are private to you.</p>
-        <div className="mood-options" role="group" aria-label="How are you feeling right now?">
-          {moodLabels.map((label, index) => (
-            <button
-              key={label}
-              type="button"
-              className={`mood-option mood-${index + 1}${quickMood === index + 1 ? " selected" : ""}`}
-              aria-pressed={quickMood === index + 1}
-              onClick={() => setQuickMood(index + 1)}
-            >
-              <span>{index + 1}</span>{label}
-            </button>
-          ))}
-        </div>
-        {quickMood > 0 && (
-          <div className="quick-followup">
-            <label htmlFor="quick-note">Want to tell us why? <span>Optional</span></label>
-            <input id="quick-note" maxLength={4000} value={quickNote} onChange={(event) => setQuickNote(event.target.value)} placeholder="A few words is enough" />
-            <button type="button" className="sensory-primary" disabled={saving} onClick={() => save("quick", { mood: quickMood, dayNote: quickNote, sharedWithMentor: false })}>
-              <Check size={17} /> Save quick check-in
-            </button>
-          </div>
-        )}
-      </section>
-
-      <form className="sensory-panel full-checkin" onSubmit={(event) => { event.preventDefault(); save("full", checkin); }}>
-        <div className="sensory-panel-heading">
-          <div><p className="eyebrow">DAILY CHECK-IN</p><h2>How has today felt for you?</h2></div>
-          <span className="full-time">About 1–2 minutes</span>
-        </div>
-
-        <fieldset className="sensory-fieldset">
-          <legend>How are you feeling today?</legend>
-          <div className="mood-options" role="group" aria-label="How are you feeling today?">
-            {moodLabels.map((label, index) => (
-              <button key={label} type="button" className={`mood-option mood-${index + 1}${checkin.mood === index + 1 ? " selected" : ""}`} aria-pressed={checkin.mood === index + 1} onClick={() => update("mood", index + 1)}>
-                <span>{index + 1}</span>{label}
-              </button>
-            ))}
-          </div>
-          <label className="sensory-label" htmlFor="mood-note">Something else? <span>Optional</span></label>
-          <input id="mood-note" className="sensory-input" maxLength={250} value={checkin.moodNote} onChange={(event) => update("moodNote", event.target.value)} placeholder="Add your own words" />
-        </fieldset>
-
-        <fieldset className="sensory-fieldset">
-          <legend>What emotions are you feeling?</legend>
-          <ToggleChips label="Choose any emotions that fit" options={emotionOptions} values={checkin.emotions} onChange={(values) => update("emotions", values)} />
-          {checkin.emotions.includes("other") && <input className="sensory-input sensory-followup-input" aria-label="Other emotion" maxLength={250} value={checkin.emotionNote} onChange={(event) => update("emotionNote", event.target.value)} placeholder="What emotion would you add?" />}
-        </fieldset>
-
-        <div className="rating-grid">
-          <Rating title="How is your energy today?" name="energy" value={checkin.energy} onChange={(value) => update("energy", value)} low="Very low" high="Very high" labels={["Very low", "Low", "Okay", "High", "Very high"]} />
-          <Rating title="How comfortable do you feel today?" name="comfort" value={checkin.comfort} onChange={(value) => update("comfort", value)} low="Very uncomfortable" high="Very comfortable" labels={["Very uncomfortable", "Uncomfortable", "Okay", "Comfortable", "Very comfortable"]} />
-        </div>
-
-        <fieldset className="sensory-fieldset">
-          <legend>How was your day?</legend>
-          <label className="sensory-label" htmlFor="day-note">Tell us anything about your day. <span>Optional</span></label>
-          <textarea id="day-note" className="sensory-input sensory-textarea" maxLength={4000} value={checkin.dayNote} onChange={(event) => update("dayNote", event.target.value)} rows={4} placeholder="Whatever feels important to you" />
-        </fieldset>
-
-        <fieldset className="sensory-fieldset">
-          <legend>What caused you to feel this way?</legend>
-          <ToggleChips label="Possible causes" options={causeOptions} values={checkin.causes} onChange={(values) => update("causes", values)} />
-          {checkin.causes.includes("other") && <input className="sensory-input sensory-followup-input" aria-label="Other cause" maxLength={250} value={checkin.causeNote} onChange={(event) => update("causeNote", event.target.value)} placeholder="Add another cause" />}
-        </fieldset>
-
-        <fieldset className="sensory-fieldset">
-          <legend>Did anything overwhelm you today?</legend>
-          <label className="sensory-label" htmlFor="overwhelm-note">You can leave this blank. <span>Optional</span></label>
-          <textarea id="overwhelm-note" className="sensory-input sensory-textarea" maxLength={2000} value={checkin.overwhelmNote} onChange={(event) => update("overwhelmNote", event.target.value)} rows={3} placeholder="Share only what you want to" />
-        </fieldset>
-
-        <fieldset className="sensory-fieldset">
-          <legend>What helped you feel better?</legend>
-          <ToggleChips label="Helpful actions" options={helpfulOptions} values={checkin.helpfulActions} onChange={(values) => update("helpfulActions", values)} />
-          {checkin.helpfulActions.includes("other") && <input className="sensory-input sensory-followup-input" aria-label="Other helpful action" maxLength={250} value={checkin.helpfulNote} onChange={(event) => update("helpfulNote", event.target.value)} placeholder="What else helped?" />}
-        </fieldset>
-
-        <fieldset className="sensory-fieldset mentor-support">
-          <legend>Do you need help from a mentor?</legend>
-          <div className="support-options">
-            {mentorHelpOptions.map(([value, label]) => (
-              <label key={value} className={checkin.mentorHelp === value ? "selected" : ""}>
-                <input type="radio" name="mentor-help" value={value} checked={checkin.mentorHelp === value} onChange={() => update("mentorHelp", value)} />
-                <span>{label}</span>
-              </label>
-            ))}
-          </div>
-          {checkin.mentorHelp === "specific_mentor" && checkin.sharedWithMentor && (
-            <label className="sensory-label mentor-select-label">
-              Choose an assigned mentor
-              <select className="sensory-input" value={checkin.selectedMentorId} onChange={(event) => update("selectedMentorId", event.target.value)} required>
-                <option value="">Choose a mentor</option>
-                {mentors.map((mentor) => <option key={mentor.id} value={mentor.id}>{mentor.display_name}</option>)}
-              </select>
-              {mentors.length === 0 && <small>No mentors are assigned to your account yet.</small>}
-            </label>
-          )}
-          {checkin.mentorHelp === "specific_mentor" && !checkin.sharedWithMentor && <p className="sensory-inline-note">If you choose to share, you can pick an assigned mentor.</p>}
-          <label className="sensory-label" htmlFor="mentor-message">Is there anything you'd like your mentor to know? <span>Optional</span></label>
-          <textarea id="mentor-message" className="sensory-input sensory-textarea" maxLength={2000} value={checkin.mentorMessage} onChange={(event) => update("mentorMessage", event.target.value)} rows={3} placeholder="Write a note for your mentor" />
-          <label className="share-control">
-            <input type="checkbox" checked={checkin.sharedWithMentor} onChange={(event) => update("sharedWithMentor", event.target.checked)} />
-            <span><strong>Share this check-in with my mentor</strong><small>Your full entry is shared only with mentors assigned to support you.</small></span>
-          </label>
-          <p className={`privacy-status${checkin.sharedWithMentor ? " shared" : ""}`} role="status">
-            {checkin.sharedWithMentor ? <Send size={16} /> : <LockKeyhole size={16} />}
-            {checkin.sharedWithMentor
-              ? checkin.selectedMentorId
-                ? `This entry will be shared with ${mentors.find((mentor) => mentor.id === checkin.selectedMentorId)?.display_name || "your selected mentor"}.`
-                : "This entry will be shared with your assigned mentor(s)."
-              : "Private to you. No mentor can see this entry."}
-          </p>
-          {checkin.mentorHelp !== "none" && !checkin.sharedWithMentor && <p className="sensory-inline-note">Your support choice will stay private unless you turn on sharing.</p>}
-        </fieldset>
-
-        <div className="sensory-submit-row">
-          <p>Only you can see private entries. You can delete any entry later.</p>
-          <button type="submit" className="sensory-primary" disabled={saving}>{saving ? "Saving…" : "Save today's check-in"}</button>
-        </div>
-      </form>
-
-      {recentSuggestions.length > 0 && (
-        <section className="sensory-panel suggestion-panel">
-          <div className="sensory-panel-heading"><div><p className="eyebrow">OPTIONAL IDEAS</p><h2>A few things you could try</h2></div><ChevronDown size={19} aria-hidden="true" /></div>
-          <p>These are just ideas, not instructions. Choose what feels right for you.</p>
-          <ul>{recentSuggestions.map((suggestion) => <li key={suggestion}>{suggestion}</li>)}</ul>
+      {!todayEntry ? (
+        <section className="sensory-card sensory-checkin">
+          <div className="sensory-card-title"><div><span className="sensory-step">TODAY'S CHECK-IN</span><h2>{view === "quick" ? "How are you feeling right now?" : "How are you feeling today?"}</h2></div><Activity size={22} /></div>
+          <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">Quick check-in</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button">Full check-in</button></div>
+          <form onSubmit={(event) => submit(event, view === "quick")}>
+            <div className="sensory-field"><div className="sensory-label">How are you feeling today?</div><div className="sensory-mood-options">{moodLabels.map((mood, index) => <button type="button" key={mood} className={form.mood === index + 1 ? "selected" : ""} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true">{["☹", "🙁", "◉", "🙂", "☺"][index]}</span>{mood}</button>)}</div></div>
+            {view === "quick" ? (
+              <label className="sensory-field">Want to tell us why?<textarea value={form.quickReason} maxLength={4000} onChange={(event) => updateForm("quickReason", event.target.value)} placeholder="Anything you'd like to remember..." rows="3" /></label>
+            ) : (
+              <>
+                <fieldset className="sensory-field"><legend>What emotions are you feeling?</legend><div className="sensory-chips">{emotionOptions.map(([key, label]) => <button type="button" key={key} className={form.emotions.includes(key) ? "selected" : ""} onClick={() => toggleArray("emotions", key)}>{label}</button>)}</div></fieldset>
+                <label className="sensory-field">Anything else you'd like to call this feeling?<input value={form.moodCustom} maxLength={250} onChange={(event) => updateForm("moodCustom", event.target.value)} placeholder="Optional" /></label>
+                <div className="sensory-field"><label htmlFor="energy-range">How is your energy today? <strong>{["Very low", "Low", "Okay", "High", "Very high"][form.energy - 1]}</strong></label><input id="energy-range" type="range" min="1" max="5" value={form.energy} onChange={(event) => updateForm("energy", event.target.value)} /></div>
+                <div className="sensory-field"><label htmlFor="comfort-range">How comfortable do you feel today? <strong>{["Very uncomfortable", "Uncomfortable", "Okay", "Comfortable", "Very comfortable"][form.comfort - 1]}</strong></label><input id="comfort-range" type="range" min="1" max="5" value={form.comfort} onChange={(event) => updateForm("comfort", event.target.value)} /></div>
+                <label className="sensory-field">How was your day?<textarea value={form.daySummary} maxLength={4000} onChange={(event) => updateForm("daySummary", event.target.value)} placeholder="Tell us anything about your day." rows="4" /></label>
+                <fieldset className="sensory-field"><legend>What might have contributed to how you feel?</legend><div className="sensory-chips">{causeOptions.map(([key, label]) => <button type="button" key={key} className={form.causes.includes(key) ? "selected" : ""} onClick={() => toggleArray("causes", key)}>{label}</button>)}</div></fieldset>
+                <label className="sensory-field">Did anything overwhelm you today?<textarea value={form.overwhelm} maxLength={2000} onChange={(event) => updateForm("overwhelm", event.target.value)} placeholder="Optional" rows="3" /></label>
+                <fieldset className="sensory-field"><legend>What helped you feel better?</legend><div className="sensory-chips">{helpfulOptions.map(([key, label]) => <button type="button" key={key} className={form.helpful.includes(key) ? "selected" : ""} onClick={() => toggleArray("helpful", key)}>{label}</button>)}</div></fieldset>
+                <label className="sensory-field">Do you need help from a mentor?<select value={form.helpRequest} onChange={(event) => updateForm("helpRequest", event.target.value)}>{mentorHelpOptions.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+                {form.helpRequest === "specific_mentor" && <label className="sensory-field">Choose a mentor<select value={form.selectedMentorId} onChange={(event) => updateForm("selectedMentorId", event.target.value)}><option value="">Select a mentor</option>{mentors.map((mentor) => <option key={mentor.id} value={mentor.id}>{mentor.display_name}</option>)}</select>{mentors.length === 0 && <small>No mentors are assigned to your account yet.</small>}</label>}
+                {form.helpRequest !== "none" && <label className="sensory-field">Is there anything you'd like your mentor to know?<textarea value={form.mentorMessage} maxLength={2000} onChange={(event) => updateForm("mentorMessage", event.target.value)} rows="3" /></label>}
+                <label className="sensory-share"><input type="checkbox" checked={form.shared} onChange={(event) => updateForm("shared", event.target.checked)} /><span><Share2 size={17} /><strong>Share this check-in with my mentor</strong><small>{form.shared ? "Your assigned mentor can see the details in their dashboard." : "This stays private unless you turn this on."}</small></span></label>
+                {form.shared && <p className="sensory-share-note">Shared entries are visible only to mentors assigned to you.</p>}
+              </>
+            )}
+            {view === "quick" && <p className="sensory-private-note"><LockKeyhole size={15} /> Quick check-ins are private.</p>}
+            <button className="sensory-submit" type="submit" disabled={!form.mood || saving}>{saving ? "Saving…" : view === "quick" ? "Save quick check-in" : "Save today's check-in"}</button>
+          </form>
         </section>
+      ) : (
+        <section className="sensory-card sensory-done"><Check size={21} /><div><h2>You've checked in today.</h2><p>Your entry is {todayEntry.shared_with_mentor ? "shared with your mentor" : "private"}. You can still review or delete it in your history.</p></div></section>
       )}
 
-      {insights.length > 0 && (
-        <section className="sensory-panel insight-panel" aria-labelledby="insights-heading">
-          <p className="eyebrow">YOUR OWN PATTERNS</p><h2 id="insights-heading">Things you may have noticed</h2>
-          <ul>{insights.map((insight) => <li key={insight}>{insight}</li>)}</ul>
-          <small>These are reflections on your entries, not diagnoses or predictions.</small>
-        </section>
-      )}
+      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">GENTLE IDEAS</span><h2>A few things you could try</h2></div><Heart size={22} /></div><div className="sensory-suggestions">{suggestions.map((item) => <span key={item}>{item}</span>)}</div><small>Optional ideas only. You know what works best for you.</small></section>
 
-      <TrendChart entries={entries} />
-
-      <section className="sensory-history" aria-labelledby="history-heading">
-        <div className="sensory-panel-heading"><div><p className="eyebrow">YOUR PRIVATE RECORD</p><h2 id="history-heading">Past check-ins</h2></div><span>{entries.length} {entries.length === 1 ? "entry" : "entries"}</span></div>
-        {entries.length === 0 ? (
-          <p className="sensory-history-empty">Your check-ins will appear here. Start with whichever version feels right today.</p>
-        ) : (
-          <div className="sensory-history-list">
-            {entries.map((entry) => (
-              <article className="sensory-history-item" key={entry.id}>
-                <button type="button" className="history-open" aria-expanded={selectedEntryId === entry.id} onClick={() => setSelectedEntryId(selectedEntryId === entry.id ? null : entry.id)}>
-                  <span className="history-date"><strong>{formatDate(entry.created_at)}</strong><small>{entry.checkin_type === "quick" ? "Quick check-in" : "Daily check-in"}</small></span>
-                  <span className={`history-mood mood-text-${entry.mood}`}>{moodLabels[entry.mood - 1]}</span>
-                  <span className="history-emotions">{(entry.emotions || []).slice(0, 2).map((emotion) => emotionOptions.find(([key]) => key === emotion)?.[1] || emotion).join(", ") || "No emotions selected"}</span>
-                  <span className="history-energy">{entry.energy ? `Energy ${entry.energy}/5` : "Quick entry"}</span>
-                  <span className="history-summary">{entry.day_note || entry.overwhelm_note || "No note added"}</span>
-                  <ChevronDown size={17} className={selectedEntryId === entry.id ? "expanded" : ""} aria-hidden="true" />
-                </button>
-                {selectedEntryId === entry.id && (
-                  <div className="history-detail">
-                    <p className="history-created">Saved {formatDateTime(entry.created_at)} · {entry.shared_with_mentor ? "Shared with assigned mentor(s)" : "Private to you"}</p>
-                    {entry.energy && <p>Comfort: {entry.comfort}/5</p>}
-                    {(entry.mood_note || entry.emotion_note) && <p>{entry.mood_note || entry.emotion_note}</p>}
-                    {entry.day_note && <p><strong>About your day:</strong> {entry.day_note}</p>}
-                    {entry.causes?.length > 0 && <p><strong>Causes:</strong> {entry.causes.map((cause) => causeOptions.find(([key]) => key === cause)?.[1] || cause).join(", ")}{entry.cause_note && ` · ${entry.cause_note}`}</p>}
-                    {entry.overwhelm_note && <p><strong>Overwhelm:</strong> {entry.overwhelm_note}</p>}
-                    {entry.helpful_actions?.length > 0 && <p><strong>What helped:</strong> {entry.helpful_actions.map((action) => helpfulOptions.find(([key]) => key === action)?.[1] || action).join(", ")}{entry.helpful_note && ` · ${entry.helpful_note}`}</p>}
-                    {entry.mentor_help !== "none" && <p><strong>Mentor support:</strong> {mentorHelpOptions.find(([key]) => key === entry.mentor_help)?.[1]}</p>}
-                    {entry.mentor_message && <p><strong>Message to mentor:</strong> {entry.mentor_message}</p>}
-                    {responses.filter((response) => response.checkin_id === entry.id).map((response) => <p className="mentor-reply" key={response.checkin_id}><strong>Mentor replied:</strong> {response.mentor_message}</p>)}
-                    <button type="button" className="delete-checkin" onClick={() => removeEntry(entry.id)}><Trash2 size={15} /> Delete this check-in</button>
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )}
+      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">YOUR RECENT CHECK-INS</span><h2>Patterns over time</h2></div></div><TrendChart entries={sortedEntries} />
+        {sortedEntries.length >= 4 && <div className="sensory-insights">{tiredCount >= 3 && <p>Your entries suggest you reported feeling tired on several recent days.</p>}{stressedCount >= 3 && <p>You reported feeling stressed on several school days recently.</p>}{tiredCount < 3 && stressedCount < 3 && <p>You're building a picture of what your days feel like. Keep checking in if it feels helpful.</p>}</div>}
       </section>
-    </main>
+
+      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">YOUR HISTORY</span><h2>Previous check-ins</h2></div></div>
+        {!sortedEntries.length ? <p className="sensory-muted">Your check-ins will appear here. Only you can see private entries.</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{moodLabels[entry.mood - 1]}{entry.emotions?.length ? ` · ${labelsFor(emotionOptions, entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · Energy ${entry.energy}/5` : " · Quick check-in"}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{entry.shared_with_mentor ? "Shared" : "Private"}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} onDelete={removeEntry} />}</article>)}</div>}
+      </section>
+    </section>
   );
 }

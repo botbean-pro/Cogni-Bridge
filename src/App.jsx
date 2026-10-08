@@ -13,9 +13,12 @@ import { readStudentActivities, recordStudentAttendance } from "./studentActivit
 import { fetchSessions } from "./mentorContent";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { translate } from "./i18n";
+import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
+import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
+  const [learningNotes, setLearningNotes] = useState([]);
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
   const [activeTab, setActiveTab] = useState("home");
@@ -41,6 +44,9 @@ const App = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [premiumCartPlan, setPremiumCartPlan] = useState(null);
+  const [premiumCheckoutOpen, setPremiumCheckoutOpen] = useState(false);
+  const [pendingPremiumLogin, setPendingPremiumLogin] = useState(false);
   const t = useMemo(
     () => (key, values) => translate(studentLanguage, key, values),
     [studentLanguage],
@@ -51,6 +57,8 @@ const App = () => {
   const sensoryTrackerEnabled = Boolean(
     signedIn && supabaseConfigured && authUserId && authRole === "student",
   );
+  const classLabel = String(studentProfile?.studentClass || "").trim().toLowerCase();
+  const isGrade12 = /(^|[^a-z0-9])(12(?:th)?|xii|twelfth)(?=$|[^a-z0-9])/.test(classLabel);
 
   const scrollToAbout = () => {
     const aboutSection = document.getElementById("about-us");
@@ -251,6 +259,7 @@ const App = () => {
 
   const goToTab = (tab) => {
     if (tab === "sensory" && !sensoryTrackerEnabled) return;
+    if (tab === "careers" && (!signedIn || !isGrade12)) return;
     if (tab === "about") {
       setActiveTab("about");
       setSelectedSession(null);
@@ -271,6 +280,7 @@ const App = () => {
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <MentorPortal
           sessions={sessions}
+          notes={learningNotes}
           initialLoggedIn
           mentorId={authRole === "mentor" ? authUserId : null}
           t={t}
@@ -278,6 +288,8 @@ const App = () => {
           onUpdateSession={(updatedSession) => setSessions((items) => items.map((session) => (
             session.id === updatedSession.id ? { ...session, ...updatedSession } : session
           )))}
+          onAddNote={(note) => setLearningNotes((items) => [note, ...items])}
+          onLoadNotes={setLearningNotes}
           onBack={() => {
             setMentorOpen(false);
             if (supabaseConfigured) supabase.auth.signOut();
@@ -321,7 +333,8 @@ const App = () => {
             setStudentProfile(profile);
             setStudentEmail(profile.email);
             setSignedIn(true);
-            setActiveTab("study");
+            setActiveTab(pendingPremiumLogin ? "premium" : "study");
+            setPendingPremiumLogin(false);
           }}
         />
       </div>
@@ -376,10 +389,12 @@ const App = () => {
         goToTab={goToTab}
         signedIn={signedIn}
         sensoryTrackerEnabled={sensoryTrackerEnabled}
+        isGrade12={isGrade12}
         studentName={studentName}
         t={t}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
+        onOpenAccount={() => setProfileOpen(true)}
         showIntro={showIntro}
         introExiting={introExiting}
         accessibilityOpen={accessibilityOpen}
@@ -418,6 +433,7 @@ const App = () => {
           sessions: (
             <SessionsPage
               sessions={sessions}
+              notes={learningNotes}
               selectedSession={selectedSession}
               signedIn={signedIn}
               t={t}
@@ -443,7 +459,26 @@ const App = () => {
               }}
             />
           ),
+          careers: signedIn && isGrade12 ? <CareerOptionsPage /> : null,
           flow: <FlowPage t={t} language={studentLanguage} />,
+          premium: <PremiumFlowPage
+            t={t}
+            signedIn={signedIn}
+            studentEmail={studentEmail}
+            studentName={studentName}
+            cartPlan={premiumCartPlan}
+            checkoutOpen={premiumCheckoutOpen}
+            onAddToCart={setPremiumCartPlan}
+            onRemoveFromCart={() => setPremiumCartPlan(null)}
+            onBeginCheckout={() => {
+              setPremiumCheckoutOpen(true);
+              if (!signedIn) {
+                setPendingPremiumLogin(true);
+                setLoginOpen(true);
+              }
+            }}
+            onBackToPlans={() => setPremiumCheckoutOpen(false)}
+          />,
           messages: <MessagesPage t={t} />,
           settings: (
             <SettingsPage
@@ -456,11 +491,7 @@ const App = () => {
             />
           ),
           sensory: sensoryTrackerEnabled ? (
-            <SensoryTrackerPage
-              studentId={authUserId}
-              studentName={studentName}
-              t={t}
-            />
+            <SensoryTrackerPage studentId={authUserId} />
           ) : null,
         }}
       />
@@ -481,7 +512,8 @@ const App = () => {
             setAuthUserId(userId || null);
             setAuthRole(profile?.role || null);
             setSignedIn(true);
-            setActiveTab("study");
+            setActiveTab(pendingPremiumLogin ? "premium" : "study");
+            setPendingPremiumLogin(false);
           }}
           onCreateAccount={() => {
             setLoginOpen(false);

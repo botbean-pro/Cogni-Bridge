@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
-import { ArrowDown, ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
+import { Card } from "../../Brand";
+import { CognibridgeButton } from "../../CognibridgeButton";
 import { AboutPage } from "./AboutPage";
 import { StudyPage } from "./SessionsPage";
 
@@ -11,9 +13,9 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
         <h1>{t("bigIdeasGrow")}<br />{t("weLearn")} <span>{t("together")}</span></h1>
         <p className="hero-description">{t("homeHeroDescription")}</p>
         <div className="hero-actions">
-          <button className="hero-primary" onClick={onSignIn}>
+          <CognibridgeButton className="hero-primary" onClick={onSignIn}>
             {t("joinCommunity")} <ArrowRight size={19} />
-          </button>
+          </CognibridgeButton>
           <button className="hero-secondary" onClick={onExploreSessions}>
             {t("exploreSessions")}
           </button>
@@ -25,7 +27,9 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
           <span className="hero-orbit hero-orbit-one" />
           <span className="hero-orbit hero-orbit-two" />
           <span className="hero-orbit hero-orbit-three" />
-          <span className="hero-orb hero-orb-book"><BookOpen size={76} strokeWidth={1.5} /></span>
+          <div className="hero-orb hero-orb-book hero-orb-card">
+            <Card />
+          </div>
           <span className="hero-float hero-float-coral"><Sparkles size={20} fill="currentColor" /></span>
           <span className="hero-float hero-float-yellow"><Sparkles size={20} fill="currentColor" /></span>
           <span className="hero-float hero-float-mint"><Sparkles size={20} fill="currentColor" /></span>

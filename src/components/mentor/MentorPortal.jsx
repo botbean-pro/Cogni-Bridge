@@ -16,13 +16,12 @@ const createSessionForm = () => ({
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
-export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAddSession, onUpdateSession, onBack, t }) {
+export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorId, onAddSession, onUpdateSession, onAddNote, onLoadNotes, onBack, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("overview");
-  const [notes, setNotes] = useState([]);
   const [form, setForm] = useState(createSessionForm);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [noteForm, setNoteForm] = useState(createNoteForm);
@@ -33,7 +32,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
     let isCurrent = true;
     loadMentorNotes(mentorId)
       .then((rows) => {
-        if (isCurrent) setNotes(rows);
+        if (isCurrent) onLoadNotes(rows);
       })
       .catch(() => {});
     return () => {
@@ -131,7 +130,7 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
     if (supabaseConfigured && mentorId) {
       try {
         const saved = await uploadMentorNote(mentorId, noteForm);
-        setNotes((items) => [saved, ...items]);
+        onAddNote(saved);
         setActionError("");
         setNoteForm(createNoteForm());
         event.target.reset();
@@ -141,10 +140,15 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
       return;
     }
 
-    setNotes((items) => [
-      { ...noteForm, id: String(Date.now()), fileName: noteForm.file.name },
-      ...items,
-    ]);
+    const reader = new FileReader();
+    reader.onload = () => onAddNote({
+      title: noteForm.title,
+      subject: noteForm.subject,
+      id: String(Date.now()),
+      fileName: noteForm.file.name,
+      dataUrl: reader.result,
+    });
+    reader.readAsDataURL(noteForm.file);
     setNoteForm(createNoteForm());
     event.target.reset();
   };

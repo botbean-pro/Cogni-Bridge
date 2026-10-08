@@ -39,6 +39,12 @@ export function FlowPage({ t, language }) {
 
     try {
       const answer = await askLearningAssistant(conversation, "chat", language);
+      let quiz = null;
+      try {
+        quiz = await askLearningAssistant(conversation, "mcq", language);
+      } catch {
+        // Keep the tutor's answer available when practice generation is unavailable.
+      }
       setMessages((current) => {
         const translatedMessages = answer.translatedQuestion
           ? current.map((message) => (
@@ -52,10 +58,11 @@ export function FlowPage({ t, language }) {
           ...translatedMessages,
           {
             id: `${Date.now()}-chat`,
-          role: "assistant",
+            role: "assistant",
             content: answer.content,
             relatedQuestions: answer.relatedQuestions,
-          timestamp: new Date(),
+            quiz,
+            timestamp: new Date(),
           },
         ];
       });
@@ -78,7 +85,7 @@ export function FlowPage({ t, language }) {
     const conversation = [...messages, userMessage];
     setMessages(conversation);
     setInput("");
-    await requestAssistant(conversation, "chat", userMessage.id);
+    await requestAssistant(conversation, userMessage.id);
   };
 
   const sendMessage = async (event) => {

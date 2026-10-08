@@ -22,7 +22,7 @@ export async function askLearningAssistant(conversation, task = "chat", language
       translatedQuestion: data.translatedQuestion || "",
       relatedQuestions: data.relatedQuestions || [],
     }
-    : data.content;
+    : data.quiz;
 }
 
 export function parseQuiz(responseText) {

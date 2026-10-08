@@ -94,8 +94,7 @@ select {
 
 .login-button,
 .primary-btn,
-.mentor-primary,
-.hero-primary {
+.mentor-primary {
   min-height: 48px;
   border-radius: 13px;
   background: var(--teal);
@@ -105,8 +104,7 @@ select {
 
 .login-button:hover,
 .primary-btn:hover,
-.mentor-primary:hover,
-.hero-primary:hover {
+.mentor-primary:hover {
   transform: translateY(-2px);
   background: #06a699;
   box-shadow: 0 12px 25px rgba(8, 179, 167, .27);
@@ -114,8 +112,7 @@ select {
 
 .login-button::before,
 .primary-btn::before,
-.mentor-primary::before,
-.hero-primary::before {
+.mentor-primary::before {
   content: none;
 }
 
@@ -248,18 +245,6 @@ select {
   gap: 24px;
 }
 
-.hero-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 11px;
-  min-height: 55px;
-  padding: 0 23px;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 800;
-}
-
 .hero-secondary {
   padding: 8px 0;
   color: #f7ffff;
@@ -343,6 +328,149 @@ select {
   background: linear-gradient(140deg, #ffd18a, #f6a94f);
   box-shadow: 0 22px 48px rgba(35, 57, 48, .17), inset 0 2px 0 rgba(255, 255, 255, .25);
   animation: heroFloat 5.5s ease-in-out infinite;
+}
+
+.brand-stat-card {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.brand-stat-outer {
+  position: relative;
+  width: min(100%, 230px);
+  aspect-ratio: 1;
+  border-radius: 26px;
+  padding: 2px;
+  background: linear-gradient(145deg, #e7fffa, #08b3a7 68%, #087f77);
+  box-shadow: 0 20px 42px rgba(8, 127, 119, 0.24);
+}
+
+.brand-stat-dot {
+  position: absolute;
+  right: 10%;
+  top: 10%;
+  z-index: 2;
+  width: 5px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
+  animation: moveDot 6s linear infinite;
+}
+
+.brand-stat-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: radial-gradient(circle 250px at 0% 0%, #f3fffc, #c3eee7 72%, #a3e0d7);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.brand-stat-ray {
+  position: absolute;
+  top: 0%;
+  left: 0;
+  width: 220px;
+  height: 45px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.9);
+  filter: blur(10px);
+  transform: rotate(40deg);
+  transform-origin: 10%;
+}
+
+.brand-stat-logo-badge {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 112px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #fff, #f7fffd 62%, #e2f7f3);
+  box-shadow:
+    0 10px 24px rgba(8, 127, 119, 0.16),
+    0 0 0 7px rgba(255, 255, 255, 0.2),
+    0 0 30px rgba(8, 179, 167, 0.22);
+}
+
+.brand-stat-logo {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(8, 127, 119, 0.16));
+}
+
+.brand-stat-line {
+  position: absolute;
+  background: rgba(8, 127, 119, 0.15);
+}
+
+.brand-stat-topl {
+  top: 10%;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(8, 127, 119, 0.4), rgba(8, 127, 119, 0.06));
+}
+
+.brand-stat-bottoml {
+  bottom: 10%;
+  width: 100%;
+  height: 1px;
+}
+
+.brand-stat-leftl {
+  left: 10%;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(8, 127, 119, 0.4), rgba(8, 127, 119, 0.06));
+}
+
+.brand-stat-rightl {
+  right: 10%;
+  width: 1px;
+  height: 100%;
+}
+
+@keyframes moveDot {
+  0%, 100% {
+    top: 10%;
+    right: 10%;
+  }
+  25% {
+    top: 10%;
+    right: calc(100% - 30px);
+  }
+  50% {
+    top: calc(100% - 30px);
+    right: calc(100% - 30px);
+  }
+  75% {
+    top: calc(100% - 30px);
+    right: 10%;
+  }
+}
+
+.hero-orb-card {
+  width: min(64%, 300px);
+  aspect-ratio: 1;
+  border-radius: 30px;
+  background: rgba(8, 179, 167, 0.12);
+  border: 1px solid rgba(176, 246, 237, 0.42);
+  box-shadow: 0 30px 60px rgba(8, 127, 119, 0.2);
+  overflow: visible;
+  transform: translateY(-8px);
 }
 
 .hero-book-flight {
@@ -795,6 +923,11 @@ select {
     height: 44px;
   }
 
+  .brand-mark img {
+    width: 44px;
+    height: 44px;
+  }
+
   .nav {
     display: flex;
     flex: 0 0 100%;
@@ -843,6 +976,13 @@ select {
   .sessions-section,
   .home-content > .stats-section {
     width: min(100% - 40px, 1280px);
+  }
+}
+
+@media (max-width: 760px) {
+  .brand-mark img {
+    width: 32px;
+    height: 32px;
   }
 }
 
