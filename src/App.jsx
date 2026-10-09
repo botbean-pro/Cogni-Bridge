@@ -9,6 +9,7 @@ import { StudentPage } from "./components/student/StudentPage";
 import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
 import { SettingsPage } from "./components/student/pages/SettingsPage";
 import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
+import { clearDemoStudentCheckins } from "./studentSensory";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { fetchSessions } from "./mentorContent";
 import { supabase, supabaseConfigured } from "./supabaseClient";
@@ -54,8 +55,9 @@ const App = () => {
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
+  const sensoryTrackerDemoMode = Boolean(signedIn && !supabaseConfigured && studentEmail);
   const sensoryTrackerEnabled = Boolean(
-    signedIn && supabaseConfigured && authUserId && authRole === "student",
+    signedIn && (sensoryTrackerDemoMode || (supabaseConfigured && authUserId && authRole === "student")),
   );
   const classLabel = String(studentProfile?.studentClass || "").trim().toLowerCase();
   const isGrade12 = /(^|[^a-z0-9])(12(?:th)?|xii|twelfth)(?=$|[^a-z0-9])/.test(classLabel);
@@ -247,6 +249,7 @@ const App = () => {
 
   const logOut = () => {
     if (supabaseConfigured) supabase.auth.signOut();
+    else clearDemoStudentCheckins(studentEmail);
     setSignedIn(false);
     setAuthUserId(null);
     setAuthRole(null);
@@ -491,7 +494,11 @@ const App = () => {
             />
           ),
           sensory: sensoryTrackerEnabled ? (
-            <SensoryTrackerPage studentId={authUserId} />
+            <SensoryTrackerPage
+              key={supabaseConfigured ? authUserId : studentEmail}
+              studentId={supabaseConfigured ? authUserId : studentEmail}
+              demoMode={sensoryTrackerDemoMode}
+            />
           ) : null,
         }}
       />

@@ -102,20 +102,31 @@ function useMentorSupport(mentorId) {
     item.id === id ? { ...item, ...changes } : item
   )));
 
-  const markAllViewed = () => {
+  const markAllViewed = async () => {
     const now = new Date().toISOString();
-    notifications.filter((item) => !item.viewed_at).forEach((item) => {
+    const unreadNotifications = notifications.filter((item) => !item.viewed_at);
+    const results = await Promise.allSettled(unreadNotifications.map((item) => (
       markMentorNotificationViewed(mentorId, item.id)
-        .then(() => patchNotification(item.id, { viewed_at: now }))
-        .catch(() => {});
+    )));
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        patchNotification(unreadNotifications[index].id, { viewed_at: now });
+      }
     });
+    if (results.some((result) => result.status === "rejected")) {
+      setError("Some support requests couldn't be marked as viewed. Please try again.");
+    }
   };
 
   const respond = async (notificationId, message, addressed) => {
     try {
-      await respondToMentorRequest(mentorId, notificationId, message);
+      await respondToMentorRequest(mentorId, notificationId, message, addressed);
       const now = new Date().toISOString();
-      patchNotification(notificationId, { viewed_at: now, addressed_at: now, mentor_message: message.trim() });
+      patchNotification(notificationId, {
+        viewed_at: now,
+        ...(addressed ? { addressed_at: now } : {}),
+        mentor_message: message.trim(),
+      });
       setError("");
     } catch {
       setError(addressed ? "This request couldn't be marked addressed." : "Your reply couldn't be sent.");

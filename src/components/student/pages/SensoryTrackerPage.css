@@ -4,6 +4,7 @@
 .sensory-heading p:last-child { margin:0; color:var(--muted); }
 .sensory-heading > span { display:flex; align-items:center; gap:8px; padding:10px 13px; border:1px solid var(--line); border-radius:12px; color:var(--teal); font-size:13px; }
 .sensory-privacy,.sensory-status { display:flex; align-items:center; gap:9px; margin:0; padding:12px 15px; border-radius:12px; background:var(--surface-2); color:var(--muted); font-size:13px; }
+.sensory-demo-banner { display:flex; align-items:flex-start; gap:9px; margin:0; padding:12px 15px; border:1px solid #e7d8ac; border-radius:12px; background:#fffaf0; color:#6f5d36; font-size:13px; line-height:1.5; }
 .sensory-status { border:1px solid #b9ded8; color:var(--teal); background:#eff9f7; }
 .sensory-card { padding:22px; border:1px solid var(--line); border-radius:17px; background:var(--surface); color:var(--text); box-shadow:0 6px 20px rgba(20,55,55,.035); }
 .sensory-card-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; color:var(--teal); }
@@ -12,7 +13,9 @@
 .sensory-view-switch { display:flex; gap:6px; width:max-content; max-width:100%; margin-bottom:20px; padding:4px; border-radius:11px; background:var(--surface-2); }
 .sensory-view-switch button { padding:9px 13px; border:0; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
 .sensory-view-switch button.active { background:var(--surface); color:var(--teal); box-shadow:0 2px 7px rgba(20,55,55,.08); }
+.sensory-view-switch button:disabled { opacity:.55; cursor:not-allowed; }
 .sensory-field { display:grid; gap:10px; min-width:0; margin:18px 0; padding:0; border:0; }
+.sensory-other-field { display:grid; gap:8px; margin-top:12px; }
 .sensory-field > label,.sensory-field > legend,.sensory-label { color:var(--text); font-size:14px; font-weight:700; }
 .sensory-field > label strong { float:right; color:var(--teal); }
 .sensory-field input:not([type=range]),.sensory-field textarea,.sensory-field select { width:100%; padding:12px 13px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:inherit; }
@@ -62,4 +65,5 @@
 .sensory-entry-detail { padding:2px 2px 15px; color:var(--text); font-size:13px; line-height:1.5; }
 .sensory-delete { display:inline-flex; align-items:center; gap:6px; padding:7px 9px; border:1px solid #e7bebe; border-radius:8px; background:transparent; color:#9e4141; font:inherit; cursor:pointer; }
 .theme-dark .sensory-mood-options button.selected,.theme-dark .sensory-chips button.selected,.theme-dark .sensory-status,.theme-dark .sensory-history-entry em.is-shared { background:#203b3c; }
+.theme-dark .sensory-demo-banner { border-color:#63583f; background:#332f24; color:#eee0b8; }
 @media (max-width:650px) { .sensory-heading { align-items:flex-start; flex-direction:column; } .sensory-heading > span { font-size:12px; } .sensory-card { padding:17px; } .sensory-mood-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .sensory-submit { width:100%; } }
