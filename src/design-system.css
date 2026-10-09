@@ -678,8 +678,53 @@ select {
   background: var(--surface);
 }
 
-.about-values-section > .eyebrow {
-  margin-bottom: 14px;
+.about-heading-text {
+  width: min(100%, 920px);
+  margin: 0 auto 32px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: clamp(26px, 4.5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -.055em;
+  line-height: 1.12;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.text-path-track {
+  display: flex;
+  width: max-content;
+  animation: text-path-scroll var(--text-path-duration, 18s) linear infinite;
+  will-change: transform;
+}
+
+.text-path-sequence {
+  display: flex;
+  flex: none;
+}
+
+.text-path-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: clamp(26px, 4vw, 56px);
+  padding-right: clamp(26px, 4vw, 56px);
+  white-space: nowrap;
+}
+
+.text-path-separator {
+  color: var(--teal);
+  font-size: .52em;
+  letter-spacing: 0;
+}
+
+@keyframes text-path-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-path-track { animation: none; }
 }
 
 .about-values-section > h1 {
