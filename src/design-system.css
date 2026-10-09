@@ -376,6 +376,32 @@ select {
   place-items: center;
 }
 
+.hero-text-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  animation: heroRingSpin 80s linear infinite;
+}
+
+.hero-text-ring text {
+  fill: rgba(224, 255, 250, .78);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@keyframes heroRingSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-text-ring { animation: none; }
+}
+
 .hero-orbit {
   position: absolute;
   border: 1px solid rgba(224, 255, 250, .25);
