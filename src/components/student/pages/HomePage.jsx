@@ -1,5 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { ArrowDown, ArrowRight, Sparkles } from "lucide-react";
+import logoWithoutText from "../../../assets/logo without text.svg";
 import { Card } from "../../Brand";
 import { CognibridgeButton } from "../../CognibridgeButton";
 import { AboutPage } from "./AboutPage";
@@ -60,8 +61,47 @@ export function HomePage({
   onScrollToAbout,
   onOpenSession,
 }) {
-  const flightInProgress = useRef(false);
-  const [bookLanded, setBookLanded] = useState(false);
+  const homeContentRef = useRef(null);
+  const scrollBrandRef = useRef(null);
+  const scrollLogoRef = useRef(null);
+  const scrollOrbitRef = useRef(null);
+
+  useEffect(() => {
+    if (signedIn || !homeContentRef.current) return undefined;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = null;
+    const updateLogo = () => {
+      frame = null;
+      if (!homeContentRef.current) return;
+
+      const page = homeContentRef.current;
+      const pageTop = page.getBoundingClientRect().top + window.scrollY;
+      const hero = page.querySelector(".home-hero");
+      const heroBottom = pageTop + (hero?.offsetHeight ?? 0);
+      scrollBrandRef.current?.classList.toggle("over-hero", window.scrollY < heroBottom - 20);
+      if (reduceMotion || !scrollLogoRef.current) return;
+
+      const scrollDistance = Math.max(page.offsetHeight - window.innerHeight, 1);
+      const progress = Math.min(1, Math.max(0, (window.scrollY - pageTop) / scrollDistance));
+      scrollLogoRef.current.style.transform = `rotate(${progress * 360}deg) scale(${1 + progress * 0.08})`;
+      if (scrollOrbitRef.current) {
+        scrollOrbitRef.current.style.transform = `rotate(${-progress * 180}deg)`;
+      }
+    };
+    const scheduleUpdate = () => {
+      if (frame === null) frame = window.requestAnimationFrame(updateLogo);
+    };
+
+    scheduleUpdate();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, [signedIn]);
 
   if (signedIn) {
     return (
@@ -78,68 +118,24 @@ export function HomePage({
     );
   }
 
-  const flyBookToGlobe = () => {
-    const book = document.querySelector(".hero-orb-book");
-    const globe = document.querySelector(".about-value-1 .about-value-icon");
-    const start = book?.getBoundingClientRect();
-
-    if (
-      !book
-      || !globe
-      || !start
-      || flightInProgress.current
-      || window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      onScrollToAbout();
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setBookLanded(true);
-      }
-      return;
-    }
-
-    flightInProgress.current = true;
-    const flight = book.cloneNode(true);
-    Object.assign(flight.style, {
-      position: "fixed",
-      top: `${start.top}px`,
-      left: `${start.left}px`,
-      width: `${start.width}px`,
-      height: `${start.height}px`,
-      zIndex: "50",
-      margin: "0",
-      animation: "none",
-      pointerEvents: "none",
-    });
-    flight.classList.add("hero-book-flight");
-    document.body.appendChild(flight);
-    const globePageTop = globe.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo(0, Math.max(0, globePageTop - window.innerHeight * 0.72));
-
-    window.setTimeout(() => {
-      const end = globe.getBoundingClientRect();
-      const offsetX = end.left + end.width / 2 - (start.left + start.width / 2);
-      const offsetY = end.top + end.height / 2 - (start.top + start.height / 2);
-      const scale = end.width / start.width;
-      const animation = flight.animate(
-        [
-          { transform: "translate(0, 0) scale(1)" },
-          { transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})` },
-        ],
-        { duration: 1050, easing: "cubic-bezier(.22,.75,.22,1)", fill: "forwards" },
-      );
-      animation.onfinish = () => {
-        flight.remove();
-        setBookLanded(true);
-        flightInProgress.current = false;
-      };
-    }, 120);
-  };
-
   return (
-    <section className="content home-content">
-      <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} onScrollToAbout={flyBookToGlobe} t={t} />
-      <AboutPage t={t} onExploreSessions={onExploreSessions} bookLanded={bookLanded} />
-
+    <section className="content home-content" ref={homeContentRef}>
+      <div className="home-story">
+        <aside className="home-scroll-brand" ref={scrollBrandRef} aria-label="CogniBridge">
+          <div className="home-scroll-brand-sticky">
+            <span className="home-scroll-logo-wrap">
+              <span className="home-scroll-logo-orbit" ref={scrollOrbitRef} aria-hidden="true" />
+              <span className="home-scroll-logo-badge">
+                <img className="home-scroll-logo-mark" ref={scrollLogoRef} src={logoWithoutText} alt="" />
+              </span>
+            </span>
+            <span className="home-scroll-brand-name">CogniBridge</span>
+            <span className="home-scroll-brand-caption">{t("learnTogether")}</span>
+          </div>
+        </aside>
+        <HomeHero onSignIn={onSignIn} onExploreSessions={onExploreSessions} onScrollToAbout={onScrollToAbout} t={t} />
+        <AboutPage t={t} onExploreSessions={onExploreSessions} />
+      </div>
     </section>
   );
 }

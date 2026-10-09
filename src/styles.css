@@ -729,7 +729,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail-link:hover { transform:translateX(2px); background:rgba(255,255,255,.09); color:#fff; }
 .student-rail-link.active { background:linear-gradient(120deg,#0cae9a,#087f77); color:white; box-shadow:0 7px 18px rgba(8,169,150,.2); }
 .student-rail-link > span:not(.avatar-small) { width:0; overflow:hidden; opacity:0; transition:width .2s ease,opacity .15s ease; }
-.student-rail:hover .student-rail-brand,.student-rail:focus-within .student-rail-brand,.student-rail:has(.pinned-open) .student-rail-brand { min-height:48px; flex-direction:row; justify-content:flex-start; padding:0 3px; }
+.student-rail:hover .student-rail-brand,.student-rail:focus-within .student-rail-brand,.student-rail:has(.pinned-open) .student-rail-brand { width:100%; min-height:48px; flex-direction:row; justify-content:flex-start; padding:0 3px; }
 .student-rail:hover .student-rail-toggle,.student-rail:focus-within .student-rail-toggle,.student-rail:has(.pinned-open) .student-rail-toggle { width:32px; height:32px; margin-left:auto; border-radius:9px; }
 .student-rail:hover .student-rail-brand-copy,.student-rail:focus-within .student-rail-brand-copy,.student-rail:has(.pinned-open) .student-rail-brand-copy { width:138px; opacity:1; }
 .student-rail:hover .student-rail-nav,.student-rail:focus-within .student-rail-nav,.student-rail:has(.pinned-open) .student-rail-nav { justify-items:stretch; }
