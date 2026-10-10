@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChatHeader } from "../flow/ChatHeader";
-import { ChatMessages } from "../flow/ChatMessages";
+import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
 import { QuickPrompts } from "../flow/QuickPrompts";
 import { askLearningAssistant } from "../flow/flowApi";
@@ -20,6 +20,8 @@ export function FlowPage({ t, language }) {
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const hasAskedQuestion = messages.some((message) => message.role === "user");
+  const latestMessage = messages[messages.length - 1];
+  const relatedQuestions = latestMessage?.role === "assistant" ? latestMessage.relatedQuestions : null;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,7 +106,6 @@ export function FlowPage({ t, language }) {
           isLoading={isLoading}
           messagesEndRef={messagesEndRef}
           t={t}
-          onAskRelated={askQuestion}
         />
         {error && (
           <div className="ai-error" role="alert">
@@ -113,6 +114,14 @@ export function FlowPage({ t, language }) {
           </div>
         )}
         {!hasAskedQuestion && <QuickPrompts onSelect={selectPrompt} t={t} />}
+        {!isLoading && (
+          <RelatedQuestionCards
+            questions={relatedQuestions}
+            onAsk={askQuestion}
+            disabled={isLoading}
+            t={t}
+          />
+        )}
         <ChatComposer
           input={input}
           isLoading={isLoading}

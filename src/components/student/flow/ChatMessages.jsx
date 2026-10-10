@@ -1,5 +1,6 @@
 ﻿import React from "react";
-import { ArrowUpRight, Sparkles, UserRound } from "lucide-react";
+import { ArrowUpRight, UserRound } from "lucide-react";
+import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
 
 function renderInline(text) {
@@ -29,25 +30,19 @@ function FormattedAnswer({ content }) {
   );
 }
 
-function Message({ message, t, onAskRelated, disabled }) {
+function Message({ message, t }) {
   const isAssistant = message.role === "assistant";
 
   return (
     <article className={`ai-message ${message.role}`}>
       <div className="message-avatar">
-        {isAssistant ? <Sparkles size={18} /> : <UserRound size={18} />}
+        {isAssistant ? <LogoImage size={24} /> : <UserRound size={18} />}
       </div>
       <div className="message-content">
         <div className="message-text">
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
         {message.quiz && <PracticeQuestion quiz={message.quiz} t={t} />}
-        {isAssistant && <RelatedQuestionCards
-          questions={message.relatedQuestions}
-          onAsk={onAskRelated}
-          disabled={disabled}
-          t={t}
-        />}
         <time className="message-time">
           {message.timestamp.toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -62,23 +57,26 @@ function Message({ message, t, onAskRelated, disabled }) {
 export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
   if (!questions?.length) return null;
   return (
-    <div className="related-question-cards" aria-label={t("relatedTopics")}>
-      {questions.slice(0, 4).map((question) => (
-        <button key={question} type="button" onClick={() => onAsk(question)} disabled={disabled}>
-          <span>{question}</span><ArrowUpRight size={16} />
-        </button>
-      ))}
+    <div className="related-questions">
+      <p className="quick-prompts-title">{t("relatedTopics")}</p>
+      <div className="related-question-cards" aria-label={t("relatedTopics")}>
+        {questions.slice(0, 4).map((question) => (
+          <button key={question} type="button" onClick={() => onAsk(question)} disabled={disabled}>
+            <span>{question}</span><ArrowUpRight size={16} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-export function ChatMessages({ messages, isLoading, messagesEndRef, t, onAskRelated }) {
+export function ChatMessages({ messages, isLoading, messagesEndRef, t }) {
   return (
     <div className="ai-chat-messages" aria-live="polite">
-      {messages.map((message) => <Message key={message.id} message={message} t={t} onAskRelated={onAskRelated} disabled={isLoading} />)}
+      {messages.map((message) => <Message key={message.id} message={message} t={t} />)}
       {isLoading && (
         <div className="ai-message assistant" aria-label={t("aiThinking")}>
-          <div className="message-avatar"><Sparkles size={18} /></div>
+          <div className="message-avatar"><LogoImage size={24} /></div>
           <div className="message-content">
             <div className="typing-indicator"><span /><span /><span /></div>
           </div>
