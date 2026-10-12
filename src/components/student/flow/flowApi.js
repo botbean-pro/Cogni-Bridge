@@ -1,7 +1,16 @@
+import { supabase, supabaseConfigured } from "../../../supabaseClient";
+
+async function authHeaders() {
+  if (!supabaseConfigured) return {};
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function askLearningAssistant(conversation, task = "chat", language = "English") {
   const response = await fetch("/api/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify({
       task,
       language,

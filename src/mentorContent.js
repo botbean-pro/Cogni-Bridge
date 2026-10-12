@@ -7,6 +7,7 @@ const throwIfError = ({ data, error }) => {
 
 const toClientSession = (row) => ({
   id: row.id,
+  mentorId: row.mentor_id,
   subject: row.subject,
   title: row.title,
   description: row.description,
@@ -80,7 +81,10 @@ export async function loadMentorNotes(mentorId) {
 }
 
 export async function uploadMentorNote(mentorId, { title, subject, file }) {
-  const filePath = `${mentorId}/${Date.now()}-${file.name}`;
+  // Storage keys reject some characters (e.g. brackets or non-Latin script), so store a
+  // safe name and keep the original in file_name.
+  const safeName = file.name.replace(/[^\w.-]+/g, "_");
+  const filePath = `${mentorId}/${Date.now()}-${safeName}`;
   const { error: uploadError } = await supabase.storage
     .from("mentor-notes")
     .upload(filePath, file);

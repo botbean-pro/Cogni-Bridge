@@ -28,6 +28,8 @@
 .leaderboard-table-header, .leaderboard-row { display:grid; grid-template-columns:80px 1.5fr 1fr .7fr 1fr; align-items:center; gap:18px; padding:17px 25px; }
 .leaderboard-table-header { color:var(--muted); background:var(--surface-2); font-size:calc(12px * var(--text-scale, 1)); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
 .leaderboard-row { min-height:76px; border-top:1px solid var(--line); color:var(--text); }
+.leaderboard-row-me { background:var(--surface-2); }
+.leaderboard-loading { margin-top:17px; color:var(--muted); }
 .leaderboard-rank-1 { background:linear-gradient(90deg,#e8f7f4,var(--surface)); }
 .leaderboard-rank { display:flex; align-items:center; justify-content:center; width:31px; height:31px; border-radius:10px; color:var(--muted); font-weight:800; }
 .leaderboard-rank-1 .leaderboard-rank { color:var(--teal-dark); background:#d1ebe6; }

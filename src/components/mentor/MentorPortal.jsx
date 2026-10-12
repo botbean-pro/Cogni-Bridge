@@ -135,7 +135,8 @@ export function MentorPortal({ sessions, initialLoggedIn = false, mentorId, onAd
         setActionError("");
         setNoteForm(createNoteForm());
         event.target.reset();
-      } catch {
+      } catch (uploadError) {
+        console.error("Note upload failed:", uploadError);
         setActionError("Couldn't upload the note. Please try again.");
       }
       return;

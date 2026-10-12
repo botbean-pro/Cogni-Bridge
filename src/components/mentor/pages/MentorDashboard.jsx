@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   CalendarDays,
   ChevronRight,
@@ -15,6 +15,7 @@ import {
 import { formatSession, getSessionSubjectLabel, subjects } from "../../../constants";
 import { LogoImage } from "../../Brand";
 import { SensorySupportInbox } from "../SensorySupportInbox";
+import { SessionStudents } from "../SessionStudents";
 
 function MentorHeader({ onBack, t }) {
   return (
@@ -57,7 +58,8 @@ function MentorNavigation({ tab, setTab, mentorId, t }) {
   );
 }
 
-function OverviewPage({ sessions, notes, setTab, onEditSession, t }) {
+function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
+  const [openStudentsId, setOpenStudentsId] = useState(null);
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const upcomingSessions = sessions.filter((session) => session.date >= today);
@@ -99,6 +101,19 @@ function OverviewPage({ sessions, notes, setTab, onEditSession, t }) {
               {t("openGoogleMeet")} <ChevronRight size={15} />
             </a>
             <button type="button" className="mentor-edit-session" onClick={() => onEditSession(session)}>{t("editSession")}</button>
+            {mentorId && session.mentorId === mentorId && (
+              <>
+                <button
+                  type="button"
+                  className="mentor-edit-session"
+                  aria-expanded={openStudentsId === session.id}
+                  onClick={() => setOpenStudentsId((id) => (id === session.id ? null : session.id))}
+                >
+                  <Users size={15} /> {t("sessionStudents")}
+                </button>
+                {openStudentsId === session.id && <SessionStudents sessionId={session.id} t={t} />}
+              </>
+            )}
           </article>
         ))}
       </div>
@@ -216,7 +231,7 @@ export function MentorDashboard({
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} t={t} />
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
-          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
           {tab === "sensory-support" && mentorId && <SensorySupportInbox mentorId={mentorId} />}

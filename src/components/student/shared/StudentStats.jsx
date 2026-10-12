@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { BookOpen, CheckCircle2, Clock3, Sparkles } from "lucide-react";
 import { calculateStudentStats, readStudentActivities } from "../../../studentActivity";
+import { loadMyRegistrations } from "../../../sessionRegistrations";
+import { supabaseConfigured } from "../../../supabaseClient";
 
 export function StudentStats({ studentEmail, studentName, activityVersion, t }) {
   const [stats, setStats] = useState(null);
@@ -11,6 +13,19 @@ export function StudentStats({ studentEmail, studentName, activityVersion, t }) 
     let isCurrent = true;
     setStats(null);
     setError("");
+
+    if (supabaseConfigured) {
+      loadMyRegistrations()
+        .then(({ activities }) => {
+          if (isCurrent) setStats(calculateStudentStats(activities));
+        })
+        .catch(() => {
+          if (isCurrent) setError(t("statsError"));
+        });
+      return () => {
+        isCurrent = false;
+      };
+    }
 
     try {
       const activities = readStudentActivities(studentEmail);

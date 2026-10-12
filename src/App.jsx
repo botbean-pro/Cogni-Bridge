@@ -11,6 +11,7 @@ import { SettingsPage } from "./components/student/pages/SettingsPage";
 import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { fetchSessions } from "./mentorContent";
+import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { translate } from "./i18n";
 
@@ -160,9 +161,28 @@ const App = () => {
   }, [sensoryTrackerEnabled, activeTab]);
 
   useEffect(() => {
+    if (supabaseConfigured) {
+      if (!signedIn || !authUserId) {
+        setRegisteredSessionIds([]);
+        setAttendedSessionIds(new Set());
+        return undefined;
+      }
+      let isCurrent = true;
+      loadMyRegistrations()
+        .then((registrations) => {
+          if (!isCurrent) return;
+          setRegisteredSessionIds(registrations.registeredSessionIds);
+          setAttendedSessionIds(registrations.attendedSessionIds);
+        })
+        .catch(() => {});
+      return () => {
+        isCurrent = false;
+      };
+    }
+
     if (!signedIn || !studentEmail) {
       setAttendedSessionIds(new Set());
-      return;
+      return undefined;
     }
     try {
       setAttendedSessionIds(new Set(
@@ -171,7 +191,8 @@ const App = () => {
     } catch {
       setAttendedSessionIds(new Set());
     }
-  }, [signedIn, studentEmail, activityVersion]);
+    return undefined;
+  }, [signedIn, studentEmail, authUserId, activityVersion]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--text-scale", textScale);
@@ -209,19 +230,46 @@ const App = () => {
     window.setTimeout(() => setToast(""), 2800);
   };
 
-  const registerForSession = (sessionId) => {
+  const registerForSession = async (sessionId) => {
     if (registeredSessionIds.includes(sessionId)) return;
 
     const session = sessions.find((item) => item.id === sessionId);
+    if (supabaseConfigured) {
+      try {
+        const created = await saveRegistration(sessionId);
+        if (created) {
+          setSessions((items) => items.map((item) => (
+            item.id === sessionId ? { ...item, attendees: item.attendees + 1 } : item
+          )));
+        }
+      } catch {
+        notify(t("registrationError"));
+        return;
+      }
+    }
     setRegisteredSessionIds((ids) => (
       ids.includes(sessionId) ? ids : [...ids, sessionId]
     ));
     notify(t("registrationConfirmed", { title: session?.title || "Session" }));
   };
 
-  const markSessionAttended = (session) => {
+  const markSessionAttended = async (session) => {
     if (!signedIn || !studentEmail) {
       notify(t("signInToSaveAttendance"));
+      return;
+    }
+    if (supabaseConfigured) {
+      try {
+        const recorded = await saveAttendance(session.id);
+        if (!recorded) {
+          notify(t("attendanceAlreadyRecorded"));
+          return;
+        }
+        setActivityVersion((version) => version + 1);
+        notify(t("attendanceRecordedToast"));
+      } catch {
+        notify(t("attendanceSyncError"));
+      }
       return;
     }
     try {
@@ -414,7 +462,7 @@ const App = () => {
               }}
             />
           ),
-          leaderboard: <LeaderboardPage t={t} />,
+          leaderboard: <LeaderboardPage signedIn={signedIn} t={t} />,
           sessions: (
             <SessionsPage
               sessions={sessions}

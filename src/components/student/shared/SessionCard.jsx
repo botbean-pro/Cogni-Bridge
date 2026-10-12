@@ -1,6 +1,7 @@
 import React from "react";
 import { CalendarDays, ChevronRight, Clock3, Users } from "lucide-react";
 import { classNames, formatSession, getSessionSubjectLabel } from "../../../constants";
+import { supabaseConfigured } from "../../../supabaseClient";
 
 export function SessionCard({
   session,
@@ -32,7 +33,7 @@ export function SessionCard({
         <Clock3 size={15} /> {formatSession(session)}
       </p>
       <p className="session-learners">
-        <Users size={15} /> {session.attendees + (registered ? 1 : 0)} {t("learnersSignedUp")}
+        <Users size={15} /> {session.attendees + (registered && !supabaseConfigured ? 1 : 0)} {t("learnersSignedUp")}
       </p>
 
       <div className="session-card-footer" onClick={(event) => event.stopPropagation()}>

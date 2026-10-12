@@ -43,6 +43,14 @@
 .mentor-edit-session,
 .mentor-cancel-edit { margin-top:12px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--teal-dark); font-weight:800; cursor:pointer; }
 .mentor-cancel-edit { margin-top:0; background:transparent; }
+.mentor-edit-session + .mentor-edit-session { margin-left:8px; }
+.mentor-edit-session svg { vertical-align:-3px; }
+.mentor-session-students { display:grid; gap:8px; margin:12px 0 0; padding:0; list-style:none; }
+.mentor-session-students li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); }
+.mentor-session-students li > span { display:grid; gap:2px; font-weight:700; }
+.mentor-session-students small { display:inline-flex; align-items:center; gap:4px; color:var(--teal-dark); font-weight:600; }
+.mentor-session-students label { display:inline-flex; align-items:center; gap:6px; font-size:.86rem; white-space:nowrap; }
+.mentor-session-students-note { margin:12px 0 0; color:var(--muted); font-size:.9rem; }
 
 .schedule-form input,
 .schedule-form select {

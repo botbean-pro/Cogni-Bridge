@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Award, CheckCircle2, Flame, Info, MinusCircle, PlusCircle, Trophy } from "lucide-react";
+import { fetchLeaderboard } from "../../../sessionRegistrations";
+import { supabaseConfigured } from "../../../supabaseClient";
 import "./LeaderboardPage.css";
 
+// Demo-mode sample data; with Supabase the leaderboard comes from public.leaderboard().
 const leaderboardStudents = [
   { name: "Harsh", registered: 4, attended: 3, mentorGood: 2, streak: 1 },
   { name: "Samar", registered: 3, attended: 2, mentorGood: 1, streak: 7 },
@@ -17,8 +20,30 @@ const scoreStudent = (student) => {
   };
 };
 
-export function LeaderboardPage({ t }) {
-  const rows = leaderboardStudents.map(scoreStudent);
+export function LeaderboardPage({ signedIn, t }) {
+  const [rows, setRows] = useState(() => (supabaseConfigured ? null : leaderboardStudents.map(scoreStudent)));
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    if (!supabaseConfigured || !signedIn) return undefined;
+    let isCurrent = true;
+    setError("");
+    fetchLeaderboard()
+      .then((leaderboard) => {
+        if (isCurrent) setRows(leaderboard);
+      })
+      .catch(() => {
+        if (isCurrent) setError(t("leaderboardError"));
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [signedIn, retry, t]);
+
+  const status = supabaseConfigured && !signedIn
+    ? t("leaderboardSignIn")
+    : error || (rows && !rows.length ? t("leaderboardEmpty") : "");
 
   return (
     <section className="content leaderboard-page">
@@ -45,10 +70,19 @@ export function LeaderboardPage({ t }) {
         </div>
       </aside>
 
+      {status ? (
+        <div className="stats-error" role={error ? "alert" : "status"}>
+          <span>{status}</span>
+          {error && <button type="button" onClick={() => setRetry((value) => value + 1)}>{t("tryAgain")}</button>}
+        </div>
+      ) : !rows ? (
+        <p className="leaderboard-loading" role="status">{t("loading")}</p>
+      ) : (
+      <>
       <section className="leaderboard-podium" aria-label="Top three students">
         <div className="podium-zone-label"><Trophy size={17} /> {t("topThreeZone")}</div>
-        {rows.map((student, index) => (
-          <article className={`podium-card podium-card-${index + 1}`} key={student.name}>
+        {rows.slice(0, 3).map((student, index) => (
+          <article className={`podium-card podium-card-${index + 1}`} key={`${index}-${student.name}`}>
             <div className="podium-medal">{index + 1}</div>
             <span className="podium-avatar">{student.name[0]}</span>
             <strong>{student.name}</strong>
@@ -61,7 +95,10 @@ export function LeaderboardPage({ t }) {
       <div className="leaderboard-card">
         <div className="leaderboard-table-header"><span>{t("rank")}</span><span>{t("student")}</span><span>{t("sessionsAttendedShort")}</span><span>{t("streak")}</span><span>{t("cogniPointsColumn")}</span></div>
         {rows.map((student, index) => (
-          <div className={`leaderboard-row leaderboard-rank-${index + 1}`} key={student.name}>
+          <div
+            className={`leaderboard-row leaderboard-rank-${index + 1}${student.isMe ? " leaderboard-row-me" : ""}`}
+            key={`${index}-${student.name}`}
+          >
             <span className="leaderboard-rank">{index === 0 ? <Trophy size={19} /> : index + 1}</span>
             <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><strong>{student.name}</strong></span>
             <span className="leaderboard-attendance">{student.attended} <small>of {student.registered}</small></span>
@@ -70,6 +107,8 @@ export function LeaderboardPage({ t }) {
           </div>
         ))}
       </div>
+      </>
+      )}
     </section>
   );
 }

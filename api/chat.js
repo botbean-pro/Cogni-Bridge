@@ -1,4 +1,29 @@
+import { createClient } from "@supabase/supabase-js";
+
 const reply = (response, status, body) => response.status(status).json(body);
+
+const DAILY_TOKEN_LIMIT = Number(process.env.AI_DAILY_TOKEN_LIMIT) || 10000;
+const MAX_RESPONSE_TOKENS = 2000;
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+// Rough fallback when the provider doesn't report usage (~4 characters per token).
+const estimateTokens = (text) => Math.ceil(text.length / 4);
+const tokensUsed = (data, fallbackText) => data?.usage?.total_tokens || estimateTokens(fallbackText);
+
+// Returns a Supabase client acting as the caller, or null if the bearer token is missing/invalid.
+async function getUserClient(request) {
+  const token = request.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
+  if (!token) return null;
+
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data, error } = await client.auth.getUser(token);
+  return error || !data.user ? null : client;
+}
 
 const tutorInstructions =
   "You are Cogni-Flow, a supportive learning assistant for students. Explain ideas clearly, " +
@@ -69,18 +94,21 @@ async function callOpenRouter(messages, task, language) {
     },
     body: JSON.stringify({
       model,
+      max_tokens: MAX_RESPONSE_TOKENS,
       messages: [{ role: "system", content: systemPrompt }, ...messages],
     }),
   });
 }
 
-async function translateChatResult(result, language) {
+async function translateChatResult(result, language, usage) {
+  const input = JSON.stringify(result);
   const response = await callOpenRouter(
-    [{ role: "user", content: JSON.stringify(result) }],
+    [{ role: "user", content: input }],
     "translate",
     language,
   );
   const data = await response.json();
+  if (response.ok) usage.tokens += tokensUsed(data, input + (data.choices?.[0]?.message?.content || ""));
   if (!response.ok) {
     throw new Error(data.error?.message || "The translation request failed.");
   }
@@ -116,10 +144,35 @@ export default async function handler(request, response) {
     return reply(response, 400, { error: "A valid task and conversation are required." });
   }
 
+  // Without Supabase (demo mode) there are no accounts, so the per-user limit can't apply.
+  let userClient = null;
+  if (supabaseUrl && supabaseAnonKey) {
+    userClient = await getUserClient(request);
+    if (!userClient) {
+      return reply(response, 401, { error: "Sign in to use Cogni-Flow." });
+    }
+
+    const { data: usedToday, error: usageError } = await userClient.rpc("ai_tokens_used_today");
+    if (usageError) {
+      return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable. Please try again later." });
+    }
+    const promptEstimate = estimateTokens(messages.map((message) => message.content).join(""));
+    if (usedToday + promptEstimate >= DAILY_TOKEN_LIMIT) {
+      return reply(response, 429, {
+        error: "You've reached today's Cogni-Flow limit. It resets tomorrow.",
+      });
+    }
+  }
+
+  const usage = { tokens: 0 };
   try {
     const responseLanguage = supportedLanguages.has(language) ? language : "English";
     const upstreamResponse = await callOpenRouter(messages, task, responseLanguage);
     const data = await upstreamResponse.json();
+    if (upstreamResponse.ok) usage.tokens += tokensUsed(
+      data,
+      messages.map((message) => message.content).join("") + (data.choices?.[0]?.message?.content || ""),
+    );
     if (!upstreamResponse.ok) {
       return reply(response, upstreamResponse.status, {
         error: data.error?.message || "The AI provider rejected the request.",
@@ -153,7 +206,7 @@ export default async function handler(request, response) {
 
       const localizedResult = responseLanguage === "English"
         ? chatResult
-        : await translateChatResult(chatResult, responseLanguage);
+        : await translateChatResult(chatResult, responseLanguage, usage);
       return reply(response, 200, {
         content: localizedResult.answer,
         translatedQuestion: localizedResult.translatedQuestion,
@@ -169,5 +222,9 @@ export default async function handler(request, response) {
         ? error.message
         : "Unable to reach the AI provider. Please try again.",
     });
+  } finally {
+    if (userClient && usage.tokens > 0) {
+      await userClient.rpc("record_ai_usage", { p_tokens: usage.tokens });
+    }
   }
 }
