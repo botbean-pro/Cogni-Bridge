@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Accessibility, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { classNames, demoStudents, initialSessions, readStudents } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
@@ -17,6 +17,7 @@ import { supabase, supabaseConfigured } from "./supabaseClient";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
 import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
+import { ParentPortal } from "./components/parent/ParentPortal";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
@@ -28,6 +29,7 @@ const App = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mentorOpen, setMentorOpen] = useState(false);
+  const [parentOpen, setParentOpen] = useState(false);
   const [accessibilityOpen, setAccessibilityOpen] = useState(false);
   const [appearance, setAppearance] = useState("light");
   const [textScale, setTextScale] = useState(1);
@@ -35,6 +37,7 @@ const App = () => {
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupStudentClass, setSignupStudentClass] = useState("");
   const [studentProfile, setStudentProfile] = useState(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [authUserId, setAuthUserId] = useState(null);
@@ -110,6 +113,7 @@ const App = () => {
       setStudentProfile(null);
       setStudentEmail("");
       setMentorOpen(false);
+      setParentOpen(false);
       if (activeTab === "sensory") setActiveTab("home");
       return undefined;
     }
@@ -132,11 +136,17 @@ const App = () => {
           setMentorOpen(false);
           setSignedIn(true);
           setStudentEmail(user.email || "");
-          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name });
+          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "" });
           setActiveTab((currentTab) => currentTab === "home" ? "study" : currentTab);
         } else if (profile.role === "mentor") {
           setSignedIn(false);
           setMentorOpen(true);
+          setParentOpen(false);
+        } else if (profile.role === "parent") {
+          setSignedIn(false);
+          setMentorOpen(false);
+          setParentOpen(true);
+          setStudentEmail(user.email || "");
         } else {
           supabase.auth.signOut();
         }
@@ -345,16 +355,9 @@ const App = () => {
             setMentorOpen(false);
             if (supabaseConfigured) supabase.auth.signOut();
           }}
+          accessibilityOpen={accessibilityOpen}
+          onToggleAccessibility={() => setAccessibilityOpen((isOpen) => !isOpen)}
         />
-        <button
-          className="accessibility-tab"
-          aria-label={t("openAccessibility")}
-          aria-expanded={accessibilityOpen}
-          onClick={() => setAccessibilityOpen((isOpen) => !isOpen)}
-        >
-          <Accessibility size={21} />
-          <span>{t("accessibility")}</span>
-        </button>
         {accessibilityOpen && (
           <AccessibilityPanel
             textScale={textScale}
@@ -372,15 +375,23 @@ const App = () => {
     );
   }
 
+  if (parentOpen) {
+    return <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+      <ParentPortal parentId={authUserId} parentName={authSession?.user?.user_metadata?.full_name || "Parent"} onLogout={() => { setParentOpen(false); if (supabaseConfigured) supabase.auth.signOut(); }} t={t} />
+    </div>;
+  }
+
   if (signupEmail) {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentProfileFlow
           email={signupEmail}
+          initialClass={signupStudentClass}
           t={t}
-          onBack={() => setSignupEmail("")}
+          onBack={() => { setSignupEmail(""); setSignupStudentClass(""); }}
           onComplete={(profile) => {
             setSignupEmail("");
+            setSignupStudentClass("");
             setStudentProfile(profile);
             setStudentEmail(profile.email);
             setSignedIn(true);
@@ -415,17 +426,18 @@ const App = () => {
         <CreateAccountPage
           t={t}
           onBack={() => setCreateAccountOpen(false)}
-          onComplete={(email) => {
+          onComplete={(account) => {
             setCreateAccountOpen(false);
-            if (typeof email === "object") {
-              setStudentEmail(email.email);
-              setStudentProfile({ id: email.id, email: email.email, name: email.name });
-              setAuthUserId(email.id);
+            if (account.requiresProfileSetup) {
+              setSignupEmail(account.email);
+              setSignupStudentClass(account.studentClass);
+            } else {
+              setStudentEmail(account.email);
+              setStudentProfile({ id: account.id, email: account.email, name: account.name, studentClass: account.studentClass });
+              setAuthUserId(account.id);
               setAuthRole("student");
               setSignedIn(true);
               setActiveTab("study");
-            } else {
-              setSignupEmail(email);
             }
           }}
         />
@@ -534,6 +546,7 @@ const App = () => {
           settings: (
             <SettingsPage
               studentEmail={studentEmail}
+              studentId={authUserId}
               studentName={studentName}
               studentProfile={studentProfile}
               activityVersion={activityVersion}
@@ -577,6 +590,12 @@ const App = () => {
           onMentor={() => {
             setLoginOpen(false);
             setMentorOpen(true);
+          }}
+          onParent={(parentId) => {
+            setLoginOpen(false);
+            setAuthUserId(parentId);
+            setParentOpen(true);
+            setMentorOpen(false);
           }}
         />
       )}

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, ChevronDown, ChevronUp, Heart, LockKeyhole, Share2, Trash2 } from "lucide-react";
+import { Activity, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Trash2, VolumeX, Wind } from "lucide-react";
 import {
   causeOptions,
   deleteStudentCheckin,
@@ -73,6 +73,36 @@ function EntryDetail({ entry, reply, onDelete }) {
   );
 }
 
+const calmVideos = [
+  { title: "Mindful breathing", source: "HeadStart.gov", url: "https://headstart.gov/video/mindful-breathing", note: "A gentle guided breathing practice" },
+  { title: "Body scan meditation", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=TCoUnEPeuQk", note: "Notice how each part of your body feels" },
+  { title: "What is mindfulness?", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=8rp5bpFIUpg", note: "A simple introduction to mindful moments" },
+];
+
+export function CalmCorner({ onClose, startBreathing = false }) {
+  const [breathing, setBreathing] = useState(startBreathing);
+  const [phase, setPhase] = useState(startBreathing ? "Breathe in" : "Breathe out");
+  useEffect(() => {
+    if (!breathing) return undefined;
+    const timer = window.setInterval(() => setPhase((current) => current === "Breathe in" ? "Breathe out" : "Breathe in"), 4000);
+    return () => window.clearInterval(timer);
+  }, [breathing]);
+  return <section className="sensory-card calm-corner" id="calm-corner" aria-labelledby="calm-corner-title">
+    <div className="sensory-card-title"><div><span className="sensory-step">YOUR CALM CORNER</span><h2 id="calm-corner-title">A little space to reset</h2></div><Sparkles size={21} /></div>
+    <p className="calm-intro">Choose what feels comfortable. You can stop or leave whenever you like.</p>
+    <div className="calm-tools">
+      <div className="calm-breath-card"><div className="breathing-copy"><h3>Breathing exercise</h3><p aria-live="polite">{breathing ? `${phase} slowly` : "Follow the circle. Breathe in, then breathe out."}</p></div>
+        <div className={`breathing-stage${breathing ? " is-active" : ""}${breathing && phase === "Breathe out" ? " is-exhaling" : ""}`} aria-label={breathing ? phase : "Breathing circle"}>
+          <div className="breathing-ring" aria-hidden="true"><span className={`breathing-cue${breathing ? ` is-active ${phase === "Breathe out" ? "is-exhaling" : ""}` : ""}`}>{breathing ? (phase === "Breathe in" ? "in" : "out") : "breathe"}</span></div>
+        </div>
+        <button type="button" className="calm-action" onClick={() => { setBreathing((current) => !current); setPhase("Breathe in"); }} aria-pressed={breathing}>{breathing ? <><Pause size={16} /> Pause</> : <><Play size={16} /> Begin</>}</button>
+      </div>
+      <div className="calm-videos"><h3>Quiet videos & mindfulness</h3>{calmVideos.map((item) => <a key={item.title} href={item.url} target="_blank" rel="noreferrer"><span><strong>{item.title}</strong><small>{item.note} · {item.source}</small></span><span aria-hidden="true">↗</span></a>)}</div>
+    </div>
+    <button type="button" className="calm-close" onClick={onClose}>Back to my check-in</button>
+  </section>;
+}
+
 export function SensoryTrackerPage({ studentId, demoMode = false }) {
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
@@ -82,6 +112,8 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
   const [expandedId, setExpandedId] = useState(null);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lowSensory, setLowSensory] = useState(false);
+  const [showCalmCorner, setShowCalmCorner] = useState(false);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
   const todayFullEntry = sortedEntries.find((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
 
@@ -208,8 +240,10 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
   const earlierMoodAverage = moodRatings.length >= 8 ? moodRatings.slice(4, 8).reduce((sum, rating) => sum + rating, 0) / 4 : null;
 
   return (
-    <section className="content sensory-page">
-      <header className="sensory-heading"><div><p className="eyebrow">A private space for you</p><h1>Sensory Tracker</h1><p>Check in with yourself. Share only what you choose.</p></div><span><Heart size={18} /> No judgement, just your own notes</span></header>
+    <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
+      <header className="sensory-heading"><div><p className="eyebrow">A private space for you</p><h1>Sensory Tracker</h1><p>Check in with yourself. Share only what you choose.</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {lowSensory ? "Low sensory on" : "Low sensory mode"}</button><span><Heart size={18} /> No judgement, just your own notes</span></div></header>
+      <section className="break-banner"><div><span className="sensory-step">IT'S OKAY TO PAUSE</span><h2>Need a little break?</h2><p>Take a moment for yourself. There’s no rush to continue.</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> I need a break</button></section>
+      {showCalmCorner && <CalmCorner onClose={() => setShowCalmCorner(false)} />}
       {demoMode ? (
         <div className="sensory-demo-banner" role="note"><LockKeyhole size={17} /> Demo preview: use test details only. Entries stay in memory for this tab session, clear when you reload or sign out, and are not shared with mentors.</div>
       ) : (

@@ -1,9 +1,10 @@
-import React from "react";
-import { Accessibility } from "lucide-react";
+import React, { useState } from "react";
+import { Accessibility, X } from "lucide-react";
 import { classNames } from "../../constants";
 import { AnimatedLogo, MouseTrail } from "../Brand";
 import { StudentSidebar } from "./StudentSidebar";
 import { StudentTopBar } from "./StudentTopBar";
+import { CalmCorner } from "./pages/SensoryTrackerPage";
 
 export const StudentPage = ({
   activeTab,
@@ -22,8 +23,10 @@ export const StudentPage = ({
   accessibilityOpen,
   onToggleAccessibility,
   accessibilityPanel,
-}) => (
-  <>
+}) => {
+  const [calmCornerOpen, setCalmCornerOpen] = useState(false);
+  const [breathingOpen, setBreathingOpen] = useState(false);
+  return <>
     <MouseTrail />
     {showIntro && (
       <div className={classNames("intro-screen", introExiting && "is-exiting")} aria-label={t("loadingCogniBridge")}>
@@ -33,7 +36,7 @@ export const StudentPage = ({
     )}
     <div className="student-app-shell">
       <aside className="student-rail">
-        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} />
+        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(true); setCalmCornerOpen(true); }} />
         <div className="student-rail-footer">
           <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>
@@ -43,6 +46,7 @@ export const StudentPage = ({
       </aside>
       <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
     </div>
+    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? "Breathing exercise" : "My calm corner"}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label="Close calm corner"><X size={20} /></button><CalmCorner startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} /></div></div>}
     {accessibilityOpen && accessibilityPanel}
   </>
-);
+};

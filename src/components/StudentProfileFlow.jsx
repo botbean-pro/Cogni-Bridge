@@ -23,8 +23,8 @@ const readImage = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
-export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile, t }) => {
-  const [profile, setProfile] = useState(existingProfile || { name: "", studentClass: "", age: "", section: "", school: "" });
+export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile, initialClass = "", t }) => {
+  const [profile, setProfile] = useState(existingProfile || { name: "", studentClass: initialClass, age: "", section: "", school: "" });
   const [image, setImage] = useState("");
   const [imageName, setImageName] = useState("");
   const [step, setStep] = useState("form");

@@ -1,4 +1,42 @@
 .sensory-page { display:grid; gap:18px; max-width:1040px; margin:0 auto; padding-bottom:50px; }
+.sensory-heading-actions { display:flex; align-items:center; gap:10px; }
+.low-sensory-toggle { display:inline-flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--muted); font:inherit; font-size:13px; cursor:pointer; }
+.low-sensory-toggle.active { background:var(--surface-2); color:var(--teal); border-color:var(--teal); }
+.break-banner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:19px 22px; border:1px solid #d7e8e2; border-radius:16px; background:linear-gradient(110deg,#f1f8f5,#f7f8f3); }
+.break-banner h2 { margin:4px 0; color:var(--text); font-size:19px; }
+.break-banner p,.calm-intro { margin:0; color:var(--muted); font-size:14px; }
+.break-banner > button,.calm-action { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 15px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+.calm-corner { scroll-margin-top:20px; }
+.calm-tools { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
+.calm-breath-card,.calm-videos { padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); }
+.calm-breath-card { display:grid; justify-items:center; gap:16px; padding:20px; border:0; background:#b6a5fa; }
+.calm-breath-card .breathing-copy { width:100%; text-align:center; }
+.calm-breath-card .breathing-copy h3 { font-size:17px; }
+.calm-breath-card .breathing-copy p { color:#453c70; }
+.breathing-stage { display:grid; place-items:center; width:min(100%,560px); height:clamp(230px,38vh,330px); min-height:0; overflow:hidden; }
+.breathing-ring { display:grid; place-items:center; width:min(56%,330px); aspect-ratio:1; border:2px solid rgba(48,39,83,.72); border-radius:50%; }
+.breathing-cue { display:grid; place-items:center; width:104px; height:104px; border-radius:50%; background:#fff; color:#3d4651; font-size:27px; font-weight:750; transform:scale(1); transition:transform 4s ease-in-out; }
+.breathing-cue.is-active { transform:scale(1.42); }
+.breathing-cue.is-active.is-exhaling { transform:scale(.82); }
+.calm-breath-card .calm-action { min-width:125px; background:#fff; color:#443a73; }
+.breathing-copy { flex:1; }
+.breathing-copy h3,.calm-videos h3 { margin:0 0 5px; color:var(--text); font-size:15px; }
+.breathing-copy p { margin:0; color:var(--muted); font-size:13px; }
+.calm-videos { display:grid; gap:8px; }
+.calm-videos a { display:flex; justify-content:space-between; gap:10px; align-items:center; padding:9px 10px; border-radius:9px; background:var(--surface); color:var(--teal); text-decoration:none; }
+.calm-videos a:hover { outline:1px solid var(--teal); }
+.calm-videos a span:first-child { display:grid; gap:3px; }
+.calm-videos strong { color:var(--text); font-size:13px; }
+.calm-videos small { color:var(--muted); font-size:11px; }
+.calm-close { margin-top:15px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--teal); font:inherit; font-weight:700; cursor:pointer; }
+.low-sensory-mode { --surface-2:#f7f8f6; }
+.low-sensory-mode .sensory-card,.low-sensory-mode .break-banner { box-shadow:none; background:var(--surface); }
+.low-sensory-mode .sensory-card { border-color:#e5e9e6; }
+.low-sensory-mode .sensory-page * { animation:none !important; transition:none !important; }
+.low-sensory-mode .breathing-cue { transform:none !important; }
+.theme-dark .break-banner { background:#1d302e; border-color:#334744; }
+.theme-dark .calm-breath-card { background:#a99aed; }
+.theme-dark .calm-videos a { background:var(--surface); }
 .sensory-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:3px; }
 .sensory-heading h1 { margin:2px 0 6px; color:var(--text); font-size:clamp(28px,4vw,38px); }
 .sensory-heading p:last-child { margin:0; color:var(--muted); }
@@ -43,6 +81,7 @@
 .sensory-done { display:flex; align-items:flex-start; gap:12px; color:var(--teal); }
 .sensory-done h2 { margin:0 0 5px; color:var(--text); font-size:18px; }
 .sensory-done p { margin:0; color:var(--muted); }
+.sensory-upgrade { margin-top:12px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--teal); font:inherit; font-weight:700; cursor:pointer; }
 .sensory-chart-wrap { width:100%; }
 .sensory-chart-legend { display:flex; gap:17px; margin-bottom:5px; color:var(--muted); font-size:12px; }
 .sensory-chart-legend span::before { display:inline-block; width:15px; height:3px; margin:0 6px 3px 0; border-radius:2px; background:currentColor; content:""; }
@@ -66,4 +105,4 @@
 .sensory-delete { display:inline-flex; align-items:center; gap:6px; padding:7px 9px; border:1px solid #e7bebe; border-radius:8px; background:transparent; color:#9e4141; font:inherit; cursor:pointer; }
 .theme-dark .sensory-mood-options button.selected,.theme-dark .sensory-chips button.selected,.theme-dark .sensory-status,.theme-dark .sensory-history-entry em.is-shared { background:#203b3c; }
 .theme-dark .sensory-demo-banner { border-color:#63583f; background:#332f24; color:#eee0b8; }
-@media (max-width:650px) { .sensory-heading { align-items:flex-start; flex-direction:column; } .sensory-heading > span { font-size:12px; } .sensory-card { padding:17px; } .sensory-mood-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .sensory-submit { width:100%; } }
+@media (max-width:650px) { .sensory-heading { align-items:flex-start; flex-direction:column; } .sensory-heading-actions { align-items:flex-start; flex-direction:column; } .sensory-heading > span { font-size:12px; } .break-banner { align-items:flex-start; flex-direction:column; } .break-banner > button { width:100%; } .calm-tools { grid-template-columns:1fr; } .calm-breath-card { align-items:flex-start; } .sensory-card { padding:17px; } .sensory-mood-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .sensory-submit { width:100%; } }

@@ -135,6 +135,17 @@ export async function loadStudentResponses() {
     .not("mentor_message", "eq", ""));
 }
 
+export async function saveStudentLearningActivity(studentId, activity) {
+  const { error } = await supabase.from("student_learning_activity").upsert({
+    student_id: studentId,
+    session_id: activity.sessionId,
+    subject: activity.subject,
+    activity_date: activity.activityDate,
+    duration_minutes: activity.durationMinutes,
+  }, { onConflict: "student_id,session_id", ignoreDuplicates: true });
+  if (error) throw error;
+}
+
 export async function loadMentorCheckins(mentorId) {
   if (!supabase) return { checkins: [], notifications: [], students: [] };
   const assignments = throwIfError(await supabase
