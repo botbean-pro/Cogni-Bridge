@@ -1,5 +1,6 @@
 ﻿import React from "react";
-import { ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3 } from "lucide-react";
+import { useState } from "react";
+import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, FileText } from "lucide-react";
 import { formatSession, getSessionSubjectLabel } from "../../../constants";
 import { isSessionComplete } from "../../../studentActivity";
 import { StudentStats } from "../shared/StudentStats";
@@ -62,7 +63,8 @@ function SessionList({ sessions, onSelect, t }) {
   );
 }
 
-export function SessionsPage({ sessions, selectedSession, signedIn, registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
+export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
+  const [section, setSection] = useState("sessions");
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
 
   return (
@@ -70,7 +72,21 @@ export function SessionsPage({ sessions, selectedSession, signedIn, registeredSe
       <div className="section-title">
         <div><p className="eyebrow">{t("learningPlan")}</p><h2>{t("sessions")}</h2><p>{t("sessionsDescription")}</p></div>
       </div>
-      {selectedSession ? (
+      <div className="sessions-subnav" role="tablist" aria-label={t("sessionsAndNotes")}>
+        <button type="button" role="tab" aria-selected={section === "sessions"} className={section === "sessions" ? "active" : ""} onClick={() => setSection("sessions")}>{t("sessions")}</button>
+        <button type="button" role="tab" aria-selected={section === "notes"} className={section === "notes" ? "active" : ""} onClick={() => { setSection("notes"); onBack(); }}>{t("notesTab")}{notes.length > 0 && <span>{notes.length}</span>}</button>
+      </div>
+      {section === "notes" ? (
+        <section className="student-notes" aria-label={t("notesTab")}>
+          {notes.length ? notes.map((note) => (
+            <article className="student-note-card" key={note.id}>
+              <FileText size={21} />
+              <div><span className="subject-pill">{getSessionSubjectLabel(note.subject, t)}</span><h3>{note.title}</h3><p>{note.fileName}</p></div>
+              <a href={note.dataUrl} download={note.fileName} aria-label={`${t("downloadNote")}: ${note.title}`}><ArrowDownToLine size={18} /> {t("downloadNote")}</a>
+            </article>
+          )) : <p className="student-notes-empty">{t("noNotesAvailable")}</p>}
+        </section>
+      ) : selectedSession ? (
         <SessionDetail
           session={selectedSession}
           signedIn={signedIn}

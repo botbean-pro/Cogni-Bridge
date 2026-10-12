@@ -1,10 +1,13 @@
 import React from "react";
-import { BookOpen, CheckCircle2, FileText, Sparkles } from "lucide-react";
+import { BookOpen, CheckCircle2, FileText } from "lucide-react";
+import { LogoImage } from "../../Brand";
+
+const BrandIcon = ({ size }) => <LogoImage size={size} />;
 
 const prompts = [
   { icon: BookOpen, label: "explainTopic", prompt: "promptExplain" },
   { icon: CheckCircle2, label: "homeworkHelp", prompt: "promptHomework" },
-  { icon: Sparkles, label: "studyPlan", prompt: "promptPlan" },
+  { icon: BrandIcon, label: "studyPlan", prompt: "promptPlan" },
   { icon: FileText, label: "practiceQuestions", prompt: "promptPractice" },
 ];
 

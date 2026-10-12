@@ -25,11 +25,11 @@ The app runs in one of two auth modes, decided entirely by whether `VITE_SUPABAS
 
 ### Feature gating pattern
 
-Some features are only available in Supabase mode and are gated by a derived boolean rather than a route guard — e.g. `sensoryTrackerEnabled = signedIn && supabaseConfigured && authUserId && authRole === "student"` in `src/App.jsx`. Follow this pattern (compute an `*Enabled` boolean from auth state, gate both the nav tab and the page content on it) when adding new Supabase-dependent features.
+Features are gated by derived booleans rather than route guards. The Sensory Tracker appears for signed-in students in demo mode using in-memory-only preview data; in Supabase mode it requires a real authenticated student profile. `src/App.jsx` gates both the student nav tab and page content. Follow this pattern when adding features that depend on auth state.
 
 ### Sensory Tracker (Supabase-backed feature)
 
-`src/studentSensory.js` wraps all Supabase table access for sensory check-ins (`sensory_checkins`, `sensory_notifications`, `mentor_student_assignments`, `profiles`). The schema and row-level security policies are defined in `supabase/migrations/20261008000100_sensory_tracker.sql`: check-ins are private by default; a student must explicitly share a check-in before an assigned mentor can read it; mentor-help notifications are only created for explicit shared requests. Mentor-student assignment is deliberately not exposed to any UI — it's done via SQL in the Supabase dashboard. If you touch this feature, read the migration file to understand what the RLS policies allow before changing client queries, since the client relies on Postgres to enforce authorization (not app-level checks).
+`src/studentSensory.js` wraps Supabase table access for sensory check-ins (`sensory_checkins`, `sensory_notifications`, `mentor_student_assignments`, `profiles`) and provides a demo-only in-memory preview when Supabase is not configured. Demo entries are cleared on sign-out/reload and cannot be shared. The schema and row-level security policies are defined in `supabase/migrations/20261008000100_sensory_tracker.sql`: check-ins are private by default; a student must explicitly share a check-in before an assigned mentor can read it; mentor-help notifications are only created for explicit shared requests. Mentor-student assignment is deliberately not exposed to any UI — it's done via SQL in the Supabase dashboard. If you touch the Supabase path, read the migration file to understand its RLS policies before changing client queries.
 
 ### Cogni-Flow AI chat
 
@@ -54,7 +54,7 @@ The browser never talks to OpenRouter directly. `src/components/student/flow/flo
 ## Security & Configuration
 
 - Copy `.env.example` to `.env.local` for local secrets. Set `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` for Cogni-Flow AI. Never expose these through `VITE_`-prefixed variables or commit `.env.local` — only the server-side function may read them.
-- Sensory Tracker needs `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local`. Never put a Supabase service-role key in the browser or a `VITE_` variable.
+- Persistent Sensory Tracker entries and mentor sharing need `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local`. Demo mode uses only in-memory preview data. Never put a Supabase service-role key in the browser or a `VITE_` variable.
 - Treat browser localStorage and the demo auth path as prototype-only — not secure storage for real student records, and not server-verified.
 
 ## Coding conventions

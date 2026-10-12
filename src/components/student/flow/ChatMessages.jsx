@@ -1,5 +1,6 @@
 ﻿import React from "react";
-import { ArrowUpRight, Sparkles, UserRound } from "lucide-react";
+import { ArrowUpRight, UserRound } from "lucide-react";
+import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
 
 function renderInline(text) {
@@ -35,7 +36,7 @@ function Message({ message, t }) {
   return (
     <article className={`ai-message ${message.role}`}>
       <div className="message-avatar">
-        {isAssistant ? <Sparkles size={18} /> : <UserRound size={18} />}
+        {isAssistant ? <LogoImage size={24} /> : <UserRound size={18} />}
       </div>
       <div className="message-content">
         <div className="message-text">
@@ -56,12 +57,15 @@ function Message({ message, t }) {
 export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
   if (!questions?.length) return null;
   return (
-    <div className="related-question-cards" aria-label={t("relatedTopics")}>
-      {questions.slice(0, 4).map((question) => (
-        <button key={question} type="button" onClick={() => onAsk(question)} disabled={disabled}>
-          <span>{question}</span><ArrowUpRight size={16} />
-        </button>
-      ))}
+    <div className="related-questions">
+      <p className="quick-prompts-title">{t("relatedTopics")}</p>
+      <div className="related-question-cards" aria-label={t("relatedTopics")}>
+        {questions.slice(0, 4).map((question) => (
+          <button key={question} type="button" onClick={() => onAsk(question)} disabled={disabled}>
+            <span>{question}</span><ArrowUpRight size={16} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -72,7 +76,7 @@ export function ChatMessages({ messages, isLoading, messagesEndRef, t }) {
       {messages.map((message) => <Message key={message.id} message={message} t={t} />)}
       {isLoading && (
         <div className="ai-message assistant" aria-label={t("aiThinking")}>
-          <div className="message-avatar"><Sparkles size={18} /></div>
+          <div className="message-avatar"><LogoImage size={24} /></div>
           <div className="message-content">
             <div className="typing-indicator"><span /><span /><span /></div>
           </div>

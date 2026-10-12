@@ -28,7 +28,7 @@ This is self-reported attendance and local browser storage, not server-verified 
 
 ## Sensory Tracker security setup
 
-The Sensory Tracker uses Supabase Auth and Postgres. It is intentionally unavailable unless both `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are configured. With Supabase configured, the local demo credentials are not accepted; student and mentor access is determined by the authenticated user's `public.profiles.role`.
+The Sensory Tracker appears for signed-in students in both auth modes. Without Supabase, it runs as a demo preview: entries stay in memory for the current session, clear on reload or sign-out, and cannot be shared with mentors. Use test details only in this mode. For persistent check-ins and mentor support, configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. With Supabase configured, the local demo credentials are not accepted; student and mentor access is determined by the authenticated user's `public.profiles.role`.
 
 1. Create a Supabase project and configure Email authentication, confirmation, and allowed redirect URLs for the local and deployed app origins.
 2. Apply `supabase/migrations/20261008000100_sensory_tracker.sql` using the Supabase CLI or SQL editor.

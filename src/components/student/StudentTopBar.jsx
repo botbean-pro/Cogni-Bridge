@@ -1,29 +1,22 @@
 import React from "react";
-import { LogIn, LogOut, Settings } from "lucide-react";
+import { LogIn, LogOut, UserRound } from "lucide-react";
 
-export const StudentTopBar = ({ signedIn, activeTab, studentName, onLogin, onLogout, onSettings, t }) => (
-  <div className="top-actions">
+export const StudentTopBar = ({ signedIn, studentName, onLogin, onLogout, onOpenAccount, t }) => (
+  <div className="student-rail-account">
     {signedIn ? (
       <>
-        <button
-          className={`settings-button${activeTab === "settings" ? " active" : ""}`}
-          onClick={onSettings}
-          aria-label={t("settings")}
-          aria-current={activeTab === "settings" ? "page" : undefined}
-          title={t("settings")}
-        >
-          <Settings size={18} aria-hidden="true" />
+        <button className="student-rail-link" onClick={onOpenAccount} aria-label={t("myAccount")} title={t("myAccount")}>
+          <UserRound size={19} /><span>{t("myAccount")}</span>
         </button>
-        <button className="profile-chip" onClick={onLogout} aria-label={t("logOut")} title={t("logOut")}>
+        <button className="student-rail-link student-rail-logout" onClick={onLogout} aria-label={t("logOut")} title={t("logOut")}>
           <span className="avatar-small">{studentName?.charAt(0)?.toUpperCase() || "S"}</span>
-          {studentName}
-          <LogOut size={16} />
+          <span>{studentName}</span>
+          <LogOut size={16} className="student-rail-logout-icon" />
         </button>
       </>
     ) : (
-      <button className="login-button" onClick={onLogin}>
-        <LogIn size={18} />
-        {t("signIn")}
+      <button className="student-rail-link" onClick={onLogin} title={t("signIn")}>
+        <LogIn size={18} /><span>{t("signIn")}</span>
       </button>
     )}
   </div>

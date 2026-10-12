@@ -57,11 +57,14 @@
 .answer-list-item > span:first-child { color:var(--teal); font-weight:800; }
 .answer-spacer { height:3px; }
 .formatted-answer code { padding:2px 5px; border-radius:5px; background:var(--surface-2); font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.92em; }
-.related-question-cards { display:grid; gap:8px; margin-top:7px; }
+.related-questions { padding:12px 24px 14px; border-top:1px solid var(--line); background:var(--surface); }
+.related-question-cards { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
 .related-question-cards button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--text); font:inherit; text-align:left; line-height:1.4; cursor:pointer; transition:border-color .2s, transform .2s, background .2s; }
 .related-question-cards button:hover { transform:translateY(-1px); border-color:var(--teal); background:#e9f6f4; }
 .related-question-cards svg { flex:0 0 auto; color:var(--teal); }
 .theme-dark .related-question-cards button:hover { background:#294444; }
+.ai-message.assistant .message-avatar { background:#fff; border:1px solid var(--line); }
+.quick-prompt-btn img { flex-shrink:0; }
 
 .practice-question {
   display: grid;
@@ -138,4 +141,6 @@
   .ai-learning-tools { align-items: flex-start; flex-direction: column; padding: 12px 16px; }
   .ai-error { padding: 10px 16px; }
   .practice-question { min-width: 0; }
+  .related-questions { padding: 10px 16px 12px; }
+  .related-question-cards { grid-template-columns: 1fr; }
 }
