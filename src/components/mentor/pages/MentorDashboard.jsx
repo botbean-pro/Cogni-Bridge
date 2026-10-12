@@ -9,7 +9,7 @@ import {
   LogOut,
   Plus,
   Upload,
-  UserRound,
+  Accessibility,
   Users,
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, subjects } from "../../../constants";
@@ -23,24 +23,7 @@ import {
   respondToMentorRequest,
 } from "../../../studentSensory";
 
-function MentorHeader({ onBack, t }) {
-  return (
-    <header className="mentor-header">
-      <button className="mentor-wordmark" onClick={onBack}>
-        <span><LogoImage size={38} /></span>
-        <strong>CogniBridge <small>{t("mentorSpace")}</small></strong>
-      </button>
-      <div>
-        <span className="mentor-user"><UserRound size={17} /> Priya Sharma {t("subjectMaths")}</span>
-        <button className="mentor-logout" onClick={onBack}>
-          <LogOut size={17} /> {t("mentorLogout")}
-        </button>
-      </div>
-    </header>
-  );
-}
-
-function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, t }) {
+function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
@@ -50,7 +33,10 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, t }) {
 
   return (
     <aside className="mentor-nav">
-      <p>{t("mentorSpace").toUpperCase()}</p>
+      <div className="mentor-rail-brand">
+        <span className="mentor-rail-logo"><LogoImage size={42} /></span>
+        <span className="mentor-rail-brand-copy"><strong>CogniBridge</strong><small>Mentor space</small></span>
+      </div>
       {items.map(([key, Icon, label]) => (
         <button
           key={key}
@@ -62,6 +48,14 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, t }) {
           <Icon size={19} /><span className="mentor-nav-label">{label}</span>{key === "sensory" && unreadSupportCount > 0 && <span className="mentor-notification-count">{unreadSupportCount}</span>}
         </button>
       ))}
+      <div className="mentor-rail-footer">
+        <button type="button" aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")} onClick={onToggleAccessibility}>
+          <Accessibility size={19} /><span className="mentor-nav-label">{t("accessibility")}</span>
+        </button>
+        <button type="button" className="mentor-rail-logout" aria-label={t("mentorLogout")} title={t("mentorLogout")} onClick={onBack}>
+          <span className="mentor-avatar-small">P</span><span className="mentor-nav-label">Priya Sharma</span><LogOut size={16} className="mentor-logout-icon" />
+        </button>
+      </div>
     </aside>
   );
 }
@@ -331,14 +325,15 @@ export function MentorDashboard({
   onCancelEdit,
   onUploadNote,
   onBack,
+  accessibilityOpen,
+  onToggleAccessibility,
   t,
 }) {
   const support = useMentorSupport(mentorId);
   return (
     <main className="mentor-page">
-      <MentorHeader onBack={onBack} t={t} />
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} t={t} />
+        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}

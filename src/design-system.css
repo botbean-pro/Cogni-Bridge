@@ -964,6 +964,25 @@ select {
   outline-offset: 3px;
 }
 
+/* Keep mentor rail navigation in sync with the student rail palette. */
+.mentor-nav button:hover:not(.active) {
+  background: rgba(255, 255, 255, .09);
+  color: #fff;
+}
+
+.mentor-nav button.active,
+.mentor-nav button.active:hover {
+  background: linear-gradient(120deg, #0cae9a, #087f77);
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(8, 169, 150, .2);
+}
+
+.theme-dark .mentor-nav button.active,
+.theme-dark .mentor-nav button.active:hover {
+  background: linear-gradient(120deg, #0cae9a, #087f77);
+  color: #fff;
+}
+
 .theme-dark .home-hero {
   background:
     radial-gradient(ellipse at 88% 54%, rgba(45, 148, 144, .54) 0, rgba(30, 109, 116, .32) 32%, transparent 63%),

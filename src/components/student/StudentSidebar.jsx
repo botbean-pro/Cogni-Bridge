@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { navigation, classNames } from "../../constants";
 import { LogoImage } from "../Brand";
-import { BookOpen, Compass, Crown, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { BookOpen, Compass, Crown, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Wind } from "lucide-react";
 
 const navigationLabels = {
   home: "home",
@@ -14,7 +14,7 @@ const navigationLabels = {
   premium: "premiumFlow",
 };
 
-export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, t }) => {
+export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, t, onOpenCalm }) => {
   const [pinnedOpen, setPinnedOpen] = useState(false);
   const items = signedIn
     ? [
@@ -43,6 +43,7 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
             <Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{t(navigationLabels[tab])}</span>
           </button>
         })}
+        {signedIn && <button type="button" className="student-rail-link calm-rail-button" onClick={onOpenCalm} title="I need a break"><Wind size={20} /><span>I need a break</span></button>}
       </nav>
     </div>
   );

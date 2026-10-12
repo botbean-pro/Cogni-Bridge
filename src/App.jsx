@@ -294,16 +294,9 @@ const App = () => {
             setMentorOpen(false);
             if (supabaseConfigured) supabase.auth.signOut();
           }}
+          accessibilityOpen={accessibilityOpen}
+          onToggleAccessibility={() => setAccessibilityOpen((isOpen) => !isOpen)}
         />
-        <button
-          className="accessibility-tab"
-          aria-label={t("openAccessibility")}
-          aria-expanded={accessibilityOpen}
-          onClick={() => setAccessibilityOpen((isOpen) => !isOpen)}
-        >
-          <Accessibility size={21} />
-          <span>{t("accessibility")}</span>
-        </button>
         {accessibilityOpen && (
           <AccessibilityPanel
             textScale={textScale}
