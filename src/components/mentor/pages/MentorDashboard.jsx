@@ -8,12 +8,18 @@ import {
   Heart,
   LogOut,
   Plus,
+  TrendingUp,
   Upload,
   Accessibility,
   Users,
+  MessageCircle,
+  Send,
 } from "lucide-react";
-import { formatSession, getSessionSubjectLabel, subjects } from "../../../constants";
+import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
+import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
+import { loadMentorLearningActivity } from "../../../mentorContent";
+import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
 import {
   emotionOptions,
   loadMentorCheckins,
@@ -26,9 +32,11 @@ import {
 function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
+    ["performance", TrendingUp, "Student Performance"],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
+    ...(mentorId ? [["parentMessages", MessageCircle, "Parent consultations"]] : []),
   ];
 
   return (
@@ -308,6 +316,142 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
   );
 }
 
+function StudentPerformancePage({ mentorId, assignedStudents }) {
+  const [activities, setActivities] = useState([]);
+  const [localStudents, setLocalStudents] = useState([]);
+  const [loading, setLoading] = useState(Boolean(mentorId));
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isCurrent = true;
+    if (mentorId) {
+      setLoading(true);
+      loadMentorLearningActivity().then((rows) => {
+        if (isCurrent) {
+          setActivities(rows.map((row) => ({
+            studentId: row.student_id,
+            sessionId: row.session_id,
+            subject: row.subject,
+            activityDate: row.activity_date,
+            durationMinutes: row.duration_minutes,
+          })));
+          setError("");
+        }
+      }).catch(() => {
+        if (isCurrent) setError("Learning activity couldn't be loaded. Apply the student performance migration, then try again.");
+      }).finally(() => { if (isCurrent) setLoading(false); });
+    } else {
+      try {
+        const students = readStudents().filter((student) => (student.role || "Student").toLowerCase() === "student");
+        const localActivity = students.flatMap((student) => readStudentActivities(student.email).map((activity) => ({ ...activity, studentEmail: student.email.toLowerCase() })));
+        if (isCurrent) { setLocalStudents(students); setActivities(localActivity); setError(""); }
+      } catch {
+        if (isCurrent) setError("Student activity couldn't be loaded from this device.");
+      } finally {
+        if (isCurrent) setLoading(false);
+      }
+    }
+    return () => { isCurrent = false; };
+  }, [mentorId]);
+
+  const students = mentorId
+    ? assignedStudents.map((student) => ({ id: student.id, name: student.display_name, email: "" }))
+    : localStudents.map((student) => ({ id: student.email.toLowerCase(), name: student.name || student.email, email: student.email.toLowerCase() }));
+  const rows = students.map((student) => {
+    const studentActivities = activities.filter((item) => mentorId ? item.studentId === student.id : item.studentEmail === student.email);
+    const stats = calculateStudentStats(studentActivities);
+    const latest = [...studentActivities].sort((a, b) => b.activityDate.localeCompare(a.activityDate))[0];
+    return { ...student, activities: studentActivities, stats, latest };
+  }).sort((a, b) => b.stats.sessionsAttended - a.stats.sessionsAttended || a.name.localeCompare(b.name));
+  const totalSessions = rows.reduce((sum, row) => sum + row.stats.sessionsAttended, 0);
+  const totalMinutes = activities.reduce((sum, item) => sum + item.durationMinutes, 0);
+  const activeStudents = rows.filter((row) => row.stats.sessionsAttended > 0).length;
+
+  return <>
+    <p className="mentor-kicker">LEARNING PROGRESS</p>
+    <h1 className="mentor-title">Student Performance</h1>
+    <p className="mentor-subtitle">Track recorded session attendance, learning time, and subjects explored.</p>
+    <div className="performance-summary">
+      <article><Users size={20} /><strong>{rows.length}</strong><span>Students</span></article>
+      <article><CalendarDays size={20} /><strong>{totalSessions}</strong><span>Sessions attended</span></article>
+      <article><Clock3 size={20} /><strong>{formatLearningTime(totalMinutes)}</strong><span>Learning time</span></article>
+      <article><TrendingUp size={20} /><strong>{activeStudents}</strong><span>Students with activity</span></article>
+    </div>
+    {error && <p className="error-popup" role="alert">{error}</p>}
+    {loading ? <p className="mentor-subtitle">Loading student progress…</p>
+      : rows.length === 0 ? <div className="performance-empty"><Users size={24} /><h2>No students to show yet</h2><p>Students assigned to your mentor account will appear here.</p></div>
+        : <div className="performance-grid">{rows.map((student) => {
+          const subjects = [...new Set(student.activities.map((item) => item.subject))];
+          return <article className="performance-card" key={student.id}>
+            <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? `Last activity ${new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString()}` : "No sessions recorded yet"}</small></div></div>
+            <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>Sessions</span></div><div><strong>{student.stats.learningTime}</strong><span>Learning time</span></div><div><strong>{student.stats.learningStreak}</strong><span>Day streak</span></div></div>
+            <div className="performance-subjects"><strong>Subjects</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>No subjects recorded</small>}</div>
+          </article>;
+        })}</div>}
+  </>;
+}
+
+function ParentConsultationsPage({ mentorId, students }) {
+  const [messages, setMessages] = useState([]);
+  const [drafts, setDrafts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
+  const refresh = async () => {
+    const rows = await loadMentorParentMessages(mentorId);
+    setMessages(rows);
+  };
+
+  useEffect(() => {
+    let current = true;
+    loadMentorParentMessages(mentorId).then((rows) => {
+      if (current) { setMessages(rows); setError(""); }
+    }).catch(() => {
+      if (current) setError("Parent conversations couldn't be loaded.");
+    }).finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [mentorId]);
+
+  const threads = new Map();
+  messages.forEach((message) => {
+    const key = `${message.parent_id}:${message.student_id}`;
+    if (!threads.has(key)) threads.set(key, []);
+    threads.get(key).push(message);
+  });
+
+  const sendReply = async (event, key, thread) => {
+    event.preventDefault();
+    const message = drafts[key]?.trim();
+    if (!message) return;
+    setSending(true); setError("");
+    try {
+      await sendMentorParentReply({ mentorId, studentId: thread[0].student_id, parentId: thread[0].parent_id, message });
+      setDrafts((current) => ({ ...current, [key]: "" }));
+      await refresh();
+    } catch {
+      setError("Your reply couldn't be sent. Please try again.");
+    } finally { setSending(false); }
+  };
+
+  return <>
+    <p className="mentor-kicker">FAMILY CONNECTION</p>
+    <h1 className="mentor-title">Parent consultations</h1>
+    <p className="mentor-subtitle">Private conversations with parents of your assigned students.</p>
+    {error && <p className="error-popup" role="alert">{error}</p>}
+    {loading ? <p className="mentor-subtitle">Loading conversations…</p>
+      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>No parent messages yet</h2><p>Messages from connected parents will appear here.</p></div>
+        : <div className="mentor-parent-threads">{[...threads.entries()].map(([key, thread]) => {
+          const student = students.find((item) => item.id === thread[0].student_id);
+          return <article className="mentor-parent-thread" key={key}>
+            <header><div><strong>{student?.display_name || "Student"}</strong><small>Parent consultation · {thread.length} messages</small></div></header>
+            <div className="mentor-parent-thread-messages">{thread.map((message) => <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}><strong>{message.sender_role === "mentor" ? "You" : "Parent"}</strong>{message.message}<small>{new Date(message.created_at).toLocaleString()}</small></p>)}</div>
+            <form onSubmit={(event) => sendReply(event, key, thread)}><input aria-label={`Reply to parent of ${student?.display_name || "student"}`} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder="Write a reply…" required /><button type="submit" disabled={sending}><Send size={16} /> Reply</button></form>
+          </article>;
+        })}</div>}
+  </>;
+}
+
 export function MentorDashboard({
   sessions,
   mentorId,
@@ -337,6 +481,8 @@ export function MentorDashboard({
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} />}
+          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} />}

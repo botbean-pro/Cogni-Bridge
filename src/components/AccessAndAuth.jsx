@@ -80,11 +80,13 @@ const SocialIcon = ({ provider }) => {
   );
 };
 
-const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) => {
+const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onParent, t }) => {
   const [tab, setTab] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [parentSignUp, setParentSignUp] = useState(false);
+  const [parentName, setParentName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -108,6 +110,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
   const changeTab = (nextTab) => {
     setTab(nextTab);
     setError("");
+    setParentSignUp(false);
 
     if (nextTab === "mentor" && !supabaseConfigured) {
       setEmail(MENTOR_EMAIL);
@@ -125,6 +128,18 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
 
     if (supabaseConfigured) {
       setError("");
+      if (tab === "parent" && parentSignUp) {
+        if (!parentName.trim()) { setError("Enter your name to create a parent account."); return; }
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: { data: { full_name: parentName.trim(), account_type: "parent" } },
+        });
+        if (signUpError) { setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "Parent account couldn't be created. Please try again."); return; }
+        if (data.session && data.user) onParent(data.user.id, data.user.email, parentName.trim());
+        else setError("Check your email to confirm your parent account, then sign in.");
+        return;
+      }
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
@@ -139,14 +154,20 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
         .select("id, display_name, role")
         .eq("id", data.user.id)
         .maybeSingle();
-      if (profileError || !profile || profile.role !== (tab === "mentor" ? "mentor" : "student")) {
+      if (profileError || !profile || profile.role !== tab) {
         await supabase.auth.signOut();
-        setError(tab === "mentor" ? "mentorAccessDenied" : "studentAccessDenied");
+        setError(tab === "mentor" ? "mentorAccessDenied" : tab === "parent" ? "This account is not registered as a parent." : "studentAccessDenied");
         return;
       }
 
       if (tab === "mentor") onMentor(data.user.id);
+      else if (tab === "parent") onParent(data.user.id, data.user.email, profile.display_name);
       else onStudentSuccess(data.user.email, data.user.id, profile);
+      return;
+    }
+
+    if (tab === "parent") {
+      setError("Parent accounts require secure school sign-in to protect student information.");
       return;
     }
 
@@ -234,11 +255,13 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
   const tabLabels = [
     ["student", "studentLogin"],
     ["mentor", "mentorLogin"],
+    ["parent", "Parent"],
   ];
 
   const description = {
     student: t("studentLoginDescription"),
     mentor: t("mentorDescription"),
+    parent: "Sign in or create an account to connect with your child and their teachers.",
   }[tab];
 
   return (
@@ -269,7 +292,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
               role="tab"
               aria-selected={tab === key}
             >
-              {t(labelKey)}
+              {labelKey === "Parent" ? labelKey : t(labelKey)}
             </button>
           ))}
         </div>
@@ -277,6 +300,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
         <p className="modal-copy">{description}</p>
 
         <form className="auth-form" onSubmit={submit}>
+          {tab === "parent" && parentSignUp && <label className="input-label">Full name<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
           <label className="input-label">
             {t("email")}
             <input
@@ -357,6 +381,11 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, t }) 
                   {t("demo")}: student@cognibridge.com / student123
                 </small>
               )}
+            </div>
+          ) : tab === "parent" ? (
+            <div className="auth-button-group">
+              <button className="auth-login-btn" type="submit">{parentSignUp ? "Create parent account" : t("logIn")} <ChevronRight size={18} /></button>
+              <div className="create-account-prompt"><span>{parentSignUp ? "Already have a parent account?" : "New to the parent portal?"}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">
@@ -523,6 +552,7 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
     password: "",
     confirmPassword: "",
     name: "",
+    studentClass: "",
   });
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -538,6 +568,7 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
 
     if (
       !form.name.trim() ||
+      !form.studentClass.trim() ||
       !form.email.trim() ||
       !form.password ||
       !form.confirmPassword
@@ -562,14 +593,14 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password: form.password,
-        options: { data: { full_name: form.name.trim() } },
+        options: { data: { full_name: form.name.trim(), student_class: form.studentClass.trim() } },
       });
       if (signUpError) {
         setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "accountCreateError");
         return;
       }
       if (data.session && data.user) {
-        onComplete({ email: data.user.email, id: data.user.id, name: form.name.trim() });
+        onComplete({ email: data.user.email, id: data.user.id, name: form.name.trim(), studentClass: form.studentClass.trim() });
       } else {
         setError("checkEmailToConfirm");
       }
@@ -593,13 +624,14 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
           {
             email: normalizedEmail,
             password: form.password,
-            name: form.name,
+            name: form.name.trim(),
+            studentClass: form.studentClass.trim(),
             role: "Student",
             createdAt: new Date().toISOString(),
           },
         ]),
       );
-      onComplete(normalizedEmail);
+      onComplete({ email: normalizedEmail, name: form.name.trim(), studentClass: form.studentClass.trim(), requiresProfileSetup: true });
     } catch {
       setError("accountCreateError");
     }
@@ -634,6 +666,18 @@ const CreateAccountPage = ({ onBack, onComplete, t }) => {
                 value={form.name}
                 onChange={(event) => updateField("name", event.target.value)}
                 placeholder={t("enterFullName")}
+                required
+              />
+            </label>
+
+            <label className="create-account-label">
+              <span>{t("class")}</span>
+              <input
+                type="text"
+                className="create-account-input"
+                value={form.studentClass}
+                onChange={(event) => updateField("studentClass", event.target.value)}
+                placeholder={t("class")}
                 required
               />
             </label>

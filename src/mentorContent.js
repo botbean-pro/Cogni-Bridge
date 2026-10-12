@@ -27,6 +27,13 @@ export async function fetchSessions() {
   return rows.map(toClientSession);
 }
 
+export async function loadMentorLearningActivity() {
+  return throwIfError(await supabase
+    .from("student_learning_activity")
+    .select("student_id, session_id, subject, activity_date, duration_minutes, created_at")
+    .order("activity_date", { ascending: false }));
+}
+
 export async function createSession(mentorId, session) {
   const row = throwIfError(await supabase
     .from("sessions")

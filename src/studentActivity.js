@@ -32,6 +32,19 @@ const durationBetween = (startTime, endTime) => {
   return endMinutes - startMinutes;
 };
 
+export const createStudentActivity = (session) => {
+  const durationMinutes = durationBetween(session?.time, session?.endTime);
+  if (!session?.id || !session.subject || !isValidDate(session.date) || !durationMinutes) {
+    throw new Error("This session does not have a valid date, subject, or duration.");
+  }
+  return {
+    sessionId: String(session.id),
+    subject: session.subject.trim(),
+    activityDate: session.date,
+    durationMinutes,
+  };
+};
+
 const validateActivity = (activity) => (
   activity
   && typeof activity.sessionId === "string"
@@ -59,22 +72,14 @@ export const recordStudentAttendance = (email, session) => {
   if (!session || typeof session !== "object") {
     throw new Error("A valid session is required to record attendance.");
   }
-  const durationMinutes = durationBetween(session.time, session.endTime);
-  if (!session?.id || !session.subject || !isValidDate(session.date) || !durationMinutes) {
-    throw new Error("This session does not have a valid date, subject, or duration.");
-  }
+  const activity = createStudentActivity(session);
 
   const activities = readStudentActivities(email);
   if (activities.some((activity) => activity.sessionId === String(session.id))) {
     return false;
   }
 
-  activities.push({
-    sessionId: String(session.id),
-    subject: session.subject.trim(),
-    activityDate: session.date,
-    durationMinutes,
-  });
+  activities.push(activity);
   localStorage.setItem(activityStorageKey(email), JSON.stringify(activities));
   return true;
 };
