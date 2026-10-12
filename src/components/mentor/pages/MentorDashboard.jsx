@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  ArrowDownToLine,
   CalendarDays,
   ChevronRight,
   Clock3,
@@ -294,7 +295,7 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
   );
 }
 
-function NotesPage({ notes, form, setForm, onSubmit, t }) {
+function NotesPage({ notes, form, setForm, onSubmit, onDownload, t }) {
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
@@ -333,7 +334,9 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
             <div key={note.id}>
               <FileText size={18} />
               <span><strong>{note.title}</strong><small>{getSessionSubjectLabel(note.subject, t)} · {note.fileName}</small></span>
-              <a href={note.dataUrl} target="_blank" rel="noopener noreferrer">{t("downloadNote")}</a>
+              <button type="button" className="uploaded-note-download" onClick={() => onDownload(note)} aria-label={`${t("downloadNote")}: ${note.title}`}>
+                <ArrowDownToLine size={16} /> {t("downloadNote")}
+              </button>
             </div>
           ))}
         </div>
@@ -494,6 +497,7 @@ export function MentorDashboard({
   editingSessionId,
   onCancelEdit,
   onUploadNote,
+  onDownloadNote,
   onBack,
   accessibilityOpen,
   onToggleAccessibility,
@@ -510,7 +514,7 @@ export function MentorDashboard({
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} />}
           {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
-          {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
+          {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} t={t} />}
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} />}
         </section>
       </div>

@@ -1,17 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Trash2, VolumeX, Wind } from "lucide-react";
+import { Activity, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Trash2, Users, VolumeX, Wind } from "lucide-react";
 import {
   causeOptions,
   deleteStudentCheckin,
   emotionOptions,
   helpfulOptions,
   loadAssignedMentors,
+  loadLinkedParents,
   loadStudentCheckins,
   loadStudentResponses,
   mentorHelpOptions,
   moodLabels,
   saveStudentCheckin,
 } from "../../../studentSensory";
+import { MoodTrendChart } from "../shared/MoodTrendChart";
 import "./SensoryTrackerPage.css";
 
 const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
@@ -30,28 +32,6 @@ const blankEntry = () => ({
   overwhelm: "", helpful: [], helpfulCustom: "", helpRequest: "none", selectedMentorId: "", mentorMessage: "",
   shared: false, quickReason: "",
 });
-
-function TrendChart({ entries }) {
-  const data = entries.slice(0, 7).reverse();
-  if (data.length < 2) return <p className="sensory-muted">Add a few check-ins to see your mood, energy, and comfort trend.</p>;
-  // Quick check-ins have no energy/comfort rating, so those points are skipped.
-  const pointsFor = (field) => data
-    .map((entry, index) => entry[field] == null ? null : `${30 + index * (540 / (data.length - 1))},${155 - ((entry[field] - 1) / 4) * 125}`)
-    .filter(Boolean)
-    .join(" ");
-  return (
-    <div className="sensory-chart-wrap">
-      <div className="sensory-chart-legend"><span className="mood-line">Mood</span><span className="energy-line">Energy</span><span className="comfort-line">Comfort</span></div>
-      <svg className="sensory-chart" viewBox="0 0 600 180" role="img" aria-label="Your mood, energy, and comfort over your recent check-ins">
-        {[0, 1, 2, 3, 4].map((line) => <line key={line} x1="30" x2="570" y1={30 + line * 31} y2={30 + line * 31} />)}
-        <polyline className="mood-line" points={pointsFor("mood")} />
-        <polyline className="energy-line" points={pointsFor("energy")} />
-        <polyline className="comfort-line" points={pointsFor("comfort")} />
-      </svg>
-      <div className="sensory-chart-dates"><span>{new Date(data[0].created_at).toLocaleDateString()}</span><span>{new Date(data[data.length - 1].created_at).toLocaleDateString()}</span></div>
-    </div>
-  );
-}
 
 function EntryDetail({ entry, reply, onDelete }) {
   return (
@@ -106,6 +86,7 @@ export function CalmCorner({ onClose, startBreathing = false }) {
 export function SensoryTrackerPage({ studentId, demoMode = false }) {
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
+  const [parents, setParents] = useState([]);
   const [responses, setResponses] = useState([]);
   const [form, setForm] = useState(blankEntry);
   const [view, setView] = useState("quick");
@@ -132,11 +113,18 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
     let isCurrent = true;
     setEntries([]);
     setMentors([]);
+    setParents([]);
     setResponses([]);
     setExpandedId(null);
     setForm(blankEntry());
     setView("quick");
     setStatus("");
+    // Only changes the privacy wording, so a failure here shouldn't block the tracker.
+    loadLinkedParents(studentId)
+      .then((linkedParents) => {
+        if (isCurrent) setParents(linkedParents);
+      })
+      .catch(() => {});
     Promise.all([
       loadStudentCheckins(studentId),
       loadAssignedMentors(studentId),
@@ -208,7 +196,9 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
       setView("quick");
       setStatus(demoMode
         ? "Saved for this demo session. It will be cleared when you reload or sign out."
-        : shared ? "Saved and shared with your mentor." : "Saved privately. Only you can see this check-in.");
+        : shared ? "Saved and shared with your mentor."
+          : parents.length ? "Saved. Your parent can see the ratings, but not what you wrote."
+            : "Saved privately. Only you can see this check-in.");
     } catch {
       setStatus("This check-in couldn't be saved. Please try again.");
     } finally {
@@ -249,6 +239,9 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
       ) : (
         <div className="sensory-privacy"><LockKeyhole size={17} /> Your check-ins are private by default. You'll see a clear label when you choose to share one.</div>
       )}
+      {!demoMode && parents.length > 0 && (
+        <div className="sensory-privacy"><Users size={17} /> {parents.map((parent) => parent.display_name).join(", ")} can see your mood, emotions, energy, comfort and possible causes, but never anything you write.</div>
+      )}
       {status && <p className="sensory-status" role="status">{status}</p>}
 
       <section className="sensory-card sensory-checkin">
@@ -283,19 +276,19 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
                 )}
               </>
             )}
-            {view === "quick" && <p className="sensory-private-note"><LockKeyhole size={15} /> Quick check-ins are private.</p>}
+            {view === "quick" && <p className="sensory-private-note"><LockKeyhole size={15} /> {parents.length ? "Quick check-ins are private, apart from the mood rating your parent can see." : "Quick check-ins are private."}</p>}
             <button className="sensory-submit" type="submit" disabled={!form.mood || saving}>{saving ? "Saving…" : view === "quick" ? "Save quick check-in" : "Save today's check-in"}</button>
           </form>
       </section>
 
       <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">GENTLE IDEAS</span><h2>A few things you could try</h2></div><Heart size={22} /></div><div className="sensory-suggestions">{suggestions.map((item) => <span key={item}>{item}</span>)}</div><small>Optional ideas only. You know what works best for you.</small></section>
 
-      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">YOUR RECENT CHECK-INS</span><h2>Patterns over time</h2></div></div><TrendChart entries={sortedEntries} />
+      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">YOUR RECENT CHECK-INS</span><h2>Patterns over time</h2></div></div><MoodTrendChart entries={sortedEntries} label="Your mood, energy, and comfort over your recent check-ins" emptyText="Add a few check-ins to see your mood, energy, and comfort trend." />
         {sortedEntries.length >= 4 && <div className="sensory-insights">{tiredCount >= 3 && <p>Your entries suggest you reported feeling tired on several recent days.</p>}{stressedCount >= 3 && <p>You reported feeling stressed on several school days recently.</p>}{recentMoodAverage != null && recentMoodAverage > earlierMoodAverage && <p>Your recent mood ratings are higher than in the entries before them.</p>}{tiredCount < 3 && stressedCount < 3 && !(recentMoodAverage != null && recentMoodAverage > earlierMoodAverage) && <p>You're building a picture of what your days feel like. Keep checking in if it feels helpful.</p>}</div>}
       </section>
 
       <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">YOUR HISTORY</span><h2>Previous check-ins</h2></div></div>
-        {!sortedEntries.length ? <p className="sensory-muted">Your check-ins will appear here. Only you can see private entries.</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{moodLabels[entry.mood - 1]}{entry.emotions?.length ? ` · ${labelsFor(emotionOptions, entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · Energy ${entry.energy}/5` : " · Quick check-in"}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{entry.shared_with_mentor ? "Shared" : "Private"}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} onDelete={removeEntry} />}</article>)}</div>}
+        {!sortedEntries.length ? <p className="sensory-muted">Your check-ins will appear here.{parents.length ? "" : " Only you can see private entries."}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{moodLabels[entry.mood - 1]}{entry.emotions?.length ? ` · ${labelsFor(emotionOptions, entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · Energy ${entry.energy}/5` : " · Quick check-in"}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{entry.shared_with_mentor ? "Shared" : "Private"}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} onDelete={removeEntry} />}</article>)}</div>}
       </section>
     </section>
   );

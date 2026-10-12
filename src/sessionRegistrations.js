@@ -67,6 +67,7 @@ export async function fetchSessionStudents(sessionId) {
     name: row.display_name,
     attended: Boolean(row.attended_at),
     good: row.mentor_good,
+    attention: row.attention_level,
   }));
 }
 
@@ -75,5 +76,14 @@ export async function setStudentGood(sessionId, studentId, good) {
     p_session_id: sessionId,
     p_student_id: studentId,
     p_good: good,
+  }));
+}
+
+// level is 1-5, or null to clear the rating.
+export async function setStudentAttention(sessionId, studentId, level) {
+  throwIfError(await supabase.rpc("set_student_attention", {
+    p_session_id: sessionId,
+    p_student_id: studentId,
+    p_level: level,
   }));
 }

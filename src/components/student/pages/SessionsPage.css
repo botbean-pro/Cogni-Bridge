@@ -8,8 +8,8 @@
 .student-note-card > div { flex:1; min-width:0; }
 .student-note-card h3 { margin:8px 0 3px; color:var(--text); font-size:16px; }
 .student-note-card p { margin:0; overflow-wrap:anywhere; color:var(--muted); font-size:13px; }
-.student-note-card a { display:inline-flex; align-items:center; justify-content:center; gap:7px; flex:none; padding:9px 12px; border:1px solid var(--line); border-radius:9px; color:var(--teal); font-size:13px; font-weight:700; text-decoration:none; }
-.student-note-card a:hover { border-color:var(--teal); background:var(--surface-2); }
+.student-note-card button { display:inline-flex; align-items:center; justify-content:center; gap:7px; flex:none; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:transparent; color:var(--teal); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.student-note-card button:hover { border-color:var(--teal); background:var(--surface-2); }
 .student-notes-empty { padding:26px; border:1px dashed var(--line); border-radius:14px; color:var(--muted); text-align:center; }
 .theme-dark .sessions-page { background:var(--surface); color:var(--text); }
 .study-profile-card { position:relative; display:flex; align-items:center; justify-content:space-between; gap:25px; overflow:hidden; margin:26px 0; padding:24px 28px; border:1px solid #b9ded8; border-radius:20px; background:linear-gradient(120deg,#e4f4f1,#f8fcfb); box-shadow:0 12px 30px rgba(8,127,119,.08); }
@@ -20,7 +20,7 @@
 .theme-dark .study-profile-card { border-color:var(--line); background:linear-gradient(120deg,#203b3c,#1f2e30); }
 .theme-dark .study-profile-card > strong { color:#142022; }
 @media (max-width:620px) { .study-profile-card { align-items:flex-start; flex-direction:column; padding:21px; } }
-@media (max-width:520px) { .student-note-card { align-items:flex-start; flex-wrap:wrap; gap:12px; } .student-note-card a { margin-left:34px; } }
+@media (max-width:520px) { .student-note-card { align-items:flex-start; flex-wrap:wrap; gap:12px; } .student-note-card button { margin-left:34px; } }
 .sessions-values {
   position:relative;
   min-height:487px;

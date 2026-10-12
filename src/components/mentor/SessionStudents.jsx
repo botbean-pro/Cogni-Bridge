@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { fetchSessionStudents, setStudentGood } from "../../sessionRegistrations";
+import { fetchSessionStudents, setStudentAttention, setStudentGood } from "../../sessionRegistrations";
+
+const attentionLevels = [1, 2, 3, 4, 5];
 
 // Students registered for one of this mentor's sessions, with a toggle for the
-// "good participation" mark (+5 Cogni-Points on the leaderboard).
+// "good participation" mark (+5 Cogni-Points on the leaderboard) and a 1-5
+// attention rating that the student's parents can see.
 export function SessionStudents({ sessionId, t }) {
   const [students, setStudents] = useState(null);
   const [error, setError] = useState("");
@@ -22,13 +25,26 @@ export function SessionStudents({ sessionId, t }) {
     };
   }, [sessionId, t]);
 
+  const updateStudent = (studentId, changes) => setStudents((items) => items.map((item) => (
+    item.id === studentId ? { ...item, ...changes } : item
+  )));
+
   const toggleGood = async (student) => {
     setError("");
     try {
       await setStudentGood(sessionId, student.id, !student.good);
-      setStudents((items) => items.map((item) => (
-        item.id === student.id ? { ...item, good: !student.good } : item
-      )));
+      updateStudent(student.id, { good: !student.good });
+    } catch {
+      setError(t("sessionStudentsError"));
+    }
+  };
+
+  const rateAttention = async (student, value) => {
+    const level = value ? Number(value) : null;
+    setError("");
+    try {
+      await setStudentAttention(sessionId, student.id, level);
+      updateStudent(student.id, { attention: level });
     } catch {
       setError(t("sessionStudentsError"));
     }
@@ -46,10 +62,21 @@ export function SessionStudents({ sessionId, t }) {
             {student.name}
             {student.attended && <small><CheckCircle2 size={13} /> {t("attendanceRecorded")}</small>}
           </span>
-          <label>
-            <input type="checkbox" checked={student.good} onChange={() => toggleGood(student)} />
-            {t("goodParticipation")}
-          </label>
+          <div className="mentor-student-controls">
+            <label>
+              {t("attentionLevel")}
+              <select value={student.attention ?? ""} onChange={(event) => rateAttention(student, event.target.value)}>
+                <option value="">{t("attentionNotRated")}</option>
+                {attentionLevels.map((level) => (
+                  <option key={level} value={level}>{level} · {t(`attention${level}`)}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <input type="checkbox" checked={student.good} onChange={() => toggleGood(student)} />
+              {t("goodParticipation")}
+            </label>
+          </div>
         </li>
       ))}
     </ul>

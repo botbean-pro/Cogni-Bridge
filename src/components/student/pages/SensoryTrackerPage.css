@@ -82,16 +82,6 @@
 .sensory-done h2 { margin:0 0 5px; color:var(--text); font-size:18px; }
 .sensory-done p { margin:0; color:var(--muted); }
 .sensory-upgrade { margin-top:12px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--teal); font:inherit; font-weight:700; cursor:pointer; }
-.sensory-chart-wrap { width:100%; }
-.sensory-chart-legend { display:flex; gap:17px; margin-bottom:5px; color:var(--muted); font-size:12px; }
-.sensory-chart-legend span::before { display:inline-block; width:15px; height:3px; margin:0 6px 3px 0; border-radius:2px; background:currentColor; content:""; }
-.mood-line { color:#368f89; fill:none; stroke:#368f89; }
-.energy-line { color:#d79a4a; fill:none; stroke:#d79a4a; }
-.comfort-line { color:#7785bb; fill:none; stroke:#7785bb; }
-.sensory-chart { display:block; width:100%; overflow:visible; }
-.sensory-chart line { stroke:var(--line); stroke-width:1; }
-.sensory-chart polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
-.sensory-chart-dates { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; }
 .sensory-insights { margin-top:16px; padding:13px; border-radius:11px; background:var(--surface-2); color:var(--text); font-size:13px; }
 .sensory-insights p { margin:5px 0; }
 .sensory-history { display:grid; }

@@ -1,6 +1,7 @@
 import { supabase } from "./supabaseClient";
 
 export const moodLabels = ["Very bad", "Bad", "Okay", "Good", "Great"];
+export const moodIcons = ["☹", "🙁", "◉", "🙂", "☺"];
 
 export const emotionOptions = [
   ["happy", "Happy"], ["sad", "Sad"], ["angry", "Angry"], ["anxious", "Anxious"],
@@ -71,6 +72,20 @@ export async function loadAssignedMentors(studentId) {
     .in("id", assignments.map(({ mentor_id: mentorId }) => mentorId)));
 }
 
+// Parents linked to this student. They can see check-in ratings, never written notes.
+export async function loadLinkedParents(studentId) {
+  if (!supabase) return [];
+  const links = throwIfError(await supabase
+    .from("parent_student_links")
+    .select("parent_id")
+    .eq("student_id", studentId));
+  if (!links.length) return [];
+  return throwIfError(await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .in("id", links.map(({ parent_id: parentId }) => parentId)));
+}
+
 export async function saveStudentCheckin(studentId, checkin) {
   if (!supabase) {
     const key = demoStudentKey(studentId);
@@ -133,17 +148,6 @@ export async function loadStudentResponses() {
     .from("sensory_notifications")
     .select("checkin_id, addressed_at, mentor_message")
     .not("mentor_message", "eq", ""));
-}
-
-export async function saveStudentLearningActivity(studentId, activity) {
-  const { error } = await supabase.from("student_learning_activity").upsert({
-    student_id: studentId,
-    session_id: activity.sessionId,
-    subject: activity.subject,
-    activity_date: activity.activityDate,
-    duration_minutes: activity.durationMinutes,
-  }, { onConflict: "student_id,session_id", ignoreDuplicates: true });
-  if (error) throw error;
 }
 
 export async function loadMentorCheckins(mentorId) {

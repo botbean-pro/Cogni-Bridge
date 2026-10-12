@@ -11,7 +11,7 @@ import { SettingsPage } from "./components/student/pages/SettingsPage";
 import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
 import { clearDemoStudentCheckins } from "./studentSensory";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
-import { fetchSessions } from "./mentorContent";
+import { fetchSessions, fetchStudentNotes } from "./mentorContent";
 import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { translate } from "./i18n";
@@ -114,6 +114,7 @@ const App = () => {
       setStudentEmail("");
       setMentorOpen(false);
       setParentOpen(false);
+      setLearningNotes([]);
       if (activeTab === "sensory") setActiveTab("home");
       return undefined;
     }
@@ -168,6 +169,20 @@ const App = () => {
       isCurrent = false;
     };
   }, []);
+
+  // Students see every mentor's notes; the mentor portal loads its own notes itself.
+  useEffect(() => {
+    if (!supabaseConfigured || !signedIn || authRole !== "student") return undefined;
+    let isCurrent = true;
+    fetchStudentNotes()
+      .then((rows) => {
+        if (isCurrent) setLearningNotes(rows);
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, [signedIn, authRole]);
 
   useEffect(() => {
     if (activeTab !== "home" || !scrollToAboutOnHome) return;
@@ -376,9 +391,35 @@ const App = () => {
   }
 
   if (parentOpen) {
-    return <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
-      <ParentPortal parentId={authUserId} parentName={authSession?.user?.user_metadata?.full_name || "Parent"} onLogout={() => { setParentOpen(false); if (supabaseConfigured) supabase.auth.signOut(); }} t={t} />
-    </div>;
+    return (
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <ParentPortal
+          key={authUserId}
+          parentId={authUserId}
+          parentName={authSession?.user?.user_metadata?.full_name || "Parent"}
+          onLogout={() => {
+            setParentOpen(false);
+            if (supabaseConfigured) supabase.auth.signOut();
+          }}
+          accessibilityOpen={accessibilityOpen}
+          onToggleAccessibility={() => setAccessibilityOpen((isOpen) => !isOpen)}
+          accessibilityPanel={(
+            <AccessibilityPanel
+              textScale={textScale}
+              setTextScale={setTextScale}
+              appearance={appearance}
+              setAppearance={setAppearance}
+              language={studentLanguage}
+              setLanguage={setStudentLanguage}
+              showLanguage
+              t={t}
+              onClose={() => setAccessibilityOpen(false)}
+            />
+          )}
+          t={t}
+        />
+      </div>
+    );
   }
 
   if (signupEmail) {

@@ -30,10 +30,9 @@ export async function loadParentPortal(parentId) {
   const links = throwIfError(await supabase.from("parent_student_links")
     .select("student_id, created_at").eq("parent_id", parentId));
   const studentIds = links.map((link) => link.student_id);
-  if (!studentIds.length) return { children: [], activities: [], messages: [] };
-  const [profiles, activityRows, assignments, messages] = await Promise.all([
-    supabase.from("profiles").select("id, display_name").in("id", studentIds),
-    supabase.from("student_learning_activity").select("student_id, session_id, subject, activity_date, duration_minutes").in("student_id", studentIds).order("activity_date", { ascending: false }),
+  if (!studentIds.length) return { children: [], messages: [] };
+  const [profiles, assignments, messages] = await Promise.all([
+    supabase.from("profiles").select("id, display_name").in("id", studentIds).order("display_name"),
     supabase.from("mentor_student_assignments").select("student_id, mentor_id").in("student_id", studentIds),
     supabase.from("parent_teacher_messages").select("id, student_id, mentor_id, sender_id, sender_role, message, created_at").eq("parent_id", parentId).order("created_at", { ascending: true }),
   ]);
@@ -49,7 +48,29 @@ export async function loadParentPortal(parentId) {
         .filter(Boolean);
     });
   }
-  return { children, activities: throwIfError(activityRows), messages: throwIfError(messages) };
+  return { children, messages: throwIfError(messages) };
+}
+
+// Ratings, emotions and causes only; the child's written notes are never returned.
+// Access is enforced by child_checkins() in 20261012000600_parent_portal.sql.
+export async function loadChildCheckins(studentId) {
+  return throwIfError(await supabase.rpc("child_checkins", { p_student_id: studentId }));
+}
+
+export async function loadChildSessions(studentId) {
+  const rows = throwIfError(await supabase.rpc("child_sessions", { p_student_id: studentId }));
+  return rows.map((row) => ({
+    id: row.session_id,
+    title: row.title,
+    subject: row.subject,
+    date: row.session_date,
+    time: row.start_time,
+    endTime: row.end_time,
+    attended: Boolean(row.attended_at),
+    ended: row.ended,
+    good: row.mentor_good,
+    attention: row.attention_level,
+  }));
 }
 
 export async function sendParentTeacherMessage({ parentId, studentId, mentorId, message }) {

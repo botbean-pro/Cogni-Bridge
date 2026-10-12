@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MENTOR_EMAIL, MENTOR_PASSWORD } from "../../constants";
-import { createSession, loadMentorNotes, updateSession, uploadMentorNote } from "../../mentorContent";
+import { createSession, downloadNote, loadMentorNotes, updateSession, uploadMentorNote } from "../../mentorContent";
 import { supabaseConfigured } from "../../supabaseClient";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MentorLoginPage } from "./pages/MentorLoginPage";
@@ -154,6 +154,16 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
     event.target.reset();
   };
 
+  const downloadMentorNote = async (note) => {
+    try {
+      await downloadNote(note);
+      setActionError("");
+    } catch (downloadError) {
+      console.error("Note download failed:", downloadError);
+      setActionError(t("noteDownloadError"));
+    }
+  };
+
   if (!loggedIn) {
     return (
       <MentorLoginPage
@@ -186,6 +196,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
       editingSessionId={editingSessionId}
       onCancelEdit={() => { setEditingSessionId(null); setForm(createSessionForm()); }}
       onUploadNote={uploadNote}
+      onDownloadNote={downloadMentorNote}
       onBack={onBack}
       accessibilityOpen={accessibilityOpen}
       onToggleAccessibility={onToggleAccessibility}

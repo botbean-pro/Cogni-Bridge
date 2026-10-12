@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, FileText } from "lucide-react";
 import { formatSession, getSessionSubjectLabel } from "../../../constants";
+import { downloadNote } from "../../../mentorContent";
 import { isSessionComplete } from "../../../studentActivity";
 import { StudentStats } from "../shared/StudentStats";
 import "./SessionsPage.css";
@@ -65,7 +66,17 @@ function SessionList({ sessions, onSelect, t }) {
 
 export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const [section, setSection] = useState("sessions");
+  const [downloadError, setDownloadError] = useState("");
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
+
+  const download = async (note) => {
+    setDownloadError("");
+    try {
+      await downloadNote(note);
+    } catch {
+      setDownloadError(t("noteDownloadError"));
+    }
+  };
 
   return (
     <section className="content sessions-page">
@@ -78,11 +89,12 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
       </div>
       {section === "notes" ? (
         <section className="student-notes" aria-label={t("notesTab")}>
+          {downloadError && <p className="error-popup" role="alert">{downloadError}</p>}
           {notes.length ? notes.map((note) => (
             <article className="student-note-card" key={note.id}>
               <FileText size={21} />
               <div><span className="subject-pill">{getSessionSubjectLabel(note.subject, t)}</span><h3>{note.title}</h3><p>{note.fileName}</p></div>
-              <a href={note.dataUrl} download={note.fileName} aria-label={`${t("downloadNote")}: ${note.title}`}><ArrowDownToLine size={18} /> {t("downloadNote")}</a>
+              <button type="button" onClick={() => download(note)} aria-label={`${t("downloadNote")}: ${note.title}`}><ArrowDownToLine size={18} /> {t("downloadNote")}</button>
             </article>
           )) : <p className="student-notes-empty">{t("noNotesAvailable")}</p>}
         </section>

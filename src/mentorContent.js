@@ -28,11 +28,9 @@ export async function fetchSessions() {
   return rows.map(toClientSession);
 }
 
+// Attended sessions of this mentor's assigned students (from session_registrations).
 export async function loadMentorLearningActivity() {
-  return throwIfError(await supabase
-    .from("student_learning_activity")
-    .select("student_id, session_id, subject, activity_date, duration_minutes, created_at")
-    .order("activity_date", { ascending: false }));
+  return throwIfError(await supabase.rpc("mentor_student_activity"));
 }
 
 export async function createSession(mentorId, session) {
@@ -76,6 +74,7 @@ const toClientNote = (row) => ({
   title: row.title,
   subject: row.subject,
   fileName: row.file_name,
+  filePath: row.file_path,
 });
 
 export async function loadMentorNotes(mentorId) {
@@ -85,6 +84,30 @@ export async function loadMentorNotes(mentorId) {
     .eq("mentor_id", mentorId)
     .order("created_at", { ascending: false }));
   return rows.map(toClientNote);
+}
+
+// Every mentor's notes, for students (RLS lets students read all of them).
+export async function fetchStudentNotes() {
+  const rows = throwIfError(await supabase
+    .from("mentor_notes")
+    .select("*")
+    .order("created_at", { ascending: false }));
+  return rows.map(toClientNote);
+}
+
+// Demo-mode notes carry their file as a data URL. Supabase notes are private, so they
+// are fetched through a short-lived signed URL that forces a download.
+export async function downloadNote(note) {
+  const url = note.dataUrl || throwIfError(await supabase.storage
+    .from("mentor-notes")
+    .createSignedUrl(note.filePath, 60, { download: note.fileName })).signedUrl;
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = note.fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 export async function uploadMentorNote(mentorId, { title, subject, file }) {

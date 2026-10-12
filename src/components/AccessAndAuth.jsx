@@ -156,7 +156,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
         .maybeSingle();
       if (profileError || !profile || profile.role !== tab) {
         await supabase.auth.signOut();
-        setError(tab === "mentor" ? "mentorAccessDenied" : tab === "parent" ? "This account is not registered as a parent." : "studentAccessDenied");
+        setError(tab === "mentor" ? "mentorAccessDenied" : tab === "parent" ? "parentAccessDenied" : "studentAccessDenied");
         return;
       }
 
@@ -255,13 +255,13 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
   const tabLabels = [
     ["student", "studentLogin"],
     ["mentor", "mentorLogin"],
-    ["parent", "Parent"],
+    ["parent", "parentLogin"],
   ];
 
   const description = {
     student: t("studentLoginDescription"),
     mentor: t("mentorDescription"),
-    parent: "Sign in or create an account to connect with your child and their teachers.",
+    parent: t("parentLoginDescription"),
   }[tab];
 
   return (
@@ -292,7 +292,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
               role="tab"
               aria-selected={tab === key}
             >
-              {labelKey === "Parent" ? labelKey : t(labelKey)}
+              {t(labelKey)}
             </button>
           ))}
         </div>
