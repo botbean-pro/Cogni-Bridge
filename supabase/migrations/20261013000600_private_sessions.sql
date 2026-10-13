@@ -3,7 +3,8 @@
 
 create table if not exists public.private_sessions (
   id uuid primary key default gen_random_uuid(),
-  mentor_id uuid not null references public.profiles (id) on delete cascade,
+  mentor_id uuid not null references public.prof
+  les (id) on delete cascade,
   student_id uuid not null references public.profiles (id) on delete cascade,
   title text not null check (char_length(title) between 1 and 200),
   subject text not null,
