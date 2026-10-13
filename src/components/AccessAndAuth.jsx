@@ -426,9 +426,10 @@ const AccessibilityPanel = ({
   setLanguage,
   showLanguage = true,
   onClose,
+  className = "",
   t,
 }) => (
-  <aside className="accessibility-panel" aria-label={t("accessibilityOptions")}>
+  <aside className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
       <strong>{t("accessibility")}</strong>
       <button

@@ -1,6 +1,6 @@
 .leaderboard-page { min-height: calc(100vh - 82px); background: var(--canvas); }
 .leaderboard-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; max-width:1040px; margin:0 auto 26px; }
-.leaderboard-heading h1 { margin:5px 0 8px; color:var(--text); font-size:clamp(32px,4vw,48px); letter-spacing:-.05em; }
+.leaderboard-heading h1 { margin:5px 0 8px; color:var(--text); font-size: calc((clamp(32px,4vw,48px)) * var(--text-scale, 1)); letter-spacing:-.05em; }
 .leaderboard-heading p:last-child { margin:0; color:var(--muted); font-size:calc(16px * var(--text-scale, 1)); }
 .leaderboard-trophy { display:grid; place-items:center; width:68px; height:68px; border-radius:22px; color:var(--teal); background:#d9f1ed; box-shadow:0 8px 22px rgba(8,127,119,.13); }
 .points-info-box { display:flex; gap:16px; max-width:1040px; margin:0 auto 24px; padding:22px 24px; border:1px solid #b9ded8; border-radius:18px; background:#e4f4f1; color:var(--charcoal-2); }
@@ -18,9 +18,9 @@
 .podium-card-1 { order:2; transform:translateY(-7px); border-color:var(--teal); box-shadow:0 10px 22px rgba(8,127,119,.12); }
 .podium-card-2 { order:1; }
 .podium-card-3 { order:3; }
-.podium-medal { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; color:var(--teal-dark); background:#d1ebe6; font-size:12px; font-weight:900; }
+.podium-medal { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; color:var(--teal-dark); background:#d1ebe6; font-size: calc((12px) * var(--text-scale, 1)); font-weight:900; }
 .podium-card-1 .podium-medal { color:#fff; background:var(--teal); }
-.podium-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:15px; color:var(--teal-dark); background:#dff4f0; font-size:19px; font-weight:900; }
+.podium-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:15px; color:var(--teal-dark); background:#dff4f0; font-size: calc((19px) * var(--text-scale, 1)); font-weight:900; }
 .podium-card strong { color:var(--charcoal-2); font-size:calc(16px * var(--text-scale, 1)); }
 .podium-score { color:var(--teal-dark); font-size:calc(16px * var(--text-scale, 1)); font-weight:900; }
 .streak-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; color:#c25b36; background:#fff0e8; font-size:calc(12px * var(--text-scale, 1)); font-weight:800; }
@@ -38,7 +38,7 @@
 .leaderboard-name strong { color:var(--charcoal-2); font-size:calc(16px * var(--text-scale, 1)); }
 .leaderboard-attendance { font-weight:700; color:var(--charcoal-2); }
 .leaderboard-streak { display:inline-flex; align-items:center; gap:4px; color:#c25b36; font-weight:800; }
-.leaderboard-attendance small, .leaderboard-points small { color:#829394; font-size:12px; font-weight:500; }
+.leaderboard-attendance small, .leaderboard-points small { color:#829394; font-size: calc((12px) * var(--text-scale, 1)); font-weight:500; }
 .leaderboard-points { color:var(--teal-dark); font-size:calc(22px * var(--text-scale, 1)); font-weight:900; }
 .theme-dark .leaderboard-page { background:var(--canvas); }
 .theme-dark .leaderboard-heading h1,
@@ -76,7 +76,7 @@
 @media (max-width:700px) {
   .leaderboard-heading { align-items:flex-start; }
   .leaderboard-table-header, .leaderboard-row { grid-template-columns:38px 1fr 72px 48px 65px; gap:7px; padding:14px 10px; }
-  .leaderboard-table-header { font-size:10px; }
+  .leaderboard-table-header { font-size: calc((10px) * var(--text-scale, 1)); }
   .leaderboard-table-header span:nth-child(n+3) { text-align:right; }
   .leaderboard-row > :nth-child(n+3) { justify-content:flex-end; text-align:right; }
   .points-info-box { padding:18px; }

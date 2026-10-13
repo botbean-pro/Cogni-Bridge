@@ -1,4 +1,5 @@
 import React from "react";
+import { formatLocalizedDate } from "../../../constants";
 import "./MoodTrendChart.css";
 
 const defaultLegend = { mood: "Mood", energy: "Energy", comfort: "Comfort" };
@@ -21,7 +22,7 @@ export function MoodTrendChart({ entries, label, emptyText, legend = defaultLege
         <polyline className="energy-line" pathLength="1" points={pointsFor("energy")} />
         <polyline className="comfort-line" pathLength="1" points={pointsFor("comfort")} />
       </svg>
-      <div className="sensory-chart-dates"><span>{new Date(data[0].created_at).toLocaleDateString()}</span><span>{new Date(data[data.length - 1].created_at).toLocaleDateString()}</span></div>
+      <div className="sensory-chart-dates"><span>{formatLocalizedDate(data[0].created_at)}</span><span>{formatLocalizedDate(data[data.length - 1].created_at)}</span></div>
     </div>
   );
 }

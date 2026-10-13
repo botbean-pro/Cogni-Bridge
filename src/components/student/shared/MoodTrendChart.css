@@ -1,5 +1,5 @@
 .sensory-chart-wrap { width:100%; }
-.sensory-chart-legend { display:flex; gap:17px; margin-bottom:5px; color:var(--muted); font-size:12px; }
+.sensory-chart-legend { display:flex; gap:17px; margin-bottom:5px; color:var(--muted); font-size: calc((12px) * var(--text-scale, 1)); }
 .sensory-chart-legend span::before { display:inline-block; width:15px; height:3px; margin:0 6px 3px 0; border-radius:2px; background:currentColor; content:""; }
 .mood-line { color:#368f89; fill:none; stroke:#368f89; }
 .energy-line { color:#d79a4a; fill:none; stroke:#d79a4a; }
@@ -7,5 +7,5 @@
 .sensory-chart { display:block; width:100%; overflow:visible; }
 .sensory-chart line { stroke:var(--line); stroke-width:1; }
 .sensory-chart polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
-.sensory-chart-dates { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; }
-.sensory-chart-empty { margin:0; color:var(--muted); font-size:14px; }
+.sensory-chart-dates { display:flex; justify-content:space-between; color:var(--muted); font-size: calc((11px) * var(--text-scale, 1)); }
+.sensory-chart-empty { margin:0; color:var(--muted); font-size: calc((14px) * var(--text-scale, 1)); }

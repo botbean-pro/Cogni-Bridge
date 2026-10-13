@@ -16,7 +16,7 @@ export const demoStudents = [
   { name: "Samar", email: "samar@cognibridge.com", password: "cognibridge123", role: "Student" },
   { name: "Vardaan", email: "vardaan@cognibridge.com", password: "cognibridge123", role: "Student" },
 ];
-export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Art", "Physical Education"];
+export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Artificial Intelligence", "Art", "Physical Education"];
 export const sessionSubjectTranslations = {
   Maths: "subjectMaths",
   Science: "subjectScience",
@@ -25,15 +25,30 @@ export const sessionSubjectTranslations = {
   Hindi: "subjectHindi",
   Languages: "subjectLanguages",
   "Computer Science": "subjectComputerScience",
+  "Artificial Intelligence": "subjectArtificialIntelligence",
   Art: "subjectArt",
   "Physical Education": "subjectPhysicalEducation",
 };
 export const getSessionSubjectLabel = (subject, t) => sessionSubjectTranslations[subject] ? t(sessionSubjectTranslations[subject]) : subject || t("subjectMaths");
+const sessionTitleTranslations = {
+  "plants and photosynthesis": "plantsPhotosynthesisTitle",
+  "speaking with confidence": "speakingWithConfidenceTitle",
+  "intro to scratch coding": "introScratchCodingTitle",
+};
+export const getSessionTitle = (session, t) => {
+  if (session.titleKey) return t(session.titleKey);
+  const titleKey = sessionTitleTranslations[String(session.title || "").toLowerCase()];
+  return titleKey ? t(titleKey) : session.title;
+};
 export const indianLanguages = [["English", "English"], ["हिन्दी", "Hindi"], ["বাংলा", "Bengali"], ["తెలుగు", "Telugu"], ["मराठी", "Marathi"], ["தமிழ்", "Tamil"], ["ગુજરાતી", "Gujarati"], ["ಕನ್ನಡ", "Kannada"], ["മലയാളം", "Malayalam"], ["ਪੰਜਾਬੀ", "Punjabi"]];
 
 export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"]];
 export const classNames = (...names) => names.filter(Boolean).join(" ");
-export const formatSession = (s) => `${new Date(`${s.date}T${s.time}`).toLocaleDateString(typeof document !== "undefined" ? (document.documentElement.lang || "en-IN") : "en-IN", { weekday: "short", month: "short", day: "numeric" })}, ${s.time} – ${s.endTime}`;
+export const formatLocalizedDate = (date, options) => new Date(date).toLocaleDateString(
+  typeof document !== "undefined" ? (document.documentElement.lang || "en-IN") : "en-IN",
+  options,
+);
+export const formatSession = (s) => `${formatLocalizedDate(`${s.date}T${s.time}`, { weekday: "short", month: "short", day: "numeric" })}, ${s.time} – ${s.endTime}`;
 export const readStudents = () => {
   try {
     const value = JSON.parse(localStorage.getItem("cognibridge_students") || "[]");

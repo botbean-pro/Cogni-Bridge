@@ -7,10 +7,23 @@ async function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+async function fetchWithAuth(url, options) {
+  const makeRequest = async () => fetch(url, {
+    ...options,
+    headers: { ...options.headers, ...(await authHeaders()) },
+  });
+  let response = await makeRequest();
+  if (response.status === 401 && supabaseConfigured) {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (!error && data.session?.access_token) response = await makeRequest();
+  }
+  return response;
+}
+
 export async function getLearningAssistantUsage() {
-  const response = await fetch("/api/chat", {
+  const response = await fetchWithAuth("/api/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ task: "usage" }),
   });
   const data = await response.json().catch(() => ({}));
@@ -19,9 +32,9 @@ export async function getLearningAssistantUsage() {
 }
 
 export async function askLearningAssistant(conversation, task = "chat", language = "English") {
-  const response = await fetch("/api/chat", {
+  const response = await fetchWithAuth("/api/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       task,
       language,

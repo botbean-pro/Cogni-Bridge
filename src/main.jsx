@@ -4,5 +4,6 @@ import "./styles.css";
 import "./mentor.css";
 import "./design-system.css";
 import App from "./App";
+import "./accessibility-overrides.css";
 
 createRoot(document.getElementById("root")).render(<StrictMode><App /></StrictMode>);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, Video, X } from "lucide-react";
 import { loadStudentPrivateSessions, markPrivateSessionsSeen } from "../../privateSessions";
+import { formatLocalizedDate, getSessionTitle } from "../../constants";
 
 // Session end as a Date, so finished sessions drop out of the list.
 const endOf = (session) => new Date(`${session.date}T${session.endTime}:00`);
@@ -55,8 +56,8 @@ export function StudentNotifications({ studentId, t }) {
                   <li key={session.id}>
                     <div>
                       <strong>{t("ps_newSession", { mentor: session.mentorName || t("md_student") })}</strong>
-                      <span>{session.title}</span>
-                      <small>{new Date(`${session.date}T00:00:00`).toLocaleDateString()} · {session.time} – {session.endTime}</small>
+                      <span>{getSessionTitle(session, t)}</span>
+                      <small>{formatLocalizedDate(`${session.date}T00:00:00`)} · {session.time} – {session.endTime}</small>
                     </div>
                     <a className="student-notify-join" href={session.meetLink} target="_blank" rel="noopener noreferrer"><Video size={16} /> {t("ps_join")}</a>
                   </li>

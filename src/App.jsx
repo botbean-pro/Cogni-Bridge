@@ -489,6 +489,7 @@ const App = () => {
         />
         {accessibilityOpen && (
           <AccessibilityPanel
+            className="accessibility-panel-left"
             textScale={textScale}
             setTextScale={setTextScale}
             appearance={appearance}

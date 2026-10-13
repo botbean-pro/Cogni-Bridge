@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Users, VolumeX, Wind } from "lucide-react";
+import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Users, VolumeX, Wind, X } from "lucide-react";
 import {
   causeOptions,
   emotionOptions,
@@ -12,6 +12,7 @@ import {
   saveStudentCheckin,
 } from "../../../studentSensory";
 import { MoodTrendChart } from "../shared/MoodTrendChart";
+import { formatLocalizedDate } from "../../../constants";
 import "./SensoryTrackerPage.css";
 
 // One icon per moodLabels entry (Very bad -> Great), so the picture always matches the word.
@@ -54,7 +55,6 @@ function EntryDetail({ entry, reply, t }) {
 }
 
 const calmVideos = [
-  { id: "v1", source: "HeadStart.gov", url: "https://headstart.gov/video/mindful-breathing" },
   { id: "v2", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=TCoUnEPeuQk" },
   { id: "v3", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=8rp5bpFIUpg" },
 ];
@@ -99,6 +99,13 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
   const [showCalmCorner, setShowCalmCorner] = useState(false);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
   const todayFullEntry = sortedEntries.find((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
+
+  useEffect(() => {
+    if (!showCalmCorner) return undefined;
+    const closeOnEscape = (event) => { if (event.key === "Escape") setShowCalmCorner(false); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [showCalmCorner]);
 
   const refresh = async () => {
     const [history, assignedMentors, mentorResponses] = await Promise.all([
@@ -213,13 +220,6 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
     }
   };
 
-  const suggestionKeys = form.mood === 1 || form.mood === 2
-    ? ["sn_sugTalk", "sn_sugBreath", "sn_sugQuieter"]
-    : form.causes.includes("homework")
-      ? ["sn_sugSmaller", "sn_sugBreak", demoMode ? "sn_sugTalk" : "sn_sugTalkMentor"]
-      : ["sn_sugBreak", "sn_sugBreathEx", "sn_sugTalk"];
-  const suggestions = suggestionKeys.map((key) => t(key));
-
   const tiredCount = sortedEntries.slice(0, 7).filter((entry) => entry.emotions?.includes("tired")).length;
   const stressedCount = sortedEntries.slice(0, 7).filter((entry) => entry.emotions?.includes("stressed") && entry.causes?.includes("school")).length;
   const moodRatings = sortedEntries.slice(0, 8).map((entry) => entry.mood);
@@ -230,7 +230,12 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
       <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
       <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
-      {showCalmCorner && <CalmCorner onClose={() => setShowCalmCorner(false)} t={t} />}
+      {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
+        <div className="student-calm-dialog">
+          <button className="student-calm-dismiss" type="button" onClick={() => setShowCalmCorner(false)} aria-label={t("close")}><X size={20} /></button>
+          <CalmCorner onClose={() => setShowCalmCorner(false)} t={t} />
+        </div>
+      </div>}
       {demoMode ? (
         <div className="sensory-demo-banner" role="note"><LockKeyhole size={17} /> {t("sn_demoBanner")}</div>
       ) : (
@@ -280,14 +285,12 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
           </form>
       </section>
 
-      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("sn_gentleEyebrow")}</span><h2>{t("sn_tryTitle")}</h2></div><Heart size={22} /></div><div className="sensory-suggestions">{suggestions.map((item) => <span key={item}>{item}</span>)}</div><small>{t("sn_optionalIdeas")}</small></section>
-
       <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("sn_recentEyebrow")}</span><h2>{t("sn_patterns")}</h2></div></div><MoodTrendChart entries={sortedEntries} label={t("sn_chartLabel")} emptyText={t("sn_chartEmpty")} legend={{ mood: t("moodLabel"), energy: t("energyLabel"), comfort: t("comfortLabel") }} />
         {sortedEntries.length >= 4 && <div className="sensory-insights">{tiredCount >= 3 && <p>{t("sn_insightTired")}</p>}{stressedCount >= 3 && <p>{t("sn_insightStressed")}</p>}{recentMoodAverage != null && recentMoodAverage > earlierMoodAverage && <p>{t("sn_insightMood")}</p>}{tiredCount < 3 && stressedCount < 3 && !(recentMoodAverage != null && recentMoodAverage > earlierMoodAverage) && <p>{t("sn_insightDefault")}</p>}</div>}
       </section>
 
       <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("sn_historyEyebrow")}</span><h2>{t("sn_prevCheckins")}</h2></div></div>
-        {!sortedEntries.length ? <p className="sensory-muted">{t(parents.length ? "sn_historyEmpty" : "sn_historyEmptyPrivate")}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{t(`mood_${entry.mood}`)}{entry.emotions?.length ? ` · ${labelsFor(t, "emotion", entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · ${t("sn_energyN", { n: entry.energy })}` : ` · ${t("sn_quick")}`}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{t(entry.shared_with_mentor ? "sn_sharedTag" : "sn_privateTag")}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} t={t} />}</article>)}</div>}
+        {!sortedEntries.length ? <p className="sensory-muted">{t(parents.length ? "sn_historyEmpty" : "sn_historyEmptyPrivate")}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{formatLocalizedDate(entry.created_at, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{t(`mood_${entry.mood}`)}{entry.emotions?.length ? ` · ${labelsFor(t, "emotion", entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · ${t("sn_energyN", { n: entry.energy })}` : ` · ${t("sn_quick")}`}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{t(entry.shared_with_mentor ? "sn_sharedTag" : "sn_privateTag")}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} t={t} />}</article>)}</div>}
       </section>
     </section>
   );

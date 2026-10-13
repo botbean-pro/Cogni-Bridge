@@ -7,25 +7,25 @@
   border-top: 1px solid var(--line);
   background: var(--surface);
   color: var(--muted);
-  font-size: 13px;
+  font-size: calc((13px) * var(--text-scale, 1));
 }
 
 .ai-header-actions { display:flex; align-items:center; gap:10px; }
-.ai-history-button { display:inline-flex; align-items:center; gap:7px; padding:8px 11px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.ai-history-button { display:inline-flex; align-items:center; gap:7px; padding:8px 11px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .ai-history-button:hover { border-color:var(--teal); color:var(--teal); }
-.ai-usage-meter { display:flex; align-items:center; gap:12px; padding:9px 24px; border-bottom:1px solid var(--line); background:var(--surface-2); color:var(--muted); font-size:12px; font-weight:650; }
+.ai-usage-meter { display:flex; align-items:center; gap:12px; padding:9px 24px; border-bottom:1px solid var(--line); background:var(--surface-2); color:var(--muted); font-size: calc((12px) * var(--text-scale, 1)); font-weight:650; }
 .ai-usage-track { width:110px; height:6px; overflow:hidden; border-radius:99px; background:var(--line); }
 .ai-usage-track span { display:block; height:100%; border-radius:inherit; background:var(--teal); transition:width .25s ease; }
 .ai-chat-history { padding:14px 24px; border-bottom:1px solid var(--line); background:var(--surface-2); }
 .ai-chat-history-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
-.ai-chat-history-heading h3 { margin:0; font-size:15px; }
-.ai-chat-history-heading button { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:0; border-radius:9px; background:var(--teal); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
-.ai-chat-history > p { margin:0; color:var(--muted); font-size:13px; }
+.ai-chat-history-heading h3 { margin:0; font-size: calc((15px) * var(--text-scale, 1)); }
+.ai-chat-history-heading button { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:0; border-radius:9px; background:var(--teal); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
+.ai-chat-history > p { margin:0; color:var(--muted); font-size: calc((13px) * var(--text-scale, 1)); }
 .ai-chat-history-list { display:grid; gap:7px; max-height:220px; overflow-y:auto; }
 .ai-chat-history-list button { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
 .ai-chat-history-list button:hover { border-color:var(--teal); }
-.ai-chat-history-list strong { overflow:hidden; font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
-.ai-chat-history-list time { flex:0 0 auto; color:var(--muted); font-size:12px; }
+.ai-chat-history-list strong { overflow:hidden; font-size: calc((13px) * var(--text-scale, 1)); text-overflow:ellipsis; white-space:nowrap; }
+.ai-chat-history-list time { flex:0 0 auto; color:var(--muted); font-size: calc((12px) * var(--text-scale, 1)); }
 
 .ai-learning-tools button,
 .practice-reset {
@@ -55,7 +55,7 @@
   padding: 10px 24px;
   color: #9c2f2f;
   background: #fff1f1;
-  font-size: 13px;
+  font-size: calc((13px) * var(--text-scale, 1));
 }
 
 .ai-error button {
@@ -93,7 +93,7 @@
 .practice-question h3 {
   margin: 0;
   color: var(--text);
-  font-size: 15px;
+  font-size: calc((15px) * var(--text-scale, 1));
   line-height: 1.5;
 }
 
@@ -138,7 +138,7 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 13px;
+  font-size: calc((13px) * var(--text-scale, 1));
   line-height: 1.5;
 }
 
@@ -148,7 +148,7 @@
 .practice-reset {
   justify-self: start;
   padding: 6px 9px;
-  font-size: 12px;
+  font-size: calc((12px) * var(--text-scale, 1));
 }
 
 .theme-dark .practice-option.correct { background: #203b32; }
@@ -156,7 +156,7 @@
 
 @media (max-width: 600px) {
   .ai-header-actions { flex-direction:column-reverse; align-items:flex-end; gap:6px; }
-  .ai-history-button { padding:7px 9px; font-size:12px; }
+  .ai-history-button { padding:7px 9px; font-size: calc((12px) * var(--text-scale, 1)); }
   .ai-usage-meter { justify-content:space-between; padding:9px 16px; }
   .ai-usage-track { width:70px; }
   .ai-chat-history { padding:12px 16px; }
@@ -170,9 +170,9 @@
 .audio-controls { display:flex; gap:8px; }
 .audio-controls button { margin-top:0; }
 .audio-controls button:last-child { background:transparent; color:var(--text); border:1px solid var(--line); }
-.audio-script { max-height:150px; overflow-y:auto; margin:10px 0 0; font-size:13px; line-height:1.55; opacity:.85; }
-.audio-notes-error { margin:0; color:#c0392b; font-size:13px; }
+.audio-script { max-height:150px; overflow-y:auto; margin:10px 0 0; font-size: calc((13px) * var(--text-scale, 1)); line-height:1.55; opacity:.85; }
+.audio-notes-error { margin:0; color:#c0392b; font-size: calc((13px) * var(--text-scale, 1)); }
 
 .audio-player { margin-top:10px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
-.audio-controls button { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.audio-controls button { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .audio-controls button:disabled { opacity:.5; cursor:not-allowed; }

@@ -58,7 +58,7 @@ select {
 }
 
 .brand strong {
-  font-size: 23px;
+  font-size: calc((23px) * var(--text-scale, 1));
   letter-spacing: -.045em;
 }
 
@@ -191,7 +191,7 @@ select {
 
 .home-scroll-brand-name {
   color: var(--text);
-  font-size: 13px;
+  font-size: calc((13px) * var(--text-scale, 1));
   font-weight: 800;
   letter-spacing: -.035em;
   transition: color .2s ease;
@@ -200,7 +200,7 @@ select {
 .home-scroll-brand-caption {
   margin-top: -7px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: calc((10px) * var(--text-scale, 1));
   transition: color .2s ease;
 }
 
@@ -303,7 +303,7 @@ select {
 .home-hero h1 {
   margin: 0;
   color: #f7ffff;
-  font-size: clamp(42px, 5vw, 76px);
+  font-size: calc((clamp(42px, 5vw, 76px)) * var(--text-scale, 1));
   font-weight: 800;
   line-height: 1.04;
   letter-spacing: -.065em;
@@ -317,7 +317,7 @@ select {
   max-width: 650px;
   margin: 25px 0 29px;
   color: rgba(244, 255, 255, .82);
-  font-size: clamp(16px, 1.35vw, 20px);
+  font-size: calc((clamp(16px, 1.35vw, 20px)) * var(--text-scale, 1));
   line-height: 1.7;
 }
 
@@ -349,7 +349,7 @@ select {
   gap: 10px;
   margin: 37px 0 0;
   color: rgba(244, 255, 255, .82);
-  font-size: 14px;
+  font-size: calc((14px) * var(--text-scale, 1));
 }
 
 .hero-footnote span {
@@ -388,7 +388,7 @@ select {
 
 .hero-text-ring text {
   fill: rgba(224, 255, 250, .78);
-  font-size: 13px;
+  font-size: calc((13px) * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -631,7 +631,7 @@ select {
   color: white;
   background: rgba(21, 82, 87, .68);
   box-shadow: 0 8px 25px rgba(17, 48, 49, .12);
-  font-size: 13px;
+  font-size: calc((13px) * var(--text-scale, 1));
   font-weight: 800;
   backdrop-filter: blur(10px);
 }
@@ -711,7 +711,7 @@ select {
 .about-hero h1 {
   max-width: 720px;
   margin: 0 0 16px;
-  font-size: clamp(36px, 5vw, 58px);
+  font-size: calc((clamp(36px, 5vw, 58px)) * var(--text-scale, 1));
   line-height: 1.08;
   letter-spacing: -.055em;
 }
@@ -720,7 +720,7 @@ select {
   max-width: 690px;
   margin: 0;
   color: var(--muted);
-  font-size: 17px;
+  font-size: calc((17px) * var(--text-scale, 1));
   line-height: 1.7;
 }
 
@@ -753,7 +753,7 @@ select {
 
 .about-principle h2 {
   margin: 20px 0 8px;
-  font-size: 20px;
+  font-size: calc((20px) * var(--text-scale, 1));
 }
 
 .about-principle p {
@@ -780,7 +780,7 @@ select {
   margin: 0 auto 32px;
   overflow: hidden;
   color: var(--text);
-  font-size: clamp(26px, 4.5vw, 52px);
+  font-size: calc((clamp(26px, 4.5vw, 52px)) * var(--text-scale, 1));
   font-weight: 800;
   letter-spacing: -.055em;
   line-height: 1.12;
@@ -827,7 +827,7 @@ select {
 .about-values-section > h1 {
   margin: 0 auto;
   color: var(--text);
-  font-size: clamp(32px, 4vw, 44px);
+  font-size: calc((clamp(32px, 4vw, 44px)) * var(--text-scale, 1));
   line-height: 1.15;
   letter-spacing: -.05em;
 }
@@ -887,7 +887,7 @@ select {
 .about-value h2 {
   margin: 0 0 8px;
   color: var(--text);
-  font-size: 16px;
+  font-size: calc((16px) * var(--text-scale, 1));
   font-weight: 800;
   letter-spacing: -.02em;
 }
@@ -896,7 +896,7 @@ select {
   max-width: 260px;
   margin: 0 auto;
   color: var(--muted);
-  font-size: 14px;
+  font-size: calc((14px) * var(--text-scale, 1));
   line-height: 1.55;
 }
 
@@ -920,7 +920,7 @@ select {
 .about-approach-copy h2 {
   margin: 0 0 12px;
   color: var(--text);
-  font-size: clamp(30px, 3.5vw, 42px);
+  font-size: calc((clamp(30px, 3.5vw, 42px)) * var(--text-scale, 1));
   line-height: 1.16;
   letter-spacing: -.05em;
 }
@@ -928,7 +928,7 @@ select {
 .about-approach-copy > p:last-child {
   margin: 0;
   color: var(--muted);
-  font-size: 16px;
+  font-size: calc((16px) * var(--text-scale, 1));
   line-height: 1.65;
 }
 
@@ -944,7 +944,7 @@ select {
   color: white;
   background: var(--teal-dark);
   box-shadow: 0 8px 20px rgba(8, 127, 119, .18);
-  font-size: 14px;
+  font-size: calc((14px) * var(--text-scale, 1));
   font-weight: 800;
   transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
@@ -1216,16 +1216,16 @@ select {
 
   .hero-eyebrow {
     margin-bottom: 14px;
-    font-size: 11px;
+    font-size: calc((11px) * var(--text-scale, 1));
   }
 
   .home-hero h1 {
-    font-size: clamp(41px, 11vw, 60px);
+    font-size: calc((clamp(41px, 11vw, 60px)) * var(--text-scale, 1));
   }
 
   .hero-description {
     margin: 18px 0 23px;
-    font-size: 15px;
+    font-size: calc((15px) * var(--text-scale, 1));
     line-height: 1.65;
   }
 
@@ -1237,16 +1237,16 @@ select {
   .hero-primary {
     min-height: 50px;
     padding: 0 16px;
-    font-size: 13px;
+    font-size: calc((13px) * var(--text-scale, 1));
   }
 
   .hero-secondary {
-    font-size: 13px;
+    font-size: calc((13px) * var(--text-scale, 1));
   }
 
   .hero-footnote {
     margin-top: 26px;
-    font-size: 12px;
+    font-size: calc((12px) * var(--text-scale, 1));
   }
 
   .home-hero-art-wrap {
@@ -1278,7 +1278,7 @@ select {
     right: 2%;
     bottom: 3%;
     padding: 9px 12px;
-    font-size: 11px;
+    font-size: calc((11px) * var(--text-scale, 1));
   }
 
   .sessions-section,
@@ -1318,11 +1318,11 @@ select {
   }
 
   .about-hero h1 {
-    font-size: 37px;
+    font-size: calc((37px) * var(--text-scale, 1));
   }
 
   .about-hero > p:last-child {
-    font-size: 15px;
+    font-size: calc((15px) * var(--text-scale, 1));
   }
 }
 

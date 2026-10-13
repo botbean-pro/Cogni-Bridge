@@ -1,7 +1,7 @@
 ﻿import React from "react";
 import { useState } from "react";
 import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Eye, FileText } from "lucide-react";
-import { formatSession, getSessionSubjectLabel, subjects } from "../../../constants";
+import { formatSession, getSessionSubjectLabel, getSessionTitle, subjects } from "../../../constants";
 import { downloadNote, getNotePreviewUrl } from "../../../mentorContent";
 import { isSessionComplete } from "../../../studentActivity";
 import { StudentStats } from "../shared/StudentStats";
@@ -9,7 +9,7 @@ import "./SessionsPage.css";
 
 function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const canMarkAttended = signedIn && isSessionComplete(session) && !attended;
-  const title = session.titleKey ? t(session.titleKey) : session.title;
+  const title = getSessionTitle(session, t);
   const description = session.descriptionKey ? t(session.descriptionKey) : session.description;
   const learnItems = session.learnKeys ? session.learnKeys.map((key) => t(key)) : session.learn;
 
@@ -66,7 +66,7 @@ function SessionList({ sessions, onSelect, t, activeSubject }) {
           {subjectSessions.map((session) => (
             <button key={session.id} className="my-session-row" onClick={() => onSelect(session)}>
               <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
-              <span><strong>{session.titleKey ? t(session.titleKey) : session.title}</strong><small>{formatSession(session)}</small></span>
+              <span><strong>{getSessionTitle(session, t)}</strong><small>{formatSession(session)}</small></span>
               <ChevronRight size={18} />
             </button>
           ))}
@@ -181,7 +181,7 @@ export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, s
             {upcomingRegisteredSessions.map((session) => (
               <button key={session.id} className="my-session-row" onClick={() => onOpenSession(session)}>
                 <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
-                <span><strong>{session.titleKey ? t(session.titleKey) : session.title}</strong><small>{formatSession(session)}</small></span>
+                <span><strong>{getSessionTitle(session, t)}</strong><small>{formatSession(session)}</small></span>
                 <ChevronRight size={18} />
               </button>
             ))}
