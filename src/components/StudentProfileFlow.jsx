@@ -30,6 +30,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
   const [step, setStep] = useState("form");
   const [error, setError] = useState("");
   const fileRef = useRef(null);
+  const analyzingRef = useRef(false);
 
   const chooseImage = async (event) => {
     const file = event.target.files?.[0];
@@ -49,11 +50,18 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
 
   const submit = (event) => {
     event.preventDefault();
+    // Analysis needs a real image and only runs once per submission (double-clicks are ignored).
+    if (analyzingRef.current || step !== "form") return;
+    if (!image) {
+      setError("chooseHandwritingImage");
+      return;
+    }
+    analyzingRef.current = true;
     const result = {
       ...profile,
       email,
       handwritingImage: image,
-      handwritingImageName: imageName || "Demo sample",
+      handwritingImageName: imageName,
       handwritingType: `Type ${1 + Math.floor(Math.random() * 4)}`,
       analyzedAt: new Date().toISOString(),
     };
@@ -134,7 +142,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
             <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("optionalHandwritingHint")}</small></span>
           </button>
           {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
-          <button className="primary-btn" type="submit">{existingProfile ? t("analyzeNewImageButton") : t("analyzeImage")}</button>
+          <button className="primary-btn" type="submit" disabled={!image}>{existingProfile ? t("analyzeNewImageButton") : t("analyzeImage")}</button>
         </form>
       </section>
     </main>

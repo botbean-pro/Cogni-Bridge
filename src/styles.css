@@ -156,7 +156,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .auth-icon { width:48px; height:48px; display:grid; place-items:center; margin-bottom:12px; border-radius:14px; background:var(--teal); color:white; }
 .auth-modal .eyebrow { margin:0 0 8px; color:var(--teal-dark); font-size:calc(10px * var(--text-scale, 1)); font-weight:800; letter-spacing:.13em; }
 .auth-modal h2 { margin:0 0 20px; font-size:calc(28px * var(--text-scale, 1)); font-weight:800; color:#0f172a; letter-spacing:-.025em; }
-.auth-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin-bottom:16px; padding:5px; border-radius:12px; background:#f1f5f9; }
+.auth-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin-bottom:16px; padding:5px; border-radius:12px; background:#f1f5f9; }
 .auth-tab { padding:8px 10px; border:none; border-radius:9px; background:transparent; color:#64748b; font-size:calc(12px * var(--text-scale, 1)); font-weight:700; cursor:pointer; transition:all 0.2s ease; }
 .auth-tab.active { background:var(--teal); color:white; box-shadow:0 2px 8px rgba(8,169,150,.25); }
 .auth-tab:hover:not(.active) { background:#e2e8f0; color:#475569; }
@@ -745,6 +745,16 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail-footer { display:grid; width:100%; justify-items:center; gap:6px; margin-top:auto; padding-top:12px; border-top:1px solid rgba(255,255,255,.1); }
 .student-rail-account { display:grid; width:100%; justify-items:center; gap:6px; }
 .student-rail-account .student-rail-link,.student-rail-account .student-rail-logout { width:56px; }
+.student-rail-account-split { position:relative; }
+.student-settings-dialog .content { padding:28px 24px 24px; }
+.student-app-shell ~ .accessibility-panel { right:auto; left:88px; bottom:96px; }
+.student-rail:hover .student-rail-account-split,.student-rail:focus-within .student-rail-account-split,.student-rail:has(.pinned-open) .student-rail-account-split { display:flex; align-items:center; gap:6px; }
+.student-rail:hover .student-rail-account-split .student-rail-logout,.student-rail:focus-within .student-rail-account-split .student-rail-logout,.student-rail:has(.pinned-open) .student-rail-account-split .student-rail-logout { width:auto; flex:none; }
+.student-rail:hover .student-rail-account-split .student-rail-profile,.student-rail:focus-within .student-rail-account-split .student-rail-profile,.student-rail:has(.pinned-open) .student-rail-account-split .student-rail-profile { width:auto; flex:1; min-width:0; justify-content:flex-start; }
+.student-rail-profile > span:not(.avatar-small) { overflow:hidden; text-overflow:ellipsis; }
+.student-profile-menu { position:absolute; z-index:40; bottom:calc(100% + 8px); left:0; display:grid; min-width:180px; gap:2px; padding:6px; border:1px solid rgba(255,255,255,.14); border-radius:12px; background:#263b3d; box-shadow:0 14px 34px rgba(0,0,0,.3); }
+.student-profile-menu button { display:flex; align-items:center; gap:10px; padding:10px 12px; border:0; border-radius:8px; background:transparent; color:#e4efef; font:inherit; font-size:13px; font-weight:700; text-align:left; cursor:pointer; }
+.student-profile-menu button:hover { background:rgba(255,255,255,.1); color:#fff; }
 .student-rail-logout-icon { display:none; margin-left:auto; }
 .student-rail:hover .student-rail-logout-icon,.student-rail:focus-within .student-rail-logout-icon,.student-rail:has(.pinned-open) .student-rail-logout-icon { display:block; }
 .student-rail .student-rail-link:focus-visible,.student-rail-toggle:focus-visible { outline:2px solid #79e4d8; outline-offset:2px; }

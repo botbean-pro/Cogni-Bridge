@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Trash2, Users, VolumeX, Wind } from "lucide-react";
+import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Trash2, Users, VolumeX, Wind } from "lucide-react";
 import {
   causeOptions,
   deleteStudentCheckin,
@@ -15,6 +15,10 @@ import {
 } from "../../../studentSensory";
 import { MoodTrendChart } from "../shared/MoodTrendChart";
 import "./SensoryTrackerPage.css";
+
+// One icon per moodLabels entry (Very bad -> Great), so the picture always matches the word.
+const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
+const moodColors = ["#d64545", "#e8833a", "#c9a227", "#5aa469", "#0c9a8a"];
 
 const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
 const labelsFor = (options, keys = []) => keys.map((key) => labelFor(options, key));
@@ -249,7 +253,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
           {todayFullEntry && <p className="sensory-status" role="status">You've completed a full check-in today. It is {todayFullEntry.shared_with_mentor ? "shared with your mentor" : "private"}. You can still add private quick check-ins.</p>}
           <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">Quick check-in</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button" disabled={Boolean(todayFullEntry)} title={todayFullEntry ? "A full check-in is already saved for today." : undefined}>Full check-in</button></div>
           <form onSubmit={(event) => submit(event, view === "quick")}>
-            <fieldset className="sensory-field"><legend>{view === "quick" ? "How are you feeling right now?" : "How are you feeling today?"}</legend><div className="sensory-mood-options">{moodLabels.map((mood, index) => <button type="button" key={mood} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true">{["☹", "🙁", "◉", "🙂", "☺"][index]}</span>{mood}</button>)}</div></fieldset>
+            <fieldset className="sensory-field"><legend>{view === "quick" ? "How are you feeling right now?" : "How are you feeling today?"}</legend><div className="sensory-mood-options">{moodLabels.map((mood, index) => <button type="button" key={mood} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true" style={{ color: moodColors[index] }}>{React.createElement(moodIcons[index], { size: 28, strokeWidth: 1.9 })}</span>{mood}</button>)}</div></fieldset>
             {view === "quick" ? (
               <label className="sensory-field">Want to tell us why?<textarea value={form.quickReason} maxLength={4000} onChange={(event) => updateForm("quickReason", event.target.value)} placeholder="Anything you'd like to remember..." rows="3" /></label>
             ) : (

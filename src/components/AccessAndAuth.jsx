@@ -208,12 +208,19 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 
   const googleSignIn = () => {
     if (supabaseConfigured) {
+      // Google sign-in leaves the page; App.jsx reads this on return to enforce the chosen role.
+      try { window.localStorage.setItem("cognibridge_oauth_role", tab); } catch { /* storage unavailable */ }
       supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: window.location.origin },
       }).then(({ error: authError }) => {
         if (authError) setError("googleIdentityError");
       });
+      return;
+    }
+
+    if (tab === "parent") {
+      setError("Parent accounts require secure school sign-in to protect student information.");
       return;
     }
 
@@ -386,6 +393,17 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             <div className="auth-button-group">
               <button className="auth-login-btn" type="submit">{parentSignUp ? "Create parent account" : t("logIn")} <ChevronRight size={18} /></button>
               <div className="create-account-prompt"><span>{parentSignUp ? "Already have a parent account?" : "New to the parent portal?"}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
+              {!parentSignUp && (
+                <>
+                  <div className="auth-divider">{t("continueWith")}</div>
+                  <div className="social-buttons-grid" style={{ gridTemplateColumns: "1fr" }}>
+                    <button type="button" className="social-btn" onClick={googleSignIn}>
+                      <SocialIcon provider="Google" />
+                      Google
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">

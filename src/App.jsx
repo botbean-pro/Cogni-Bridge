@@ -121,13 +121,37 @@ const App = () => {
 
     let isCurrent = true;
     const user = authSession.user;
-    supabase.from("profiles")
+    let oauthRole = null;
+    try {
+      oauthRole = window.localStorage.getItem("cognibridge_oauth_role");
+    } catch { /* storage unavailable */ }
+    const loadProfile = () => supabase.from("profiles")
       .select("id, display_name, role")
       .eq("id", user.id)
-      .maybeSingle()
+      .maybeSingle();
+    loadProfile()
+      .then(async (result) => {
+        let { data: profile } = result;
+        // A fresh Google account starts as a student; the Parent tab converts it.
+        if (oauthRole === "parent" && profile?.role === "student") {
+          const { error: claimError } = await supabase.rpc("claim_parent_role");
+          if (!claimError) profile = (await loadProfile()).data;
+        }
+        return { data: profile, error: result.error };
+      })
       .then(({ data: profile, error }) => {
         if (!isCurrent) return;
+        // Cleared only once a run has handled it, so a re-run of this effect still enforces it.
+        try { window.localStorage.removeItem("cognibridge_oauth_role"); } catch { /* storage unavailable */ }
         if (error || !profile) {
+          supabase.auth.signOut();
+          return;
+        }
+        // Google sign-in must land on the side the person chose; mentors use their own credentials.
+        if (oauthRole && profile.role !== oauthRole) {
+          notify(profile.role === "mentor"
+            ? "Mentors sign in with their mentor email and password."
+            : `This Google account is a ${profile.role} account. Use the ${profile.role} tab to sign in.`);
           supabase.auth.signOut();
           return;
         }

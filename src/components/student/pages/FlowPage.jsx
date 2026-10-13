@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Headphones } from "lucide-react";
+import { AudioNotes } from "../flow/AudioNotes";
 import { ChatHeader } from "../flow/ChatHeader";
 import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
@@ -18,6 +20,7 @@ export function FlowPage({ t, language }) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [audioOpen, setAudioOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const hasAskedQuestion = messages.some((message) => message.role === "user");
   const latestMessage = messages[messages.length - 1];
@@ -122,6 +125,13 @@ export function FlowPage({ t, language }) {
             t={t}
           />
         )}
+        {audioOpen
+          ? <AudioNotes language={language} onClose={() => setAudioOpen(false)} t={t} />
+          : (
+            <button type="button" className="audio-notes-open" onClick={() => setAudioOpen(true)}>
+              <Headphones size={16} /> {t("notesToAudio")}
+            </button>
+          )}
         <ChatComposer
           input={input}
           isLoading={isLoading}

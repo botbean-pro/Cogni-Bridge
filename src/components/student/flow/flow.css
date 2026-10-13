@@ -144,3 +144,21 @@
   .related-questions { padding: 10px 16px 12px; }
   .related-question-cards { grid-template-columns: 1fr; }
 }
+
+.audio-notes-open { align-self:flex-start; display:inline-flex; align-items:center; gap:7px; margin:0 20px 8px; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--text); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.audio-notes-open:hover { border-color:var(--teal); color:var(--teal); }
+.audio-notes { display:grid; gap:10px; margin:0 20px 10px; padding:14px 16px; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
+.audio-notes-header { display:flex; align-items:center; justify-content:space-between; }
+.audio-notes-header strong { display:inline-flex; align-items:center; gap:7px; font-size:14px; }
+.audio-notes-close { display:grid; place-items:center; width:28px; height:28px; border:0; border-radius:8px; background:transparent; color:var(--text); cursor:pointer; }
+.audio-notes-hint { margin:0; font-size:13px; opacity:.75; }
+.audio-notes textarea { width:100%; box-sizing:border-box; resize:vertical; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:inherit; font-size:14px; }
+.audio-convert-btn,.audio-controls button { display:inline-flex; align-items:center; gap:7px; margin-top:8px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.audio-convert-btn:disabled,.audio-controls button:disabled { opacity:.5; cursor:not-allowed; }
+.audio-controls { display:flex; gap:8px; }
+.audio-controls button { margin-top:0; }
+.audio-controls button:last-child { background:transparent; color:var(--text); border:1px solid var(--line); }
+.audio-script { max-height:150px; overflow-y:auto; margin:10px 0 0; font-size:13px; line-height:1.55; opacity:.85; }
+.audio-notes-error { margin:0; color:#c0392b; font-size:13px; }
+.audio-spin { animation:audio-spin 1s linear infinite; }
+@keyframes audio-spin { to { transform:rotate(360deg); } }

@@ -44,7 +44,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
         setPortal(next);
         setChildId((current) => pickChild(next.children, current));
       })
-      .catch(() => {
+      .catch((loadError) => {
+        console.error("Parent portal: loading linked children failed", loadError);
         if (isCurrent) setError(t("parentLoadError"));
       });
     return () => {
@@ -60,7 +61,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
       .then(([checkins, sessions]) => {
         if (isCurrent) setChildData({ checkins, sessions });
       })
-      .catch(() => {
+      .catch((loadError) => {
+        console.error("Parent portal: loading the child's check-ins/sessions failed", loadError);
         if (isCurrent) setError(t("parentLoadError"));
       });
     return () => {

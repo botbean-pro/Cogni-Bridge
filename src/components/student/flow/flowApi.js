@@ -25,6 +25,7 @@ export async function askLearningAssistant(conversation, task = "chat", language
     throw new Error(data.error || "Cogni-Flow couldn't respond. Please try again.");
   }
 
+  if (task === "audio") return data.script;
   return task === "chat"
     ? {
       content: data.content,
@@ -33,6 +34,12 @@ export async function askLearningAssistant(conversation, task = "chat", language
     }
     : data.quiz;
 }
+
+// BCP 47 tags for the browser's speech synthesis, keyed by the response language names.
+export const speechLanguages = {
+  English: "en-IN", Hindi: "hi-IN", Bengali: "bn-IN", Telugu: "te-IN", Marathi: "mr-IN", Tamil: "ta-IN",
+  Gujarati: "gu-IN", Kannada: "kn-IN", Malayalam: "ml-IN", Punjabi: "pa-IN", French: "fr-FR", German: "de-DE",
+};
 
 export function parseQuiz(responseText) {
   const jsonText = responseText

@@ -48,6 +48,13 @@ const chatInstructions =
   "The relatedQuestions must contain four short, useful follow-up questions directly related to the student's latest question. " +
   "Do not include the follow-up questions in the answer text. Write translatedQuestion, answer, and relatedQuestions in the selected response language.";
 
+const audioInstructions =
+  "Turn the student's notes into a script that will be read aloud by a text-to-speech voice. " +
+  "Keep every important fact from the notes and do not add new facts. Use short, clear sentences and a warm, calm tone. " +
+  "Write for the ear: no markdown, bullets, headings, emojis, or symbols. Spell out abbreviations, and say formulas and numbers in words. " +
+  "Start with a one-sentence overview, walk through the notes in order, and end with a one-sentence recap. " +
+  "Return only valid JSON with this exact shape: {\"script\": string}.";
+
 const translationInstructions =
   "Translate every natural-language string in the user's JSON object into the requested language. " +
   "Keep JSON keys, formulas, code, names, and numbers unchanged. Preserve the meaning and return only valid JSON " +
@@ -84,7 +91,9 @@ async function callOpenRouter(messages, task, language) {
     ? quizInstructions
     : task === "translate"
       ? translationInstructions
-      : chatInstructions;
+      : task === "audio"
+        ? audioInstructions
+        : chatInstructions;
   const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions}`;
 
   return fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -143,7 +152,7 @@ export default async function handler(request, response) {
   }
 
   const { task = "chat", messages, language = "English" } = request.body || {};
-  if (!["chat", "mcq"].includes(task) || !isValidMessages(messages)) {
+  if (!["chat", "mcq", "audio"].includes(task) || !isValidMessages(messages)) {
     return reply(response, 400, { error: "A valid task and conversation are required." });
   }
 
@@ -215,6 +224,20 @@ export default async function handler(request, response) {
         translatedQuestion: localizedResult.translatedQuestion,
         relatedQuestions: localizedResult.relatedQuestions,
       });
+    }
+
+    if (task === "audio") {
+      let script;
+      try {
+        script = JSON.parse(content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")).script;
+      } catch {
+        // Fall back to the raw text if the model skipped the JSON wrapper.
+        script = content;
+      }
+      if (typeof script !== "string" || !script.trim()) {
+        return reply(response, 502, { error: "The AI provider returned an invalid audio script." });
+      }
+      return reply(response, 200, { script: script.trim() });
     }
 
     let quiz;

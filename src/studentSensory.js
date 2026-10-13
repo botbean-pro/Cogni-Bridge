@@ -1,7 +1,6 @@
 import { supabase } from "./supabaseClient";
 
 export const moodLabels = ["Very bad", "Bad", "Okay", "Good", "Great"];
-export const moodIcons = ["☹", "🙁", "◉", "🙂", "☺"];
 
 export const emotionOptions = [
   ["happy", "Happy"], ["sad", "Sad"], ["angry", "Angry"], ["anxious", "Anxious"],
