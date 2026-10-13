@@ -72,7 +72,7 @@ export function CalmCorner({ onClose, startBreathing = false }) {
     return () => window.clearInterval(timer);
   }, [breathing]);
   return <section className="sensory-card calm-corner" id="calm-corner" aria-labelledby="calm-corner-title">
-    <div className="sensory-card-title"><div><span className="sensory-step">YOUR CALM CORNER</span><h2 id="calm-corner-title">A little space to reset</h2></div><Sparkles size={21} /></div>
+    <div className="sensory-card-title"><div><span className="sensory-step">YOUR CALM CORNER</span><h2 id="calm-corner-title">Calm corner</h2></div></div>
     <p className="calm-intro">Choose what feels comfortable. You can stop or leave whenever you like.</p>
     <div className="calm-tools">
       <div className="calm-breath-card"><div className="breathing-copy"><h3>Breathing exercise</h3><p aria-live="polite">{breathing ? `${phase} slowly` : "Follow the circle. Breathe in, then breathe out."}</p></div>
@@ -235,8 +235,8 @@ export function SensoryTrackerPage({ studentId, demoMode = false }) {
 
   return (
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
-      <header className="sensory-heading"><div><p className="eyebrow">A private space for you</p><h1>Sensory Tracker</h1><p>Check in with yourself. Share only what you choose.</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {lowSensory ? "Low sensory on" : "Low sensory mode"}</button><span><Heart size={18} /> No judgement, just your own notes</span></div></header>
-      <section className="break-banner"><div><span className="sensory-step">IT'S OKAY TO PAUSE</span><h2>Need a little break?</h2><p>Take a moment for yourself. There’s no rush to continue.</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> I need a break</button></section>
+      <header className="sensory-heading"><div><p className="eyebrow">A private space for you</p><h1>My Little Journal</h1><p>Check in with yourself. Share only what you choose.</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {lowSensory ? "Low sensory on" : "Low sensory mode"}</button><span><Heart size={18} /> No judgement, just your own notes</span></div></header>
+      <section className="break-banner"><div><span className="sensory-step">IT'S OKAY TO PAUSE</span><h2>Need a little break?</h2><p>Take a moment for yourself. There’s no rush to continue.</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> Calm corner</button></section>
       {showCalmCorner && <CalmCorner onClose={() => setShowCalmCorner(false)} />}
       {demoMode ? (
         <div className="sensory-demo-banner" role="note"><LockKeyhole size={17} /> Demo preview: use test details only. Entries stay in memory for this tab session, clear when you reload or sign out, and are not shared with mentors.</div>

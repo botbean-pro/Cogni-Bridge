@@ -29,7 +29,7 @@ export const PremiumFlowPage = ({ t, signedIn, studentEmail, studentName, cartPl
             {!selectedPlan ? (
               <div className="premium-empty-cart"><ShoppingCart size={24} /><p>Your cart is empty. Choose a plan to continue.</p><button type="button" onClick={onBackToPlans}>View plans</button></div>
             ) : <>
-              <div className="premium-order-row"><div><strong>{selectedPlan.name}</strong><span>Premium Flow · {selectedPlan.period}</span></div><strong>{money(selectedPlan.price)}</strong></div>
+              <div className="premium-order-row"><div><strong>{selectedPlan.name}</strong><span>Golden Garden · {selectedPlan.period}</span></div><strong>{money(selectedPlan.price)}</strong></div>
               <div className="premium-order-row premium-order-total"><strong>Total</strong><strong>{money(selectedPlan.price)}</strong></div>
               {signedIn ? <div className="premium-account-note"><Check size={17} /> Signed in as {studentEmail || studentName}</div> : <div className="premium-account-note"><LockKeyhole size={17} /> Sign in to continue to checkout.</div>}
               <div className="premium-payment-note"><strong>Payment setup is coming soon</strong><span>Your plan is selected, but payments are not connected yet. You will not be charged.</span></div>

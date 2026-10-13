@@ -33,6 +33,10 @@ export async function loadMentorLearningActivity() {
   return throwIfError(await supabase.rpc("mentor_student_activity"));
 }
 
+export async function loadMentorLeaderboard() {
+  return throwIfError(await supabase.rpc("mentor_leaderboard"));
+}
+
 export async function createSession(mentorId, session) {
   const row = throwIfError(await supabase
     .from("sessions")
