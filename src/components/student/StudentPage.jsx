@@ -45,7 +45,7 @@ export const StudentPage = ({
     )}
     <div className="student-app-shell">
       <aside className="student-rail">
-        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(true); setCalmCornerOpen(true); }} />
+        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(false); setCalmCornerOpen(true); }} />
         <div className="student-rail-footer">
           <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>

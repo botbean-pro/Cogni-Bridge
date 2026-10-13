@@ -71,7 +71,7 @@ export function CalmCorner({ onClose, startBreathing = false, t }) {
   }, [breathing]);
   const phaseLabel = t(phase === "in" ? "sn_breatheIn" : "sn_breatheOut");
   return <section className="sensory-card calm-corner" id="calm-corner" aria-labelledby="calm-corner-title">
-    <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_calmEyebrow")}</span><h2 id="calm-corner-title">{t("sn_calmTitle")}</h2></div><Sparkles size={21} /></div>
+    <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_calmEyebrow")}</span><h2 id="calm-corner-title">{t("sn_calmTitle")}</h2></div></div>
     <p className="calm-intro">{t("sn_calmIntro")}</p>
     <div className="calm-tools">
       <div className="calm-breath-card"><div className="breathing-copy"><h3>{t("sn_breathingEx")}</h3><p aria-live="polite">{breathing ? t(phase === "in" ? "sn_breatheInSlow" : "sn_breatheOutSlow") : t("sn_followCircle")}</p></div>

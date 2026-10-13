@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ArrowDownToLine,
+  Award,
   CalendarDays,
   ChevronRight,
   Clock3,
@@ -14,13 +15,14 @@ import {
   Accessibility,
   Users,
   MessageCircle,
+  Trophy,
   Send,
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
 import { SessionStudents } from "../SessionStudents";
-import { loadMentorLearningActivity } from "../../../mentorContent";
+import { loadMentorLearningActivity, loadMentorLeaderboard } from "../../../mentorContent";
 import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
 import {
   loadMentorCheckins,
@@ -32,6 +34,7 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["performance", TrendingUp, t("md_perfNav")],
+    ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
@@ -415,6 +418,38 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
   </>;
 }
 
+function MentorLeaderboardPage({ mentorId, t }) {
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isCurrent = true;
+    loadMentorLeaderboard().then((rows) => {
+      if (isCurrent) setMentors(rows || []);
+    }).catch(() => {
+      if (isCurrent) setError(t("md_lbError"));
+    }).finally(() => { if (isCurrent) setLoading(false); });
+    return () => { isCurrent = false; };
+  }, []);
+
+  return <>
+    <p className="mentor-kicker">{t("md_lbKicker")}</p>
+    <h1 className="mentor-title">{t("md_lbNav")}</h1>
+    <p className="mentor-subtitle">{t("md_lbSubtitle")}</p>
+    {error && <p className="error-popup" role="alert">{error}</p>}
+    {loading ? <p className="mentor-subtitle" role="status">{t("md_lbLoading")}</p>
+      : !mentors.length ? <div className="performance-empty"><Trophy size={24} /><h2>{t("md_lbEmptyTitle")}</h2><p>{t("md_lbEmptyCopy")}</p></div>
+        : <div className="mentor-leaderboard">{mentors.map((mentor, index) => <article className={`mentor-leaderboard-row${mentor.mentor_id === mentorId ? " is-current" : ""}`} key={mentor.mentor_id}>
+          <span className={`mentor-leaderboard-rank${index < 3 ? " top-rank" : ""}`}>{index < 3 && <Award size={17} aria-hidden="true" />}<span>#{index + 1}</span></span>
+          <span className="mentor-leaderboard-avatar" aria-hidden="true">{mentor.display_name?.charAt(0)?.toUpperCase() || "M"}</span>
+          <span className="mentor-leaderboard-name">{mentor.display_name}{mentor.mentor_id === mentorId && <small>{t("md_lbYou")}</small>}</span>
+          <span className="mentor-leaderboard-sessions">{mentor.sessions_taught} {Number(mentor.sessions_taught) === 1 ? t("md_lbSession") : t("md_lbSessions")}</span>
+          <strong className="mentor-leaderboard-points">{mentor.points} {t("md_lbPts")}</strong>
+        </article>)}</div>}
+  </>;
+}
+
 function ParentConsultationsPage({ mentorId, students, t }) {
   const [messages, setMessages] = useState([]);
   const [drafts, setDrafts] = useState({});
@@ -507,6 +542,7 @@ export function MentorDashboard({
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
+          {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
           {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} t={t} />}

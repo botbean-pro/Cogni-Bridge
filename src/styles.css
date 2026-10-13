@@ -722,7 +722,8 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail-brand-copy strong { color:#fff; font-size:15px; }
 .student-rail-brand-copy small { margin-top:2px; color:#9fb8b9; font-size:11px; }
 .student-rail-toggle { display:none; width:26px; height:22px; flex:none; place-items:center; border:1px solid rgba(255,255,255,.18); border-radius:8px; background:#263b3d; color:#d8e6e6; cursor:pointer; }
-.student-rail-nav { display:grid; width:100%; align-content:start; justify-items:center; gap:6px; overflow-y:auto; overflow-x:hidden; }
+.student-rail-nav { display:grid; width:100%; align-content:start; justify-items:center; gap:6px; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; }
+.student-rail-nav::-webkit-scrollbar { display:none; }
 .student-rail-link { display:flex; width:56px; min-width:0; min-height:45px; align-items:center; justify-content:center; gap:0; margin:0 auto; padding:0; border:0; border-radius:12px; background:transparent; color:#bfd0d1; font:inherit; font-size:13px; font-weight:700; text-align:left; white-space:nowrap; cursor:pointer; transition:background .18s ease,color .18s ease,transform .18s ease; }
 .student-rail-link > svg,.student-rail-link > .avatar-small { flex:none; }
 .student-rail-link.locked { position:relative; cursor:not-allowed; opacity:.62; }
