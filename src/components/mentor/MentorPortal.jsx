@@ -80,7 +80,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
         setForm(createSessionForm());
         setTab("overview");
       } catch {
-        setActionError("Couldn't save the session. Please try again.");
+        setActionError(t("ms_saveSessionFail"));
       }
       return;
     }
@@ -136,7 +136,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
         event.target.reset();
       } catch (uploadError) {
         console.error("Note upload failed:", uploadError);
-        setActionError("Couldn't upload the note. Please try again.");
+        setActionError(t("ms_uploadNoteFail"));
       }
       return;
     }

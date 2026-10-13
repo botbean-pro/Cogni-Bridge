@@ -23,29 +23,26 @@ import { SessionStudents } from "../SessionStudents";
 import { loadMentorLearningActivity } from "../../../mentorContent";
 import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
 import {
-  emotionOptions,
   loadMentorCheckins,
   markMentorNotificationViewed,
-  mentorHelpOptions,
-  moodLabels,
   respondToMentorRequest,
 } from "../../../studentSensory";
 
 function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
-    ["performance", TrendingUp, "Student Performance"],
+    ["performance", TrendingUp, t("md_perfNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
-    ...(mentorId ? [["parentMessages", MessageCircle, "Parent consultations"]] : []),
+    ...(mentorId ? [["parentMessages", MessageCircle, t("md_parentNav")]] : []),
   ];
 
   return (
     <aside className="mentor-nav">
       <div className="mentor-rail-brand">
         <span className="mentor-rail-logo"><LogoImage size={42} /></span>
-        <span className="mentor-rail-brand-copy"><strong>CogniBridge</strong><small>Mentor space</small></span>
+        <span className="mentor-rail-brand-copy"><strong>CogniBridge</strong><small>{t("md_space")}</small></span>
       </div>
       {items.map(([key, Icon, label]) => (
         <button
@@ -70,11 +67,9 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
   );
 }
 
-const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
-
 // Loads shared check-ins for the mentor's assigned students; refreshes every 30s
 // so the nav badge stays current. Postgres RLS decides what the mentor can see.
-function useMentorSupport(mentorId) {
+function useMentorSupport(mentorId, t) {
   const [checkins, setCheckins] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [students, setStudents] = useState([]);
@@ -92,7 +87,7 @@ function useMentorSupport(mentorId) {
         setError("");
       })
       .catch(() => {
-        if (isCurrent) setError("Shared check-ins couldn't be loaded.");
+        if (isCurrent) setError(t("md_loadFail"));
       });
     refresh();
     const interval = window.setInterval(refresh, 30000);
@@ -118,7 +113,7 @@ function useMentorSupport(mentorId) {
       }
     });
     if (results.some((result) => result.status === "rejected")) {
-      setError("Some support requests couldn't be marked as viewed. Please try again.");
+      setError(t("md_viewedFail"));
     }
   };
 
@@ -133,7 +128,7 @@ function useMentorSupport(mentorId) {
       });
       setError("");
     } catch {
-      setError(addressed ? "This request couldn't be marked addressed." : "Your reply couldn't be sent.");
+      setError(t(addressed ? "md_addressFail" : "md_replyFail"));
     }
   };
 
@@ -148,7 +143,7 @@ function useMentorSupport(mentorId) {
   };
 }
 
-function SensorySupportPage({ support }) {
+function SensorySupportPage({ support, t }) {
   const { checkins, notifications, students, error, markAllViewed, respond } = support;
   const [replies, setReplies] = React.useState({});
   const notificationFor = (entry) => notifications.find((item) => item.checkin_id === entry.id);
@@ -162,31 +157,31 @@ function SensorySupportPage({ support }) {
 
   return (
     <>
-      <p className="mentor-kicker">STUDENT WELLBEING</p>
-      <h1 className="mentor-title">Shared check-ins</h1>
-      <p className="mentor-subtitle">Only check-ins your assigned students chose to share are shown here.</p>
+      <p className="mentor-kicker">{t("md_wellbeing")}</p>
+      <h1 className="mentor-title">{t("md_sharedTitle")}</h1>
+      <p className="mentor-subtitle">{t("md_sharedSub")}</p>
       {error && <p className="error-popup">{error}</p>}
-      {sortedEntries.length === 0 ? <p className="mentor-subtitle">No shared check-ins yet.</p> : <div className="mentor-sensory-list">
+      {sortedEntries.length === 0 ? <p className="mentor-subtitle">{t("md_noShared")}</p> : <div className="mentor-sensory-list">
         {sortedEntries.map((entry) => {
           const requestsHelp = entry.mentor_help !== "none";
           const notification = notificationFor(entry);
           const addressed = Boolean(notification?.addressed_at);
-          const studentName = students.find((student) => student.id === entry.student_id)?.display_name || "Student";
+          const studentName = students.find((student) => student.id === entry.student_id)?.display_name || t("md_student");
           return <article className="mentor-sensory-card" key={entry.id}>
-            <div className="mentor-sensory-top"><div><strong>{studentName}</strong><small>{new Date(entry.created_at).toLocaleString()}</small></div>{requestsHelp && <span className={addressed ? "addressed" : "support-requested"}>{addressed ? "Addressed" : "Student requested support"}</span>}</div>
-            <p><strong>Mood:</strong> {moodLabels[entry.mood - 1]} · <strong>Emotions:</strong> {entry.emotions?.length ? entry.emotions.map((key) => labelFor(emotionOptions, key)).join(", ") : "Not listed"}</p>
-            {entry.energy != null && <p><strong>Energy:</strong> {entry.energy}/5 · <strong>Comfort:</strong> {entry.comfort}/5</p>}
-            {requestsHelp && <p><strong>Help requested:</strong> {labelFor(mentorHelpOptions, entry.mentor_help)}</p>}
+            <div className="mentor-sensory-top"><div><strong>{studentName}</strong><small>{new Date(entry.created_at).toLocaleString()}</small></div>{requestsHelp && <span className={addressed ? "addressed" : "support-requested"}>{t(addressed ? "md_addressed" : "md_supportRequested")}</span>}</div>
+            <p><strong>{t("md_mood")}</strong> {t(`mood_${entry.mood}`)} · <strong>{t("sn_dEmotions")}</strong> {entry.emotions?.length ? entry.emotions.map((key) => t(`emotion_${key}`)).join(", ") : t("md_notListed")}</p>
+            {entry.energy != null && <p><strong>{t("sn_dEnergy")}</strong> {entry.energy}/5 · <strong>{t("sn_dComfort")}</strong> {entry.comfort}/5</p>}
+            {requestsHelp && <p><strong>{t("md_helpRequested")}</strong> {t(`mentorHelp_${entry.mentor_help}`)}</p>}
             {entry.mentor_message && <blockquote>{entry.mentor_message}</blockquote>}
             {entry.day_note && <p>{entry.day_note}</p>}
             {notification && (addressed ? (
-              notification.mentor_message && <p><strong>Your reply:</strong> {notification.mentor_message}</p>
+              notification.mentor_message && <p><strong>{t("md_yourReply")}</strong> {notification.mentor_message}</p>
             ) : <div className="mentor-sensory-actions">
               <form onSubmit={(event) => { event.preventDefault(); if (replies[entry.id]?.trim()) respond(notification.id, replies[entry.id], false); }}>
-                <input value={replies[entry.id] ?? ""} maxLength={2000} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder="Write an optional reply" aria-label={`Reply to ${studentName}`} />
-                <button type="submit">Send reply</button>
+                <input value={replies[entry.id] ?? ""} maxLength={2000} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder={t("md_replyPlaceholder")} aria-label={t("md_replyTo", { name: studentName })} />
+                <button type="submit">{t("md_sendReply")}</button>
               </form>
-              <button type="button" onClick={() => respond(notification.id, replies[entry.id] || "", true)}>Mark addressed</button>
+              <button type="button" onClick={() => respond(notification.id, replies[entry.id] || "", true)}>{t("md_markAddressed")}</button>
             </div>)}
           </article>;
         })}
@@ -345,7 +340,7 @@ function NotesPage({ notes, form, setForm, onSubmit, onDownload, t }) {
   );
 }
 
-function StudentPerformancePage({ mentorId, assignedStudents }) {
+function StudentPerformancePage({ mentorId, assignedStudents, t }) {
   const [activities, setActivities] = useState([]);
   const [localStudents, setLocalStudents] = useState([]);
   const [loading, setLoading] = useState(Boolean(mentorId));
@@ -367,7 +362,7 @@ function StudentPerformancePage({ mentorId, assignedStudents }) {
           setError("");
         }
       }).catch(() => {
-        if (isCurrent) setError("Learning activity couldn't be loaded. Apply the student performance migration, then try again.");
+        if (isCurrent) setError(t("md_perfLoadFail"));
       }).finally(() => { if (isCurrent) setLoading(false); });
     } else {
       try {
@@ -375,7 +370,7 @@ function StudentPerformancePage({ mentorId, assignedStudents }) {
         const localActivity = students.flatMap((student) => readStudentActivities(student.email).map((activity) => ({ ...activity, studentEmail: student.email.toLowerCase() })));
         if (isCurrent) { setLocalStudents(students); setActivities(localActivity); setError(""); }
       } catch {
-        if (isCurrent) setError("Student activity couldn't be loaded from this device.");
+        if (isCurrent) setError(t("md_localLoadFail"));
       } finally {
         if (isCurrent) setLoading(false);
       }
@@ -397,30 +392,30 @@ function StudentPerformancePage({ mentorId, assignedStudents }) {
   const activeStudents = rows.filter((row) => row.stats.sessionsAttended > 0).length;
 
   return <>
-    <p className="mentor-kicker">LEARNING PROGRESS</p>
-    <h1 className="mentor-title">Student Performance</h1>
-    <p className="mentor-subtitle">Track recorded session attendance, learning time, and subjects explored.</p>
+    <p className="mentor-kicker">{t("md_progressEyebrow")}</p>
+    <h1 className="mentor-title">{t("md_perfNav")}</h1>
+    <p className="mentor-subtitle">{t("md_perfSub")}</p>
     <div className="performance-summary">
-      <article><Users size={20} /><strong>{rows.length}</strong><span>Students</span></article>
-      <article><CalendarDays size={20} /><strong>{totalSessions}</strong><span>Sessions attended</span></article>
-      <article><Clock3 size={20} /><strong>{formatLearningTime(totalMinutes)}</strong><span>Learning time</span></article>
-      <article><TrendingUp size={20} /><strong>{activeStudents}</strong><span>Students with activity</span></article>
+      <article><Users size={20} /><strong>{rows.length}</strong><span>{t("md_students")}</span></article>
+      <article><CalendarDays size={20} /><strong>{totalSessions}</strong><span>{t("sessionsAttendedShort")}</span></article>
+      <article><Clock3 size={20} /><strong>{formatLearningTime(totalMinutes)}</strong><span>{t("md_learningTime")}</span></article>
+      <article><TrendingUp size={20} /><strong>{activeStudents}</strong><span>{t("md_activeStudents")}</span></article>
     </div>
     {error && <p className="error-popup" role="alert">{error}</p>}
-    {loading ? <p className="mentor-subtitle">Loading student progress…</p>
-      : rows.length === 0 ? <div className="performance-empty"><Users size={24} /><h2>No students to show yet</h2><p>Students assigned to your mentor account will appear here.</p></div>
+    {loading ? <p className="mentor-subtitle">{t("md_loadingProgress")}</p>
+      : rows.length === 0 ? <div className="performance-empty"><Users size={24} /><h2>{t("md_noStudentsTitle")}</h2><p>{t("md_noStudentsCopy")}</p></div>
         : <div className="performance-grid">{rows.map((student) => {
           const subjects = [...new Set(student.activities.map((item) => item.subject))];
           return <article className="performance-card" key={student.id}>
-            <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? `Last activity ${new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString()}` : "No sessions recorded yet"}</small></div></div>
-            <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>Sessions</span></div><div><strong>{student.stats.learningTime}</strong><span>Learning time</span></div><div><strong>{student.stats.learningStreak}</strong><span>Day streak</span></div></div>
-            <div className="performance-subjects"><strong>Subjects</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>No subjects recorded</small>}</div>
+            <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? t("md_lastActivity", { date: new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString() }) : t("md_noSessionsYet")}</small></div></div>
+            <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>{t("sessions")}</span></div><div><strong>{student.stats.learningTime}</strong><span>{t("md_learningTime")}</span></div><div><strong>{student.stats.learningStreak}</strong><span>{t("md_dayStreak")}</span></div></div>
+            <div className="performance-subjects"><strong>{t("md_subjectsLabel")}</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>{t("md_noSubjects")}</small>}</div>
           </article>;
         })}</div>}
   </>;
 }
 
-function ParentConsultationsPage({ mentorId, students }) {
+function ParentConsultationsPage({ mentorId, students, t }) {
   const [messages, setMessages] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -437,7 +432,7 @@ function ParentConsultationsPage({ mentorId, students }) {
     loadMentorParentMessages(mentorId).then((rows) => {
       if (current) { setMessages(rows); setError(""); }
     }).catch(() => {
-      if (current) setError("Parent conversations couldn't be loaded.");
+      if (current) setError(t("md_convoLoadFail"));
     }).finally(() => { if (current) setLoading(false); });
     return () => { current = false; };
   }, [mentorId]);
@@ -459,23 +454,23 @@ function ParentConsultationsPage({ mentorId, students }) {
       setDrafts((current) => ({ ...current, [key]: "" }));
       await refresh();
     } catch {
-      setError("Your reply couldn't be sent. Please try again.");
+      setError(t("md_convoReplyFail"));
     } finally { setSending(false); }
   };
 
   return <>
-    <p className="mentor-kicker">FAMILY CONNECTION</p>
-    <h1 className="mentor-title">Parent consultations</h1>
-    <p className="mentor-subtitle">Private conversations with parents of your assigned students.</p>
+    <p className="mentor-kicker">{t("md_familyEyebrow")}</p>
+    <h1 className="mentor-title">{t("md_parentNav")}</h1>
+    <p className="mentor-subtitle">{t("md_parentSub")}</p>
     {error && <p className="error-popup" role="alert">{error}</p>}
-    {loading ? <p className="mentor-subtitle">Loading conversations…</p>
-      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>No parent messages yet</h2><p>Messages from connected parents will appear here.</p></div>
+    {loading ? <p className="mentor-subtitle">{t("md_loadingConvo")}</p>
+      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>{t("md_noParentMsgs")}</h2><p>{t("md_noParentMsgsCopy")}</p></div>
         : <div className="mentor-parent-threads">{[...threads.entries()].map(([key, thread]) => {
           const student = students.find((item) => item.id === thread[0].student_id);
           return <article className="mentor-parent-thread" key={key}>
-            <header><div><strong>{student?.display_name || "Student"}</strong><small>Parent consultation · {thread.length} messages</small></div></header>
-            <div className="mentor-parent-thread-messages">{thread.map((message) => <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}><strong>{message.sender_role === "mentor" ? "You" : "Parent"}</strong>{message.message}<small>{new Date(message.created_at).toLocaleString()}</small></p>)}</div>
-            <form onSubmit={(event) => sendReply(event, key, thread)}><input aria-label={`Reply to parent of ${student?.display_name || "student"}`} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder="Write a reply…" required /><button type="submit" disabled={sending}><Send size={16} /> Reply</button></form>
+            <header><div><strong>{student?.display_name || t("md_student")}</strong><small>{t("md_parentThread", { n: thread.length })}</small></div></header>
+            <div className="mentor-parent-thread-messages">{thread.map((message) => <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}><strong>{message.sender_role === "mentor" ? t("youLabel") : t("md_parentWord")}</strong>{message.message}<small>{new Date(message.created_at).toLocaleString()}</small></p>)}</div>
+            <form onSubmit={(event) => sendReply(event, key, thread)}><input aria-label={t("md_replyToParent", { name: student?.display_name || t("md_student") })} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder={t("md_writeReply")} required /><button type="submit" disabled={sending}><Send size={16} /> {t("md_reply")}</button></form>
           </article>;
         })}</div>}
   </>;
@@ -503,7 +498,7 @@ export function MentorDashboard({
   onToggleAccessibility,
   t,
 }) {
-  const support = useMentorSupport(mentorId);
+  const support = useMentorSupport(mentorId, t);
   return (
     <main className="mentor-page">
       <div className="mentor-layout">
@@ -511,11 +506,11 @@ export function MentorDashboard({
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
-          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} />}
-          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} />}
+          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
+          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} t={t} />}
-          {tab === "sensory" && mentorId && <SensorySupportPage support={support} />}
+          {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
         </section>
       </div>
     </main>

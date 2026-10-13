@@ -4,71 +4,71 @@ import "./CareerOptionsPage.css";
 
 const questions = [
   {
-    prompt: "Which kind of activity sounds most interesting?",
+    promptKey: "cr_q1",
     choices: [
-      { label: "Solving a puzzle or figuring out how something works", tags: ["technology", "science", "engineering"] },
-      { label: "Making something visual, musical, or story-based", tags: ["creative", "communication"] },
-      { label: "Helping someone learn or feel supported", tags: ["people", "care", "education"] },
-      { label: "Being outdoors and learning about nature", tags: ["nature", "science"] },
-      { label: "Planning an event, team, or small project", tags: ["business", "leadership", "people"] },
+      { id: "c1", labelKey: "cr_q1c1", tags: ["technology", "science", "engineering"] },
+      { id: "c2", labelKey: "cr_q1c2", tags: ["creative", "communication"] },
+      { id: "c3", labelKey: "cr_q1c3", tags: ["people", "care", "education"] },
+      { id: "c4", labelKey: "cr_q1c4", tags: ["nature", "science"] },
+      { id: "c5", labelKey: "cr_q1c5", tags: ["business", "leadership", "people"] },
     ],
   },
   {
-    prompt: "Which school topics do you find yourself curious about?",
+    promptKey: "cr_q2",
     choices: [
-      { label: "Maths, coding, or computers", tags: ["technology", "engineering"] },
-      { label: "Science, the body, or how living things work", tags: ["science", "care", "nature"] },
-      { label: "Art, design, music, or languages", tags: ["creative", "communication"] },
-      { label: "People, history, society, or how communities work", tags: ["people", "communication", "leadership"] },
-      { label: "Business, money, or how ideas become projects", tags: ["business", "leadership"] },
+      { id: "c1", labelKey: "cr_q2c1", tags: ["technology", "engineering"] },
+      { id: "c2", labelKey: "cr_q2c2", tags: ["science", "care", "nature"] },
+      { id: "c3", labelKey: "cr_q2c3", tags: ["creative", "communication"] },
+      { id: "c4", labelKey: "cr_q2c4", tags: ["people", "communication", "leadership"] },
+      { id: "c5", labelKey: "cr_q2c5", tags: ["business", "leadership"] },
     ],
   },
   {
-    prompt: "How do you like to work on a tricky task?",
+    promptKey: "cr_q3",
     choices: [
-      { label: "Try things out and build a working solution", tags: ["engineering", "technology", "handsOn"] },
-      { label: "Research it carefully and look for patterns", tags: ["science", "technology"] },
-      { label: "Talk it through and work with other people", tags: ["people", "communication", "education"] },
-      { label: "Sketch ideas and try a few creative approaches", tags: ["creative", "handsOn"] },
-      { label: "Make a plan, organize steps, and keep everyone moving", tags: ["business", "leadership"] },
+      { id: "c1", labelKey: "cr_q3c1", tags: ["engineering", "technology", "handsOn"] },
+      { id: "c2", labelKey: "cr_q3c2", tags: ["science", "technology"] },
+      { id: "c3", labelKey: "cr_q3c3", tags: ["people", "communication", "education"] },
+      { id: "c4", labelKey: "cr_q3c4", tags: ["creative", "handsOn"] },
+      { id: "c5", labelKey: "cr_q3c5", tags: ["business", "leadership"] },
     ],
   },
   {
-    prompt: "What kind of difference would you like your work to make?",
+    promptKey: "cr_q4",
     choices: [
-      { label: "Help people stay healthy or feel cared for", tags: ["care", "science", "people"] },
-      { label: "Create useful tools or solve practical problems", tags: ["technology", "engineering", "handsOn"] },
-      { label: "Share ideas, tell stories, or make things people enjoy", tags: ["creative", "communication"] },
-      { label: "Protect nature or improve the environment", tags: ["nature", "science"] },
-      { label: "Bring people together around a useful idea", tags: ["leadership", "business", "people"] },
+      { id: "c1", labelKey: "cr_q4c1", tags: ["care", "science", "people"] },
+      { id: "c2", labelKey: "cr_q4c2", tags: ["technology", "engineering", "handsOn"] },
+      { id: "c3", labelKey: "cr_q4c3", tags: ["creative", "communication"] },
+      { id: "c4", labelKey: "cr_q4c4", tags: ["nature", "science"] },
+      { id: "c5", labelKey: "cr_q4c5", tags: ["leadership", "business", "people"] },
     ],
   },
   {
-    prompt: "Which strength would you most like to use?",
+    promptKey: "cr_q5",
     choices: [
-      { label: "Noticing details and asking good questions", tags: ["science", "technology"] },
-      { label: "Explaining ideas and listening to people", tags: ["communication", "education", "people"] },
-      { label: "Imagining new possibilities", tags: ["creative", "business"] },
-      { label: "Making, fixing, or improving things", tags: ["handsOn", "engineering"] },
-      { label: "Organizing a group and taking initiative", tags: ["leadership", "business", "people"] },
+      { id: "c1", labelKey: "cr_q5c1", tags: ["science", "technology"] },
+      { id: "c2", labelKey: "cr_q5c2", tags: ["communication", "education", "people"] },
+      { id: "c3", labelKey: "cr_q5c3", tags: ["creative", "business"] },
+      { id: "c4", labelKey: "cr_q5c4", tags: ["handsOn", "engineering"] },
+      { id: "c5", labelKey: "cr_q5c5", tags: ["leadership", "business", "people"] },
     ],
   },
 ];
 
 const careers = [
-  { title: "Software developer", tags: ["technology", "engineering"], summary: "Build apps, websites, and tools that help people do things.", explore: "Try a beginner coding activity or make a simple webpage." },
-  { title: "Engineer or robotics designer", tags: ["engineering", "handsOn", "technology"], summary: "Design and improve machines, structures, and useful products.", explore: "Build a small model and test how you could improve it." },
-  { title: "Scientist or researcher", tags: ["science", "technology"], summary: "Ask questions, investigate evidence, and discover how things work.", explore: "Pick a question about nature or space and keep a mini observation log." },
-  { title: "Health professional", tags: ["care", "science", "people"], summary: "Support people's health through science, care, and teamwork.", explore: "Learn about different health roles and what a typical day looks like." },
-  { title: "Teacher or learning designer", tags: ["education", "communication", "people"], summary: "Help people understand ideas and create engaging ways to learn.", explore: "Teach someone a topic you enjoy using a quick activity or drawing." },
-  { title: "Artist, designer, or animator", tags: ["creative", "communication"], summary: "Use visuals and imagination to communicate ideas and experiences.", explore: "Make a poster, character, or short animation about something you care about." },
-  { title: "Writer or media creator", tags: ["communication", "creative"], summary: "Tell stories and share information through words, audio, or video.", explore: "Write a short review or record a one-minute explanation of a topic." },
-  { title: "Environmental scientist or conservationist", tags: ["nature", "science", "handsOn"], summary: "Study the natural world and help care for plants, animals, and places.", explore: "Explore a local nature question and record what you notice." },
-  { title: "Entrepreneur or project leader", tags: ["business", "leadership", "creative"], summary: "Turn ideas into projects, products, or services with a team.", explore: "Think of a small problem at school and sketch an idea to help." },
-  { title: "Community organizer or public service", tags: ["leadership", "people", "communication"], summary: "Work with people to improve services and solve community problems.", explore: "Find out how a local group is helping people in your community." },
+  { id: 1, titleKey: "cr_c1t", tags: ["technology", "engineering"], summaryKey: "cr_c1s", exploreKey: "cr_c1e" },
+  { id: 2, titleKey: "cr_c2t", tags: ["engineering", "handsOn", "technology"], summaryKey: "cr_c2s", exploreKey: "cr_c2e" },
+  { id: 3, titleKey: "cr_c3t", tags: ["science", "technology"], summaryKey: "cr_c3s", exploreKey: "cr_c3e" },
+  { id: 4, titleKey: "cr_c4t", tags: ["care", "science", "people"], summaryKey: "cr_c4s", exploreKey: "cr_c4e" },
+  { id: 5, titleKey: "cr_c5t", tags: ["education", "communication", "people"], summaryKey: "cr_c5s", exploreKey: "cr_c5e" },
+  { id: 6, titleKey: "cr_c6t", tags: ["creative", "communication"], summaryKey: "cr_c6s", exploreKey: "cr_c6e" },
+  { id: 7, titleKey: "cr_c7t", tags: ["communication", "creative"], summaryKey: "cr_c7s", exploreKey: "cr_c7e" },
+  { id: 8, titleKey: "cr_c8t", tags: ["nature", "science", "handsOn"], summaryKey: "cr_c8s", exploreKey: "cr_c8e" },
+  { id: 9, titleKey: "cr_c9t", tags: ["business", "leadership", "creative"], summaryKey: "cr_c9s", exploreKey: "cr_c9e" },
+  { id: 10, titleKey: "cr_c10t", tags: ["leadership", "people", "communication"], summaryKey: "cr_c10s", exploreKey: "cr_c10e" },
 ];
 
-export function CareerOptionsPage() {
+export function CareerOptionsPage({ t }) {
   const [answers, setAnswers] = useState({});
   const [step, setStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
@@ -78,7 +78,7 @@ export function CareerOptionsPage() {
     return careers.map((career) => ({
       ...career,
       score: career.tags.reduce((total, tag) => total + (scores[tag] || 0), 0),
-    })).sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 3);
+    })).sort((a, b) => b.score - a.score || a.id - b.id).slice(0, 3);
   }, [answers]);
 
   const choose = (choice) => setAnswers((current) => ({ ...current, [step]: choice }));
@@ -86,20 +86,20 @@ export function CareerOptionsPage() {
 
   return (
     <section className="content career-page">
-      <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">Explore what could fit you</p><h1>Career Options</h1><p>Answer a few simple questions to find career ideas worth exploring.</p></div></header>
+      <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">{t("cr_eyebrow")}</p><h1>{t("careerOptions")}</h1><p>{t("cr_subtitle")}</p></div></header>
       {!showResults ? (
         <section className="career-card">
-          <div className="career-progress-label"><span>Question {step + 1} of {questions.length}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
+          <div className="career-progress-label"><span>{t("cr_questionOf", { n: step + 1, total: questions.length })}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
           <div className="career-progress"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
-          <h2>{questions[step].prompt}</h2>
-          <div className="career-choices">{questions[step].choices.map((choice) => <button key={choice.label} type="button" className={answers[step]?.label === choice.label ? "selected" : ""} aria-pressed={answers[step]?.label === choice.label} onClick={() => choose(choice)}>{choice.label}</button>)}</div>
-          <div className="career-actions">{step > 0 ? <button type="button" className="career-back" onClick={() => setStep((value) => value - 1)}><ArrowLeft size={17} /> Back</button> : <span />}{step < questions.length - 1 ? <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setStep((value) => value + 1)}>Next <ArrowRight size={17} /></button> : <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setShowResults(true)}>See my ideas <Sparkles size={17} /></button>}</div>
+          <h2>{t(questions[step].promptKey)}</h2>
+          <div className="career-choices">{questions[step].choices.map((choice) => <button key={choice.id} type="button" className={answers[step]?.id === choice.id ? "selected" : ""} aria-pressed={answers[step]?.id === choice.id} onClick={() => choose(choice)}>{t(choice.labelKey)}</button>)}</div>
+          <div className="career-actions">{step > 0 ? <button type="button" className="career-back" onClick={() => setStep((value) => value - 1)}><ArrowLeft size={17} /> {t("cr_back")}</button> : <span />}{step < questions.length - 1 ? <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setStep((value) => value + 1)}>{t("cr_next")} <ArrowRight size={17} /></button> : <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setShowResults(true)}>{t("cr_see")} <Sparkles size={17} /></button>}</div>
         </section>
       ) : (
         <section className="career-card career-results">
-          <div className="career-results-heading"><div><p className="eyebrow">A few paths to explore</p><h2>Your answers point to these ideas</h2></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> Start over</button></div>
-          <div className="career-result-list">{results.map((career, index) => <article className="career-result" key={career.title}><span className="career-result-number">{index + 1}</span><div><h3>{career.title}</h3><p>{career.summary}</p><small><strong>Try this:</strong> {career.explore}</small></div></article>)}</div>
-          <p className="career-disclaimer">These are ideas based on what you chose today, not a test or a decision about your future. Your interests can change, and there are many paths you may enjoy.</p>
+          <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
+          <div className="career-result-list">{results.map((career, index) => <article className="career-result" key={career.id}><span className="career-result-number">{index + 1}</span><div><h3>{t(career.titleKey)}</h3><p>{t(career.summaryKey)}</p><small><strong>{t("cr_tryThis")}</strong> {t(career.exploreKey)}</small></div></article>)}</div>
+          <p className="career-disclaimer">{t("cr_disclaimer")}</p>
         </section>
       )}
     </section>

@@ -129,15 +129,15 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
     if (supabaseConfigured) {
       setError("");
       if (tab === "parent" && parentSignUp) {
-        if (!parentName.trim()) { setError("Enter your name to create a parent account."); return; }
+        if (!parentName.trim()) { setError("ms_enterName"); return; }
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
           options: { data: { full_name: parentName.trim(), account_type: "parent" } },
         });
-        if (signUpError) { setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "Parent account couldn't be created. Please try again."); return; }
+        if (signUpError) { setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "ms_parentCreateFail"); return; }
         if (data.session && data.user) onParent(data.user.id, data.user.email, parentName.trim());
-        else setError("Check your email to confirm your parent account, then sign in.");
+        else setError("ms_parentConfirmEmail");
         return;
       }
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -167,7 +167,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
     }
 
     if (tab === "parent") {
-      setError("Parent accounts require secure school sign-in to protect student information.");
+      setError("ms_parentSecure");
       return;
     }
 
@@ -220,7 +220,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
     }
 
     if (tab === "parent") {
-      setError("Parent accounts require secure school sign-in to protect student information.");
+      setError("ms_parentSecure");
       return;
     }
 
@@ -307,7 +307,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
         <p className="modal-copy">{description}</p>
 
         <form className="auth-form" onSubmit={submit}>
-          {tab === "parent" && parentSignUp && <label className="input-label">Full name<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
+          {tab === "parent" && parentSignUp && <label className="input-label">{t("ms_fullName")}<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
           <label className="input-label">
             {t("email")}
             <input
@@ -391,8 +391,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             </div>
           ) : tab === "parent" ? (
             <div className="auth-button-group">
-              <button className="auth-login-btn" type="submit">{parentSignUp ? "Create parent account" : t("logIn")} <ChevronRight size={18} /></button>
-              <div className="create-account-prompt"><span>{parentSignUp ? "Already have a parent account?" : "New to the parent portal?"}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
+              <button className="auth-login-btn" type="submit">{parentSignUp ? t("ms_createParent") : t("logIn")} <ChevronRight size={18} /></button>
+              <div className="create-account-prompt"><span>{t(parentSignUp ? "ms_haveParent" : "ms_newParent")}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
               {!parentSignUp && (
                 <>
                   <div className="auth-divider">{t("continueWith")}</div>

@@ -55,7 +55,7 @@ export const StudentPage = ({
       </aside>
       <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
     </div>
-    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? "Breathing exercise" : "My calm corner"}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label="Close calm corner"><X size={20} /></button><CalmCorner startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} /></div></div>}
+    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? t("sn_breathingEx") : t("sn_calmTitle")}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label={t("close")}><X size={20} /></button><CalmCorner startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} t={t} /></div></div>}
     {settingsOpen && (
       <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("settings")} onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
         <div className="student-calm-dialog student-settings-dialog">

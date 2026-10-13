@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, ImagePlus, Loader2, Upload } from "lucide-react";
 import { readStudents } from "../constants";
 import { LogoImage } from "./Brand";
+import { typeLabel } from "../handwriting";
 import "./StudentProfileFlow.css";
 
 const readImage = (file) => new Promise((resolve, reject) => {
@@ -103,8 +104,8 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
           <div className="profile-result-mark"><CheckCircle2 size={26} /></div>
           <p className="eyebrow">{t("handwritingAnalysis")}</p>
           <h1>{profile.name || t("profileYourProfile")}</h1>
-          <p className="handwriting-type">{profile.handwritingType}</p>
-          {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt="Uploaded handwriting sample" />}
+          <p className="handwriting-type">{typeLabel(t, profile.handwritingType)}</p>
+          {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt={t("hw_altUploaded")} />}
           <p className="profile-result-copy">{t("profileCompleteCopy")}</p>
           <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? t("backToAccount") : t("continueToCogniBridge")}</button>
         </section>
@@ -122,7 +123,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
         <p className="profile-flow-copy">{existingProfile ? t("analyzeNewImage") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
         {existingProfile && <>
           <div className="profile-locked-name"><span>{t("profileName")}</span><strong>{existingProfile.name}</strong></div>
-          <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{existingProfile.handwritingType || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
+          <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{typeLabel(t, existingProfile.handwritingType) || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
         </>}
         <form className="profile-details-form" onSubmit={submit}>
           {!existingProfile && <>
@@ -138,7 +139,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
           </>}
           <input ref={fileRef} className="profile-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} />
           <button type="button" className="handwriting-upload" onClick={() => fileRef.current?.click()}>
-            {image ? <img src={image} alt="Preview of handwriting sample" /> : <Upload size={22} />}
+            {image ? <img src={image} alt={t("hw_altPreview")} /> : <Upload size={22} />}
             <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("optionalHandwritingHint")}</small></span>
           </button>
           {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}

@@ -1,3 +1,9 @@
+import sensoryOptions from "./i18nSensoryOptions";
+import sensoryText from "./i18nSensory";
+import premiumCareer from "./i18nPremiumCareer";
+import mentorText from "./i18nMentor";
+import miscText from "./i18nMisc";
+
 const localeIndexes = {
   English: 0,
   Hindi: 1,
@@ -394,6 +400,8 @@ const catalog = {
 };
 
 catalog.premiumFlow = ["Premium Flow", "प्रीमियम फ्लो", "প্রিমিয়াম ফ্লো", "ప్రీమియం ఫ్లో", "प्रीमियम फ्लो", "பிரீமியம் ஃப்ளோ", "પ્રીમિયમ ફ્લો", "ಪ್ರೀಮಿಯಂ ಫ್ಲೋ", "പ്രീമിയം ഫ്ലോ", "ਪ੍ਰੀਮੀਅਮ ਫਲੋ"];
+
+Object.assign(catalog, sensoryOptions, sensoryText, premiumCareer, mentorText, miscText);
 
 export const translate = (language, key, values = {}) => {
   const translations = catalog[key];

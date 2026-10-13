@@ -79,7 +79,7 @@ export function LeaderboardPage({ signedIn, t }) {
         <p className="leaderboard-loading" role="status">{t("loading")}</p>
       ) : (
       <>
-      <section className="leaderboard-podium" aria-label="Top three students">
+      <section className="leaderboard-podium" aria-label={t("lb_top3")}>
         <div className="podium-zone-label"><Trophy size={17} /> {t("topThreeZone")}</div>
         {rows.slice(0, 3).map((student, index) => (
           <article className={`podium-card podium-card-${index + 1}`} key={`${index}-${student.name}`}>
@@ -103,7 +103,7 @@ export function LeaderboardPage({ signedIn, t }) {
             <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><strong>{student.name}</strong></span>
             <span className="leaderboard-attendance">{student.attended} <small>of {student.registered}</small></span>
             <span className="leaderboard-streak"><Flame size={15} fill="currentColor" /> {student.streak}</span>
-            <span className="leaderboard-points">{student.points}<small> pts</small></span>
+            <span className="leaderboard-points">{student.points}<small> {t("lb_pts")}</small></span>
           </div>
         ))}
       </div>

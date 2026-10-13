@@ -149,9 +149,7 @@ const App = () => {
         }
         // Google sign-in must land on the side the person chose; mentors use their own credentials.
         if (oauthRole && profile.role !== oauthRole) {
-          notify(profile.role === "mentor"
-            ? "Mentors sign in with their mentor email and password."
-            : `This Google account is a ${profile.role} account. Use the ${profile.role} tab to sign in.`);
+          notify(t(profile.role === "mentor" ? "ms_mentorOnlyEmail" : profile.role === "parent" ? "ms_wrongRoleParent" : "ms_wrongRoleStudent"));
           supabase.auth.signOut();
           return;
         }
@@ -587,7 +585,7 @@ const App = () => {
               }}
             />
           ),
-          careers: signedIn && isGrade12 ? <CareerOptionsPage /> : null,
+          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
           flow: <FlowPage t={t} language={studentLanguage} />,
           premium: <PremiumFlowPage
             t={t}
@@ -624,6 +622,7 @@ const App = () => {
               key={supabaseConfigured ? authUserId : studentEmail}
               studentId={supabaseConfigured ? authUserId : studentEmail}
               demoMode={sensoryTrackerDemoMode}
+              t={t}
             />
           ) : null,
         }}

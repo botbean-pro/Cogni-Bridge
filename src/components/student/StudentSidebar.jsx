@@ -39,11 +39,11 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
       <nav className="student-rail-nav" aria-label={t("mainNavigation")}>
         {items.map(([Icon, tab]) => {
           const careerLocked = tab === "careers" && !isGrade12;
-          return <button key={tab} type="button" className={classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked")} aria-current={activeTab === tab ? "page" : undefined} aria-disabled={careerLocked} onClick={() => !careerLocked && onNavigate(tab)} title={careerLocked ? "Career Options are available to Grade 12 students" : t(navigationLabels[tab])}>
+          return <button key={tab} type="button" className={classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked")} aria-current={activeTab === tab ? "page" : undefined} aria-disabled={careerLocked} onClick={() => !careerLocked && onNavigate(tab)} title={careerLocked ? t("career_locked") : t(navigationLabels[tab])}>
             <Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{t(navigationLabels[tab])}</span>
           </button>
         })}
-        {signedIn && <button type="button" className="student-rail-link calm-rail-button" onClick={onOpenCalm} title="I need a break"><Wind size={20} /><span>I need a break</span></button>}
+        {signedIn && <button type="button" className="student-rail-link calm-rail-button" onClick={onOpenCalm} title={t("sn_needBreak")}><Wind size={20} /><span>{t("sn_needBreak")}</span></button>}
       </nav>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { createParentLinkCode } from "../../../parentPortal";
 import { StudentStats } from "../shared/StudentStats";
+import { typeLabel } from "../../../handwriting";
 
 export function SettingsPage({ studentEmail, studentId, studentName, studentProfile, activityVersion, onEditProfile, t }) {
   const [parentCode, setParentCode] = useState("");
@@ -9,7 +10,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
 
   const generateParentCode = async () => {
     if (!studentId) {
-      setParentCodeError("Sign in with your student account to create a parent connection code.");
+      setParentCodeError(t("ms_pcNeedStudent"));
       return;
     }
     setCreatingParentCode(true);
@@ -18,7 +19,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     try {
       setParentCode(await createParentLinkCode(studentId));
     } catch {
-      setParentCodeError("A connection code couldn't be created. Please try again.");
+      setParentCodeError(t("ms_pcFail"));
     } finally {
       setCreatingParentCode(false);
     }
@@ -30,7 +31,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     [t("age"), studentProfile?.age],
     [t("section"), studentProfile?.section],
     [t("school"), studentProfile?.school],
-    [t("handwritingType"), studentProfile?.handwritingType],
+    [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType)],
   ];
 
   return (
@@ -56,12 +57,12 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
         </button>
       </section>
       <section className="settings-details parent-link-settings" aria-labelledby="parent-link-heading">
-        <h3 id="parent-link-heading">Connect a parent or guardian</h3>
-        <p>Create a one-time code to let a parent connect to your learning progress and contact your assigned teachers.</p>
+        <h3 id="parent-link-heading">{t("ms_pcHeading")}</h3>
+        <p>{t("ms_pcCopy")}</p>
         <button className="secondary-btn settings-edit" type="button" onClick={generateParentCode} disabled={creatingParentCode}>
-          {creatingParentCode ? "Creating code…" : "Create connection code"}
+          {t(creatingParentCode ? "ms_pcCreating" : "ms_pcCreate")}
         </button>
-        {parentCode && <p className="student-parent-code" role="status"><span>Share this code with your parent (expires in 24 hours)</span><strong>{parentCode}</strong></p>}
+        {parentCode && <p className="student-parent-code" role="status"><span>{t("ms_pcShare")}</span><strong>{parentCode}</strong></p>}
         {parentCodeError && <p className="parent-link-error" role="alert">{parentCodeError}</p>}
       </section>
       <StudentStats

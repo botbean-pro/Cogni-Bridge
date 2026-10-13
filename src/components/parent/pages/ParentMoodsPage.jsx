@@ -1,10 +1,7 @@
 import React from "react";
 import { LockKeyhole } from "lucide-react";
-import { causeOptions, emotionOptions, moodLabels } from "../../../studentSensory";
 import { MoodTrendChart } from "../../student/shared/MoodTrendChart";
 import { MoodBadge } from "../shared/MoodBadge";
-
-const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
 
 function RatingMeter({ label, value }) {
   return (
@@ -42,12 +39,12 @@ export function ParentMoodsPage({ child, checkins, t }) {
                 <MoodBadge mood={entry.mood} />
                 <div className="parent-checkin-body">
                   <div className="parent-checkin-top">
-                    <strong>{moodLabels[entry.mood - 1]}</strong>
+                    <strong>{t(`mood_${entry.mood}`)}</strong>
                     <small>{new Date(entry.created_at).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</small>
                     {entry.checkin_type === "quick" && <em>{t("quickCheckin")}</em>}
                   </div>
                   {entry.emotions?.length > 0 && (
-                    <div className="parent-chips">{entry.emotions.map((key) => <span key={key}>{labelFor(emotionOptions, key)}</span>)}</div>
+                    <div className="parent-chips">{entry.emotions.map((key) => <span key={key}>{t(`emotion_${key}`)}</span>)}</div>
                   )}
                   {entry.energy != null && (
                     <div className="parent-meters">
@@ -56,7 +53,7 @@ export function ParentMoodsPage({ child, checkins, t }) {
                     </div>
                   )}
                   {entry.causes?.length > 0 && (
-                    <p className="parent-causes"><strong>{t("possibleCauses")}:</strong> {entry.causes.map((key) => labelFor(causeOptions, key)).join(", ")}</p>
+                    <p className="parent-causes"><strong>{t("possibleCauses")}:</strong> {entry.causes.map((key) => t(`cause_${key}`)).join(", ")}</p>
                   )}
                 </div>
               </article>

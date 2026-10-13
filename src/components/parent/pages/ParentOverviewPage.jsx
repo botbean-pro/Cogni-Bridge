@@ -1,6 +1,5 @@
 import React from "react";
 import { Activity, CheckCircle2, ChevronRight, Gauge, Smile } from "lucide-react";
-import { moodLabels } from "../../../studentSensory";
 import { MoodTrendChart } from "../../student/shared/MoodTrendChart";
 import { ChildSessionRow } from "../shared/ChildSessionRow";
 import { ConnectChildCard } from "../shared/ConnectChildCard";
@@ -24,7 +23,7 @@ export function ParentOverviewPage({ child, checkins, sessions, onOpenTab, onCon
   const cards = [
     [CheckCircle2, attended, t("sessionsAttended"), t("attendedOfRegistered", { count: sessions.length })],
     [Gauge, averageAttention == null ? "—" : `${averageAttention.toFixed(1)} / 5`, t("avgAttention"), averageAttention == null ? t("attentionNotRated") : t(`attention${Math.round(averageAttention)}`)],
-    [Smile, latest ? <><MoodBadge mood={latest.mood} size="sm" /> {moodLabels[latest.mood - 1]}</> : "—", t("latestMood"), latest ? new Date(latest.created_at).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }) : t("noCheckinsYet", { child: child.display_name })],
+    [Smile, latest ? <><MoodBadge mood={latest.mood} size="sm" /> {t(`mood_${latest.mood}`)}</> : "—", t("latestMood"), latest ? new Date(latest.created_at).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" }) : t("noCheckinsYet", { child: child.display_name })],
     [Activity, checkinsThisWeek, t("checkinsThisWeek"), ""],
   ];
 
