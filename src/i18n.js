@@ -3,6 +3,7 @@ import sensoryText from "./i18nSensory";
 import premiumCareer from "./i18nPremiumCareer";
 import mentorText from "./i18nMentor";
 import miscText from "./i18nMisc";
+import privateText from "./i18nPrivate";
 
 const localeIndexes = {
   English: 0,
@@ -401,7 +402,7 @@ const catalog = {
 
 catalog.premiumFlow = ["Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden", "Golden Garden"];
 
-Object.assign(catalog, sensoryOptions, sensoryText, premiumCareer, mentorText, miscText);
+Object.assign(catalog, sensoryOptions, sensoryText, premiumCareer, mentorText, miscText, privateText);
 
 export const translate = (language, key, values = {}) => {
   const translations = catalog[key];

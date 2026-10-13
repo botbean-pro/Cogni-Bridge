@@ -284,3 +284,28 @@
 .theme-dark .mentor-parent-thread-messages > p > strong { color: #55d4c3; }
 .theme-dark .mentor-parent-thread-messages small,.theme-dark .mentor-parent-thread > header small { color: var(--muted); }
 .theme-dark .mentor-parent-thread form input { border-color: var(--line); background: var(--surface-2); color: var(--text); }
+
+.uploaded-note-actions { display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; }
+.uploaded-note-actions .uploaded-note-download { margin-left:0; }
+.uploaded-note-delete { color:#c0392b; }
+.uploaded-note-delete:hover { border-color:#c0392b; background:rgba(192,57,43,.08); }
+.theme-dark .uploaded-note-delete { color:#f8b4b4; }
+
+.mentor-students-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin:6px 0 14px; }
+.mentor-students-toolbar input { flex:1 1 240px; max-width:360px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:inherit; }
+.mentor-students-toolbar span { color:var(--muted); font-size:.92rem; }
+.mentor-students-table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
+.mentor-students-table { width:100%; border-collapse:collapse; color:var(--text); }
+.mentor-students-table th,.mentor-students-table td { padding:12px 16px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; }
+.mentor-students-table th { font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+.mentor-students-table tr:last-child td { border-bottom:0; }
+.mentor-students-table tr.is-mine { background:rgba(8,179,167,.07); }
+.mentor-students-table td:first-child { display:flex; align-items:center; gap:10px; font-weight:700; }
+.mentor-student-toggle { padding:8px 14px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:inherit; font-weight:700; cursor:pointer; }
+.mentor-student-toggle:hover { border-color:var(--teal); }
+.mentor-student-toggle.active { border-color:var(--teal); background:var(--teal); color:#fff; }
+.mentor-student-toggle:disabled { opacity:.5; cursor:wait; }
+
+.form-hint { display:block; margin-top:6px; color:var(--muted); font-size:.85rem; font-weight:400; }
+.private-sessions-list { margin-top:28px; }
+.private-sessions-list a.uploaded-note-download { text-decoration:none; color:inherit; }

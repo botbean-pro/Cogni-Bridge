@@ -114,6 +114,30 @@ export async function downloadNote(note) {
   link.remove();
 }
 
+// Opens the note in a new tab so the mentor can read it on the website.
+export async function viewNote(note) {
+  const tab = window.open("", "_blank");
+  try {
+    let url = note.dataUrl;
+    if (url) {
+      url = URL.createObjectURL(await (await fetch(url)).blob());
+    } else {
+      url = throwIfError(await supabase.storage.from("mentor-notes").createSignedUrl(note.filePath, 300)).signedUrl;
+    }
+    if (tab) tab.location.href = url;
+    else window.location.assign(url);
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
+}
+
+// Removes the row first, then the file; a leftover file is harmless, a row without a file is not.
+export async function deleteMentorNote(note) {
+  throwIfError(await supabase.from("mentor_notes").delete().eq("id", note.id).select("id").single());
+  await supabase.storage.from("mentor-notes").remove([note.filePath]);
+}
+
 export async function uploadMentorNote(mentorId, { title, subject, file }) {
   // Storage keys reject some characters (e.g. brackets or non-Latin script), so store a
   // safe name and keep the original in file_name.
@@ -137,4 +161,13 @@ export async function uploadMentorNote(mentorId, { title, subject, file }) {
     .select()
     .single());
   return toClientNote(row);
+}
+
+// Every registered student (name and join date only) with whether they are under this mentor.
+export async function listStudentsForMentor() {
+  return throwIfError(await supabase.rpc("list_students_for_mentor"));
+}
+
+export async function setMyStudent(studentId, assigned) {
+  throwIfError(await supabase.rpc("set_my_student", { p_student_id: studentId, p_assigned: assigned }));
 }

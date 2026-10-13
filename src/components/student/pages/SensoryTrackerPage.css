@@ -74,6 +74,7 @@
 .sensory-private-note { display:flex; align-items:center; gap:7px; }
 .sensory-submit { display:block; margin:20px 0 0 auto; padding:12px 18px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-weight:750; cursor:pointer; }
 .sensory-submit:disabled { opacity:.45; cursor:not-allowed; }
+.sensory-submit[aria-disabled="true"] { opacity:.5; }
 .sensory-suggestions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
 .sensory-suggestions span { padding:9px 12px; border-radius:999px; background:var(--surface-2); color:var(--text); font-size:13px; }
 .sensory-card > small { color:var(--muted); }

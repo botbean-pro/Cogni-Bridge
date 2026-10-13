@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { MENTOR_EMAIL, MENTOR_PASSWORD } from "../../constants";
-import { createSession, downloadNote, loadMentorNotes, updateSession, uploadMentorNote } from "../../mentorContent";
+import { createPrivateSession } from "../../privateSessions";
+import { createSession, deleteMentorNote, downloadNote, loadMentorNotes, updateSession, uploadMentorNote, viewNote } from "../../mentorContent";
 import { supabaseConfigured } from "../../supabaseClient";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MentorLoginPage } from "./pages/MentorLoginPage";
@@ -12,17 +13,19 @@ const createSessionForm = () => ({
   time: "",
   endTime: "",
   meetLink: "",
+  privateStudentId: "",
 });
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
-export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorId, onAddSession, onUpdateSession, onAddNote, onLoadNotes, onBack, accessibilityOpen, onToggleAccessibility, t }) {
+export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorId, onAddSession, onUpdateSession, onAddNote, onRemoveNote, onLoadNotes, onBack, accessibilityOpen, onToggleAccessibility, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("overview");
   const [form, setForm] = useState(createSessionForm);
+  const [privateVersion, setPrivateVersion] = useState(0);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [noteForm, setNoteForm] = useState(createNoteForm);
   const [actionError, setActionError] = useState("");
@@ -54,8 +57,40 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
     setError("");
   };
 
+  // Accepts "meet.google.com/abc-defg-hij" as well as a full link; anything else is rejected.
+  const normalizeMeetLink = (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      const url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`);
+      return /^https?:$/.test(url.protocol) && url.hostname.includes(".") ? url.href : null;
+    } catch {
+      return null;
+    }
+  };
+
   const publishSession = async (event) => {
     event.preventDefault();
+    const meetLink = normalizeMeetLink(form.meetLink);
+    if (!meetLink) {
+      setActionError(t("md_badMeetLink"));
+      return;
+    }
+    const sessionForm = { ...form, meetLink };
+
+    // A session for one chosen student: only that student (and this mentor) can see it.
+    if (form.privateStudentId && !editingSessionId && supabaseConfigured && mentorId) {
+      try {
+        await createPrivateSession(mentorId, { ...sessionForm, studentId: form.privateStudentId });
+        setActionError("");
+        setForm(createSessionForm());
+        setPrivateVersion((current) => current + 1);
+      } catch (privateError) {
+        console.error("Private session failed:", privateError);
+        setActionError(t("ps_saveFail"));
+      }
+      return;
+    }
     const existingSession = editingSessionId
       ? sessions.find((item) => item.id === editingSessionId)
       : null;
@@ -63,9 +98,9 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
     if (supabaseConfigured && mentorId) {
       try {
         const saved = editingSessionId
-          ? await updateSession(editingSessionId, form)
+          ? await updateSession(editingSessionId, sessionForm)
           : await createSession(mentorId, {
-            ...form,
+            ...sessionForm,
             description: existingSession?.description || "A focused Maths session led by Priya Sharma.",
             learn: existingSession?.learn || [
               "Understand the core idea",
@@ -87,7 +122,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
 
     const session = {
       ...existingSession,
-      ...form,
+      ...sessionForm,
       id: editingSessionId || String(Date.now()),
       attendees: existingSession?.attendees ?? 0,
       titleKey: undefined,
@@ -164,6 +199,28 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
     }
   };
 
+  const viewMentorNote = async (note) => {
+    try {
+      await viewNote(note);
+      setActionError("");
+    } catch (viewError) {
+      console.error("Note view failed:", viewError);
+      setActionError(t("md_noteViewFail"));
+    }
+  };
+
+  const removeMentorNote = async (note) => {
+    if (!window.confirm(t("md_deleteNoteConfirm", { title: note.title }))) return;
+    try {
+      if (supabaseConfigured && mentorId) await deleteMentorNote(note);
+      onRemoveNote(note.id);
+      setActionError("");
+    } catch (deleteError) {
+      console.error("Note delete failed:", deleteError);
+      setActionError(t("md_deleteNoteFail"));
+    }
+  };
+
   if (!loggedIn) {
     return (
       <MentorLoginPage
@@ -196,7 +253,10 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
       editingSessionId={editingSessionId}
       onCancelEdit={() => { setEditingSessionId(null); setForm(createSessionForm()); }}
       onUploadNote={uploadNote}
+      privateVersion={privateVersion}
       onDownloadNote={downloadMentorNote}
+      onViewNote={viewMentorNote}
+      onDeleteNote={removeMentorNote}
       onBack={onBack}
       accessibilityOpen={accessibilityOpen}
       onToggleAccessibility={onToggleAccessibility}

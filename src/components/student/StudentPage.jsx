@@ -4,6 +4,7 @@ import { classNames } from "../../constants";
 import { AnimatedLogo, MouseTrail } from "../Brand";
 import { StudentSidebar } from "./StudentSidebar";
 import { StudentTopBar } from "./StudentTopBar";
+import { StudentNotifications } from "./StudentNotifications";
 import { CalmCorner } from "./pages/SensoryTrackerPage";
 
 export const StudentPage = ({
@@ -13,6 +14,7 @@ export const StudentPage = ({
   sensoryTrackerEnabled,
   isGrade12,
   studentName,
+  studentId,
   t,
   onLogin,
   onLogout,
@@ -47,6 +49,7 @@ export const StudentPage = ({
       <aside className="student-rail">
         <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(false); setCalmCornerOpen(true); }} />
         <div className="student-rail-footer">
+          {studentId && <StudentNotifications studentId={studentId} t={t} />}
           <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>
           </button>

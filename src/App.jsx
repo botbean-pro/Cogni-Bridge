@@ -14,6 +14,7 @@ import { readStudentActivities, recordStudentAttendance } from "./studentActivit
 import { fetchSessions, fetchStudentNotes } from "./mentorContent";
 import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
+import { loadLatestHandwriting } from "./studentHandwriting";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
 import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
@@ -160,6 +161,9 @@ const App = () => {
           setSignedIn(true);
           setStudentEmail(user.email || "");
           setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "" });
+          loadLatestHandwriting(user.id).then((handwriting) => {
+            if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
+          }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
           setActiveTab((currentTab) => currentTab === "home" ? "study" : currentTab);
         } else if (profile.role === "mentor") {
           setSignedIn(false);
@@ -387,6 +391,7 @@ const App = () => {
             session.id === updatedSession.id ? { ...session, ...updatedSession } : session
           )))}
           onAddNote={(note) => setLearningNotes((items) => [note, ...items])}
+          onRemoveNote={(id) => setLearningNotes((items) => items.filter((note) => note.id !== id))}
           onLoadNotes={setLearningNotes}
           onBack={() => {
             setMentorOpen(false);
@@ -517,6 +522,7 @@ const App = () => {
         sensoryTrackerEnabled={sensoryTrackerEnabled}
         isGrade12={isGrade12}
         studentName={studentName}
+        studentId={supabaseConfigured && authRole === "student" ? authUserId : null}
         t={t}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
@@ -545,6 +551,7 @@ const App = () => {
               sessions={sessions}
               studentEmail={studentEmail}
               studentName={studentName}
+              handwritingType={studentProfile?.handwritingType}
               activityVersion={activityVersion}
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}

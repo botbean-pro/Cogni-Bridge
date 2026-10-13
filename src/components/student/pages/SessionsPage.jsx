@@ -117,7 +117,7 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
   );
 }
 
-export function StudyPage({ sessions, studentEmail, studentName, activityVersion, onOpenSession, eyebrow, heading, t }) {
+export function StudyPage({ sessions, studentEmail, studentName, handwritingType, activityVersion, onOpenSession, eyebrow, heading, t }) {
   const today = new Date().toISOString().slice(0, 10);
   const upcomingFractions = sessions
     .filter((session) => session.id === "fractions-workshop" && session.date >= today)
@@ -153,7 +153,7 @@ export function StudyPage({ sessions, studentEmail, studentName, activityVersion
           try {
             const profile = JSON.parse(localStorage.getItem("cognibridge_students") || "[]")
               .find((student) => student.email?.toLowerCase() === studentEmail?.toLowerCase());
-            return profile?.handwritingType || t("notAnalyzed");
+            return handwritingType || profile?.handwritingType || t("notAnalyzed");
           } catch {
             return t("notAnalyzed");
           }

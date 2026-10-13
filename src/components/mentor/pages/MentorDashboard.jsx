@@ -5,6 +5,10 @@ import {
   CalendarDays,
   ChevronRight,
   Clock3,
+  Settings,
+  Video,
+  Eye,
+  Trash2,
   FileText,
   Home,
   Heart,
@@ -14,16 +18,14 @@ import {
   Upload,
   Accessibility,
   Users,
-  MessageCircle,
   Trophy,
-  Send,
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
 import { SessionStudents } from "../SessionStudents";
-import { loadMentorLearningActivity, loadMentorLeaderboard } from "../../../mentorContent";
-import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
+import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
+import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, setMyStudent } from "../../../mentorContent";
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
@@ -38,7 +40,7 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
-    ...(mentorId ? [["parentMessages", MessageCircle, t("md_parentNav")]] : []),
+    ["settings", Settings, t("settings")],
   ];
 
   return (
@@ -77,6 +79,7 @@ function useMentorSupport(mentorId, t) {
   const [notifications, setNotifications] = useState([]);
   const [students, setStudents] = useState([]);
   const [error, setError] = useState("");
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     if (!mentorId) return undefined;
@@ -98,7 +101,7 @@ function useMentorSupport(mentorId, t) {
       isCurrent = false;
       window.clearInterval(interval);
     };
-  }, [mentorId]);
+  }, [mentorId, version]);
 
   const patchNotification = (id, changes) => setNotifications((current) => current.map((item) => (
     item.id === id ? { ...item, ...changes } : item
@@ -143,12 +146,12 @@ function useMentorSupport(mentorId, t) {
     unreadCount: notifications.filter((item) => !item.viewed_at && !item.addressed_at).length,
     markAllViewed,
     respond,
+    reload: () => setVersion((current) => current + 1),
   };
 }
 
 function SensorySupportPage({ support, t }) {
   const { checkins, notifications, students, error, markAllViewed, respond } = support;
-  const [replies, setReplies] = React.useState({});
   const notificationFor = (entry) => notifications.find((item) => item.checkin_id === entry.id);
   const needsSupport = (entry) => entry.mentor_help !== "none" && !notificationFor(entry)?.addressed_at;
   const sortedEntries = [...checkins]
@@ -180,11 +183,7 @@ function SensorySupportPage({ support, t }) {
             {notification && (addressed ? (
               notification.mentor_message && <p><strong>{t("md_yourReply")}</strong> {notification.mentor_message}</p>
             ) : <div className="mentor-sensory-actions">
-              <form onSubmit={(event) => { event.preventDefault(); if (replies[entry.id]?.trim()) respond(notification.id, replies[entry.id], false); }}>
-                <input value={replies[entry.id] ?? ""} maxLength={2000} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder={t("md_replyPlaceholder")} aria-label={t("md_replyTo", { name: studentName })} />
-                <button type="submit">{t("md_sendReply")}</button>
-              </form>
-              <button type="button" onClick={() => respond(notification.id, replies[entry.id] || "", true)}>{t("md_markAddressed")}</button>
+              <button type="button" onClick={() => respond(notification.id, "", true)}>{t("md_markAddressed")}</button>
             </div>)}
           </article>;
         })}
@@ -256,7 +255,53 @@ function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
   );
 }
 
-function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
+function PrivateSessionsList({ mentorId, version, students, t }) {
+  const [rows, setRows] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let isCurrent = true;
+    loadMentorPrivateSessions(mentorId).then((result) => {
+      if (isCurrent) setRows(result);
+    }).catch((loadError) => {
+      console.error("Private sessions failed to load:", loadError);
+    });
+    return () => { isCurrent = false; };
+  }, [mentorId, version]);
+
+  const cancel = async (row) => {
+    if (!window.confirm(t("ps_cancelConfirm", { title: row.title }))) return;
+    try {
+      await deletePrivateSession(row.id);
+      setRows((current) => current.filter((item) => item.id !== row.id));
+      setError("");
+    } catch (deleteError) {
+      console.error("Private session cancel failed:", deleteError);
+      setError(t("ps_deleteFail"));
+    }
+  };
+
+  if (!rows.length) return null;
+  return (
+    <div className="uploaded-notes private-sessions-list">
+      <h2>{t("ps_listTitle")}</h2>
+      {error && <p className="error-popup" role="alert">{error}</p>}
+      {rows.map((row) => (
+        <div key={row.id}>
+          <Video size={18} />
+          <span><strong>{row.title}</strong><small>{students.find((student) => student.id === row.studentId)?.display_name || t("md_student")} · {row.date} · {row.time} – {row.endTime}</small></span>
+          <div className="uploaded-note-actions">
+            <a className="uploaded-note-download" href={row.meetLink} target="_blank" rel="noopener noreferrer"><Video size={16} /> {t("ps_join")}</a>
+            <button type="button" className="uploaded-note-download uploaded-note-delete" onClick={() => cancel(row)}><Trash2 size={16} /> {t("ps_cancel")}</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, mentorId, students, privateVersion, canSchedulePrivate, t }) {
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
@@ -282,8 +327,16 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
         </div>
         <label>
           {t("googleMeetUrl")}
-          <input type="url" value={form.meetLink} onChange={(event) => updateField("meetLink", event.target.value)} placeholder="https://meet.google.com/..." required />
+          <input type="text" inputMode="url" value={form.meetLink} onChange={(event) => updateField("meetLink", event.target.value)} placeholder="https://meet.google.com/..." required />
         </label>
+        {canSchedulePrivate && <label>
+          {t("ps_visibleTo")}
+          <select value={form.privateStudentId || ""} disabled={editing} onChange={(event) => updateField("privateStudentId", event.target.value)}>
+            <option value="">{t("ps_everyone")}</option>
+            {students.map((student) => <option key={student.id} value={student.id}>{t("ps_onlyStudent", { name: student.display_name })}</option>)}
+          </select>
+          <small className="form-hint">{students.length ? t("ps_hint") : t("ps_noStudents")}</small>
+        </label>}
         <div className="mentor-form-actions">
           <button className="mentor-primary" type="submit"><CalendarDays size={18} /> {editing ? t("saveChanges") : t("publishSession")}</button>
           {editing && <button type="button" className="mentor-cancel-edit" onClick={onCancelEdit}>{t("cancel")}</button>}
@@ -293,7 +346,7 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, t }) {
   );
 }
 
-function NotesPage({ notes, form, setForm, onSubmit, onDownload, t }) {
+function NotesPage({ notes, form, setForm, onSubmit, onDownload, onView, onDelete, t }) {
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
@@ -332,15 +385,88 @@ function NotesPage({ notes, form, setForm, onSubmit, onDownload, t }) {
             <div key={note.id}>
               <FileText size={18} />
               <span><strong>{note.title}</strong><small>{getSessionSubjectLabel(note.subject, t)} · {note.fileName}</small></span>
-              <button type="button" className="uploaded-note-download" onClick={() => onDownload(note)} aria-label={`${t("downloadNote")}: ${note.title}`}>
-                <ArrowDownToLine size={16} /> {t("downloadNote")}
-              </button>
+              <div className="uploaded-note-actions">
+                <button type="button" className="uploaded-note-download" onClick={() => onView(note)} aria-label={`${t("md_viewNote")}: ${note.title}`}>
+                  <Eye size={16} /> {t("md_viewNote")}
+                </button>
+                <button type="button" className="uploaded-note-download" onClick={() => onDownload(note)} aria-label={`${t("downloadNote")}: ${note.title}`}>
+                  <ArrowDownToLine size={16} /> {t("downloadNote")}
+                </button>
+                <button type="button" className="uploaded-note-download uploaded-note-delete" onClick={() => onDelete(note)} aria-label={`${t("md_deleteNote")}: ${note.title}`}>
+                  <Trash2 size={16} /> {t("md_deleteNote")}
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
     </>
   );
+}
+
+function MentorSettingsPage({ mentorId, onChanged, t }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(Boolean(mentorId));
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [savingId, setSavingId] = useState(null);
+
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let isCurrent = true;
+    listStudentsForMentor().then((result) => {
+      if (isCurrent) setRows(result || []);
+    }).catch((loadError) => {
+      console.error("Student list failed:", loadError);
+      if (isCurrent) setError(t("md_setLoadFail"));
+    }).finally(() => { if (isCurrent) setLoading(false); });
+    return () => { isCurrent = false; };
+  }, [mentorId]);
+
+  const toggle = async (row) => {
+    const next = !row.is_mine;
+    setSavingId(row.student_id);
+    setError("");
+    try {
+      await setMyStudent(row.student_id, next);
+      setRows((current) => current.map((item) => item.student_id === row.student_id ? { ...item, is_mine: next } : item));
+      onChanged();
+    } catch (saveError) {
+      console.error("Student selection failed:", saveError);
+      setError(t("md_setSaveFail"));
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const query = search.trim().toLowerCase();
+  const visible = rows.filter((row) => !query || row.display_name.toLowerCase().includes(query));
+  const mine = rows.filter((row) => row.is_mine).length;
+
+  return <>
+    <p className="mentor-kicker">{t("settings")}</p>
+    <h1 className="mentor-title">{t("md_setTitle")}</h1>
+    <p className="mentor-subtitle">{t("md_setSubtitle")}</p>
+    {!mentorId ? <div className="performance-empty"><Settings size={24} /><h2>{t("md_setNeedSignIn")}</h2></div> : <>
+      {error && <p className="error-popup" role="alert">{error}</p>}
+      <div className="mentor-students-toolbar">
+        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("md_setSearch")} aria-label={t("md_setSearch")} />
+        <span>{t("md_setSummary", { mine, total: rows.length })}</span>
+      </div>
+      {loading ? <p className="mentor-subtitle" role="status">{t("md_setLoading")}</p>
+        : !visible.length ? <div className="performance-empty"><Users size={24} /><h2>{t("md_setEmpty")}</h2></div>
+          : <div className="mentor-students-table-wrap"><table className="mentor-students-table">
+            <thead><tr><th>{t("md_setColStudent")}</th><th>{t("md_setColJoined")}</th><th>{t("md_setColStatus")}</th></tr></thead>
+            <tbody>{visible.map((row) => <tr key={row.student_id} className={row.is_mine ? "is-mine" : ""}>
+              <td><span className="mentor-leaderboard-avatar" aria-hidden="true">{row.display_name.charAt(0).toUpperCase()}</span> {row.display_name}</td>
+              <td>{new Date(row.joined_at).toLocaleDateString()}</td>
+              <td><button type="button" className={`mentor-student-toggle${row.is_mine ? " active" : ""}`} aria-pressed={row.is_mine} disabled={savingId === row.student_id} onClick={() => toggle(row)}>
+                {row.is_mine ? t("md_setRemove") : t("md_setAdd")}
+              </button></td>
+            </tr>)}</tbody>
+          </table></div>}
+    </>}
+  </>;
 }
 
 function StudentPerformancePage({ mentorId, assignedStudents, t }) {
@@ -450,67 +576,6 @@ function MentorLeaderboardPage({ mentorId, t }) {
   </>;
 }
 
-function ParentConsultationsPage({ mentorId, students, t }) {
-  const [messages, setMessages] = useState([]);
-  const [drafts, setDrafts] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState("");
-
-  const refresh = async () => {
-    const rows = await loadMentorParentMessages(mentorId);
-    setMessages(rows);
-  };
-
-  useEffect(() => {
-    let current = true;
-    loadMentorParentMessages(mentorId).then((rows) => {
-      if (current) { setMessages(rows); setError(""); }
-    }).catch(() => {
-      if (current) setError(t("md_convoLoadFail"));
-    }).finally(() => { if (current) setLoading(false); });
-    return () => { current = false; };
-  }, [mentorId]);
-
-  const threads = new Map();
-  messages.forEach((message) => {
-    const key = `${message.parent_id}:${message.student_id}`;
-    if (!threads.has(key)) threads.set(key, []);
-    threads.get(key).push(message);
-  });
-
-  const sendReply = async (event, key, thread) => {
-    event.preventDefault();
-    const message = drafts[key]?.trim();
-    if (!message) return;
-    setSending(true); setError("");
-    try {
-      await sendMentorParentReply({ mentorId, studentId: thread[0].student_id, parentId: thread[0].parent_id, message });
-      setDrafts((current) => ({ ...current, [key]: "" }));
-      await refresh();
-    } catch {
-      setError(t("md_convoReplyFail"));
-    } finally { setSending(false); }
-  };
-
-  return <>
-    <p className="mentor-kicker">{t("md_familyEyebrow")}</p>
-    <h1 className="mentor-title">{t("md_parentNav")}</h1>
-    <p className="mentor-subtitle">{t("md_parentSub")}</p>
-    {error && <p className="error-popup" role="alert">{error}</p>}
-    {loading ? <p className="mentor-subtitle">{t("md_loadingConvo")}</p>
-      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>{t("md_noParentMsgs")}</h2><p>{t("md_noParentMsgsCopy")}</p></div>
-        : <div className="mentor-parent-threads">{[...threads.entries()].map(([key, thread]) => {
-          const student = students.find((item) => item.id === thread[0].student_id);
-          return <article className="mentor-parent-thread" key={key}>
-            <header><div><strong>{student?.display_name || t("md_student")}</strong><small>{t("md_parentThread", { n: thread.length })}</small></div></header>
-            <div className="mentor-parent-thread-messages">{thread.map((message) => <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}><strong>{message.sender_role === "mentor" ? t("youLabel") : t("md_parentWord")}</strong>{message.message}<small>{new Date(message.created_at).toLocaleString()}</small></p>)}</div>
-            <form onSubmit={(event) => sendReply(event, key, thread)}><input aria-label={t("md_replyToParent", { name: student?.display_name || t("md_student") })} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder={t("md_writeReply")} required /><button type="submit" disabled={sending}><Send size={16} /> {t("md_reply")}</button></form>
-          </article>;
-        })}</div>}
-  </>;
-}
-
 export function MentorDashboard({
   sessions,
   mentorId,
@@ -528,9 +593,12 @@ export function MentorDashboard({
   onCancelEdit,
   onUploadNote,
   onDownloadNote,
+  onViewNote,
+  onDeleteNote,
   onBack,
   accessibilityOpen,
   onToggleAccessibility,
+  privateVersion,
   t,
 }) {
   const support = useMentorSupport(mentorId, t);
@@ -542,10 +610,10 @@ export function MentorDashboard({
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
+          {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
-          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} t={t} />}
-          {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
-          {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} t={t} />}
+          {tab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
+          {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
         </section>
       </div>

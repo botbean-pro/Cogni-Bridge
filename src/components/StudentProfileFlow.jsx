@@ -3,6 +3,8 @@ import { ArrowLeft, CheckCircle2, ImagePlus, Loader2, Upload } from "lucide-reac
 import { readStudents } from "../constants";
 import { LogoImage } from "./Brand";
 import { typeLabel } from "../handwriting";
+import { supabaseConfigured } from "../supabaseClient";
+import { saveHandwriting } from "../studentHandwriting";
 import "./StudentProfileFlow.css";
 
 const readImage = (file) => new Promise((resolve, reject) => {
@@ -66,6 +68,21 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
       handwritingType: `Type ${1 + Math.floor(Math.random() * 4)}`,
       analyzedAt: new Date().toISOString(),
     };
+    // Signed-in Supabase students: the photo and result go to the database, not the browser.
+    if (supabaseConfigured && existingProfile?.id) {
+      setStep("loading");
+      saveHandwriting(existingProfile.id, image, result.handwritingType)
+        .then(() => {
+          setProfile(result);
+          window.setTimeout(() => setStep("result"), 2200);
+        })
+        .catch(() => {
+          analyzingRef.current = false;
+          setError("hw_saveFail");
+          setStep("form");
+        });
+      return;
+    }
     try {
       const students = readStudents();
       const updated = students.some((student) => student.email === email)

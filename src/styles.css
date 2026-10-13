@@ -826,3 +826,14 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   .mentor-nav { width:64px; }
   .mentor-nav:focus-within { width:min(245px,calc(100vw - 64px)); }
 }
+
+.student-notify-button { position:relative; }
+.student-notify-badge { position:absolute; top:4px; right:6px; min-width:18px; height:18px; padding:0 5px; border-radius:999px; background:#e04b4b; color:#fff; font-size:11px; font-weight:800; line-height:18px; text-align:center; }
+.student-notify-dialog { padding:28px 24px 24px; }
+.student-notify-dialog h2 { margin:0 0 16px; }
+.student-notify-list { display:grid; gap:12px; margin:0; padding:0; list-style:none; }
+.student-notify-list li { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2, var(--surface)); }
+.student-notify-list li > div { display:grid; gap:3px; }
+.student-notify-list small,.student-notify-empty { color:var(--muted); }
+.student-notify-join { display:inline-flex; align-items:center; gap:7px; padding:10px 16px; border-radius:10px; background:var(--teal); color:#fff; font-weight:750; text-decoration:none; }
+.student-notify-error { color:#c0392b; }

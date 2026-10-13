@@ -95,6 +95,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
   const [view, setView] = useState("quick");
   const [expandedId, setExpandedId] = useState(null);
   const [status, setStatus] = useState("");
+  const [formStatus, setFormStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const [lowSensory, setLowSensory] = useState(false);
   const [showCalmCorner, setShowCalmCorner] = useState(false);
@@ -151,15 +152,19 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
 
   const submit = async (event, quick = false) => {
     event.preventDefault();
-    if (!form.mood) return;
+    if (!form.mood) {
+      setFormStatus(t("sn_pickMood"));
+      return;
+    }
+    setFormStatus("");
     const shared = !quick && !demoMode && form.shared;
     const specificMentor = shared && form.helpRequest === "specific_mentor";
     if (shared && mentors.length === 0) {
-      setStatus(t("sn_stNoMentorShare"));
+      setFormStatus(t("sn_stNoMentorShare"));
       return;
     }
     if (specificMentor && !form.selectedMentorId) {
-      setStatus(t("sn_stChooseMentor"));
+      setFormStatus(t("sn_stChooseMentor"));
       return;
     }
     const checkin = quick
@@ -197,13 +202,14 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
       await refresh();
       setForm(blankEntry());
       setView("quick");
-      setStatus(t(demoMode
+      setFormStatus(t(demoMode
         ? "sn_stSavedDemo"
         : shared ? "sn_stSavedShared"
           : parents.length ? "sn_stSavedParent"
             : "sn_stSavedPrivate"));
-    } catch {
-      setStatus(t("sn_stSaveFail"));
+    } catch (saveError) {
+      console.error("Check-in save failed:", saveError);
+      setFormStatus(t("sn_stSaveFail"));
     } finally {
       setSaving(false);
     }
@@ -281,7 +287,9 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
               </>
             )}
             {view === "quick" && <p className="sensory-private-note"><LockKeyhole size={15} /> {t(parents.length ? "sn_quickPrivateParent" : "sn_quickPrivate")}</p>}
-            <button className="sensory-submit" type="submit" disabled={!form.mood || saving}>{saving ? t("sn_saving") : t(view === "quick" ? "sn_saveQuick" : "sn_saveToday")}</button>
+            <button className="sensory-submit" type="submit" aria-disabled={!form.mood || saving} onClick={(event) => { if (saving) event.preventDefault(); }}>{saving ? t("sn_saving") : t(view === "quick" ? "sn_saveQuick" : "sn_saveToday")}</button>
+            {formStatus && <p className="sensory-status" role="status" ref={(node) => node?.scrollIntoView({ block: "nearest", behavior: "smooth" })}>{formStatus}</p>}
+            {!form.mood && !formStatus && <p className="sensory-share-note">{t("sn_pickMood")}</p>}
           </form>
       </section>
 
