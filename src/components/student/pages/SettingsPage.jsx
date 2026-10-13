@@ -1,12 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Check } from "lucide-react";
+import { getSessionSubjectLabel, subjects } from "../../../constants";
 import { createParentLinkCode } from "../../../parentPortal";
 import { StudentStats } from "../shared/StudentStats";
 import { typeLabel } from "../../../handwriting";
 
-export function SettingsPage({ studentEmail, studentId, studentName, studentProfile, activityVersion, onEditProfile, t }) {
+export function SettingsPage({ studentEmail, studentId, studentName, studentProfile, preferredSubjects = [], onSaveSubjects, premiumSubscription, activityVersion, onEditProfile, t }) {
   const [parentCode, setParentCode] = useState("");
   const [parentCodeError, setParentCodeError] = useState("");
   const [creatingParentCode, setCreatingParentCode] = useState(false);
+  const [subjectSelection, setSubjectSelection] = useState(preferredSubjects);
+  const [savingSubjects, setSavingSubjects] = useState(false);
+
+  useEffect(() => setSubjectSelection(preferredSubjects), [preferredSubjects]);
+
+  const toggleSubject = (subject) => setSubjectSelection((current) => (
+    current.includes(subject) ? current.filter((item) => item !== subject) : [...current, subject]
+  ));
+
+  const saveSubjects = async () => {
+    if (!subjectSelection.length || savingSubjects) return;
+    setSavingSubjects(true);
+    await onSaveSubjects(subjectSelection);
+    setSavingSubjects(false);
+  };
 
   const generateParentCode = async () => {
     if (!studentId) {
@@ -33,6 +50,8 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     [t("school"), studentProfile?.school],
     [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType)],
   ];
+  const planNameKeys = { monthly: "pf_planMonthly", quarterly: "pf_planQuarterly", yearly: "pf_planYearly" };
+  const subscriptionActive = Boolean(premiumSubscription?.expiresAt && new Date(premiumSubscription.expiresAt) > new Date());
 
   return (
     <section className="content settings-page">
@@ -55,6 +74,37 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
         <button className="secondary-btn settings-edit" type="button" onClick={onEditProfile}>
           {t("editProfile")}
         </button>
+      </section>
+      <section className="settings-details settings-subjects" aria-labelledby="settings-subjects-heading">
+        <h3 id="settings-subjects-heading">{t("chooseStudySubjects")}</h3>
+        <p>{t("chooseStudySubjectsCopy")}</p>
+        <div className="student-subject-options">
+          {subjects.map((subject) => {
+            const selected = subjectSelection.includes(subject);
+            return <button
+              type="button"
+              key={subject}
+              aria-pressed={selected}
+              className={selected ? "selected" : ""}
+              onClick={() => toggleSubject(subject)}
+            >
+              <span>{getSessionSubjectLabel(subject, t)}</span>
+              <span className="student-subject-check">{selected && <Check size={17} />}</span>
+            </button>;
+          })}
+        </div>
+        <button className="secondary-btn settings-edit" type="button" disabled={!subjectSelection.length || savingSubjects} onClick={saveSubjects}>
+          {t(savingSubjects ? "savingSubjects" : "saveSubjects")}
+        </button>
+      </section>
+      <section className="settings-details" aria-labelledby="premium-settings-heading">
+        <h3 id="premium-settings-heading">{t("pf_membershipHeading")}</h3>
+        <dl>
+          <div><dt>{t("pf_membershipPlan")}</dt><dd>{premiumSubscription?.planId && planNameKeys[premiumSubscription.planId] ? `${t("premiumFlow")} · ${t(planNameKeys[premiumSubscription.planId])}` : t("pf_freePlan")}</dd></div>
+          <div><dt>{t("pf_membershipStatus")}</dt><dd>{subscriptionActive ? t("pf_membershipActive") : premiumSubscription ? t("pf_membershipExpired") : t("pf_freePlan")}</dd></div>
+          {premiumSubscription?.expiresAt && <div><dt>{t(subscriptionActive ? "pf_validUntil" : "pf_expiredOn")}</dt><dd>{new Date(premiumSubscription.expiresAt).toLocaleDateString()}</dd></div>}
+          {premiumSubscription?.paymentType === "demo" && <div><dt>{t("pf_paymentType")}</dt><dd>{t("pf_demoPayment")}</dd></div>}
+        </dl>
       </section>
       <section className="settings-details parent-link-settings" aria-labelledby="parent-link-heading">
         <h3 id="parent-link-heading">{t("ms_pcHeading")}</h3>

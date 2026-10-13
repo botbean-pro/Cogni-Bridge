@@ -10,7 +10,7 @@ const plans = [
 
 const money = (amount) => `₹${amount.toLocaleString("en-IN")}`;
 
-export const PremiumFlowPage = ({ t, signedIn, studentEmail, studentName, cartPlan, checkoutOpen, onAddToCart, onRemoveFromCart, onBeginCheckout, onBackToPlans }) => {
+export const PremiumFlowPage = ({ t, signedIn, studentEmail, studentName, cartPlan, checkoutOpen, onAddToCart, onRemoveFromCart, onBeginCheckout, onCompletePurchase, onBackToPlans }) => {
   const selectedPlan = plans.find((plan) => plan.id === cartPlan);
 
   return (
@@ -32,8 +32,8 @@ export const PremiumFlowPage = ({ t, signedIn, studentEmail, studentName, cartPl
               <div className="premium-order-row"><div><strong>{t(selectedPlan.nameKey)}</strong><span>{t("premiumFlow")} · {t(selectedPlan.periodKey)}</span></div><strong>{money(selectedPlan.price)}</strong></div>
               <div className="premium-order-row premium-order-total"><strong>{t("pf_total")}</strong><strong>{money(selectedPlan.price)}</strong></div>
               {signedIn ? <div className="premium-account-note"><Check size={17} /> {t("pf_signedInAs", { who: studentEmail || studentName })}</div> : <div className="premium-account-note"><LockKeyhole size={17} /> {t("pf_signInCheckout")}</div>}
-              <div className="premium-payment-note"><strong>{t("pf_paymentSoonTitle")}</strong><span>{t("pf_paymentSoonCopy")}</span></div>
-              <button className="premium-pay-button" type="button" disabled>{t(signedIn ? "pf_payUnavailable" : "pf_signInToCheckout")}</button>
+              <div className="premium-payment-note"><strong>{t("pf_demoPaymentTitle")}</strong><span>{t("pf_demoPaymentCopy")}</span></div>
+              <button className="premium-pay-button premium-demo-pay-button" type="button" disabled={!signedIn} onClick={() => onCompletePurchase(selectedPlan.id)}>{t(signedIn ? "pf_demoPurchase" : "pf_signInToCheckout")}</button>
               <button className="premium-remove-button" type="button" onClick={onRemoveFromCart}>{t("pf_remove")}</button>
             </>}
           </div>

@@ -151,7 +151,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("id, display_name, role")
+        .select("id, display_name, role, preferred_subjects")
         .eq("id", data.user.id)
         .maybeSingle();
       if (profileError || !profile || profile.role !== tab) {

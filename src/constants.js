@@ -16,15 +16,19 @@ export const demoStudents = [
   { name: "Samar", email: "samar@cognibridge.com", password: "cognibridge123", role: "Student" },
   { name: "Vardaan", email: "vardaan@cognibridge.com", password: "cognibridge123", role: "Student" },
 ];
-export const subjects = ["Maths", "Science", "English", "SST", "Languages"];
+export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Art", "Physical Education"];
 export const sessionSubjectTranslations = {
   Maths: "subjectMaths",
   Science: "subjectScience",
   English: "subjectEnglish",
   SST: "subjectSST",
+  Hindi: "subjectHindi",
   Languages: "subjectLanguages",
+  "Computer Science": "subjectComputerScience",
+  Art: "subjectArt",
+  "Physical Education": "subjectPhysicalEducation",
 };
-export const getSessionSubjectLabel = (subject, t) => t(sessionSubjectTranslations[subject] || "subjectMaths");
+export const getSessionSubjectLabel = (subject, t) => sessionSubjectTranslations[subject] ? t(sessionSubjectTranslations[subject]) : subject || t("subjectMaths");
 export const indianLanguages = [["English", "English"], ["हिन्दी", "Hindi"], ["বাংলा", "Bengali"], ["తెలుగు", "Telugu"], ["मराठी", "Marathi"], ["தமிழ்", "Tamil"], ["ગુજરાતી", "Gujarati"], ["ಕನ್ನಡ", "Kannada"], ["മലയാളം", "Malayalam"], ["ਪੰਜਾਬੀ", "Punjabi"]];
 
 export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"]];

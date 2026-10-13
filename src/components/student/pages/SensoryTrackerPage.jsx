@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Trash2, Users, VolumeX, Wind } from "lucide-react";
+import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Users, VolumeX, Wind } from "lucide-react";
 import {
   causeOptions,
-  deleteStudentCheckin,
   emotionOptions,
   helpfulOptions,
   loadAssignedMentors,
@@ -35,7 +34,7 @@ const blankEntry = () => ({
   shared: false, quickReason: "",
 });
 
-function EntryDetail({ entry, reply, onDelete, t }) {
+function EntryDetail({ entry, reply, t }) {
   return (
     <div className="sensory-entry-detail">
       <p><strong>{t("sn_dFeeling")}</strong> {t(`mood_${entry.mood}`)}{entry.mood_note ? ` — ${entry.mood_note}` : ""}</p>
@@ -50,7 +49,6 @@ function EntryDetail({ entry, reply, onDelete, t }) {
       {entry.mentor_help !== "none" && <p><strong>{t("sn_dMentorSupport")}</strong> {t(`mentorHelp_${entry.mentor_help}`)}</p>}
       {entry.mentor_message && <p><strong>{t("sn_dMentorMsg")}</strong> {entry.mentor_message}</p>}
       {reply && <p><strong>{t("sn_dMentorReply")}</strong> {reply}</p>}
-      <button type="button" className="sensory-delete" onClick={() => onDelete(entry)}><Trash2 size={15} /> {t("sn_delete")}</button>
     </div>
   );
 }
@@ -209,17 +207,6 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
     }
   };
 
-  const removeEntry = async (entry) => {
-    try {
-      await deleteStudentCheckin(studentId, entry.id);
-      setEntries((current) => current.filter((item) => item.id !== entry.id));
-      setExpandedId(null);
-      setStatus(t("sn_stDeleted"));
-    } catch {
-      setStatus(t("sn_stDeleteFail"));
-    }
-  };
-
   const suggestionKeys = form.mood === 1 || form.mood === 2
     ? ["sn_sugTalk", "sn_sugBreath", "sn_sugQuieter"]
     : form.causes.includes("homework")
@@ -292,7 +279,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
       </section>
 
       <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("sn_historyEyebrow")}</span><h2>{t("sn_prevCheckins")}</h2></div></div>
-        {!sortedEntries.length ? <p className="sensory-muted">{t(parents.length ? "sn_historyEmpty" : "sn_historyEmptyPrivate")}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{t(`mood_${entry.mood}`)}{entry.emotions?.length ? ` · ${labelsFor(t, "emotion", entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · ${t("sn_energyN", { n: entry.energy })}` : ` · ${t("sn_quick")}`}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{t(entry.shared_with_mentor ? "sn_sharedTag" : "sn_privateTag")}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} onDelete={removeEntry} t={t} />}</article>)}</div>}
+        {!sortedEntries.length ? <p className="sensory-muted">{t(parents.length ? "sn_historyEmpty" : "sn_historyEmptyPrivate")}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{t(`mood_${entry.mood}`)}{entry.emotions?.length ? ` · ${labelsFor(t, "emotion", entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · ${t("sn_energyN", { n: entry.energy })}` : ` · ${t("sn_quick")}`}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{t(entry.shared_with_mentor ? "sn_sharedTag" : "sn_privateTag")}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} t={t} />}</article>)}</div>}
       </section>
     </section>
   );

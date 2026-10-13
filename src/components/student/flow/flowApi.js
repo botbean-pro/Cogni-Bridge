@@ -7,6 +7,17 @@ async function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export async function getLearningAssistantUsage() {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ task: "usage" }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Could not load Cogni-Flow usage.");
+  return { used: Number(data.used) || 0, limit: Number(data.limit) || 5000 };
+}
+
 export async function askLearningAssistant(conversation, task = "chat", language = "English") {
   const response = await fetch("/api/chat", {
     method: "POST",

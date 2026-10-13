@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const reply = (response, status, body) => response.status(status).json(body);
 
-const DAILY_TOKEN_LIMIT = Number(process.env.AI_DAILY_TOKEN_LIMIT) || 10000;
+const DAILY_TOKEN_LIMIT = 5000;
 const MAX_RESPONSE_TOKENS = 2000;
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -79,7 +79,7 @@ function isValidMessages(messages) {
   );
 }
 
-async function callOpenRouter(messages, task, language) {
+async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE_TOKENS) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL;
   if (!apiKey || !model) {
@@ -106,7 +106,7 @@ async function callOpenRouter(messages, task, language) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: MAX_RESPONSE_TOKENS,
+      max_tokens: Math.max(1, Math.min(MAX_RESPONSE_TOKENS, maxTokens)),
       messages: [{ role: "system", content: systemPrompt }, ...messages],
     }),
   });
@@ -114,10 +114,14 @@ async function callOpenRouter(messages, task, language) {
 
 async function translateChatResult(result, language, usage) {
   const input = JSON.stringify(result);
+  const translationPromptEstimate = estimateTokens(input + tutorInstructions + translationInstructions + language);
+  const translationBudget = DAILY_TOKEN_LIMIT - usage.startingTokens - usage.tokens - translationPromptEstimate;
+  if (translationBudget <= 0) return result;
   const response = await callOpenRouter(
     [{ role: "user", content: input }],
     "translate",
     language,
+    translationBudget,
   );
   const data = await response.json();
   if (response.ok) usage.tokens += tokensUsed(data, input + (data.choices?.[0]?.message?.content || ""));
@@ -152,34 +156,54 @@ export default async function handler(request, response) {
   }
 
   const { task = "chat", messages, language = "English" } = request.body || {};
+  if (task === "usage") {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return reply(response, 200, { used: 0, limit: DAILY_TOKEN_LIMIT });
+    }
+    const userClient = await getUserClient(request);
+    if (!userClient) return reply(response, 401, { error: "Sign in to view Cogni-Flow usage." });
+    const { data: used, error } = await userClient.rpc("ai_tokens_used_today");
+    if (error) return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable." });
+    return reply(response, 200, { used: Number(used) || 0, limit: DAILY_TOKEN_LIMIT });
+  }
+
   if (!["chat", "mcq", "audio"].includes(task) || !isValidMessages(messages)) {
     return reply(response, 400, { error: "A valid task and conversation are required." });
   }
 
   // Without Supabase (demo mode) there are no accounts, so the per-user limit can't apply.
   let userClient = null;
+  let usedToday = 0;
   if (supabaseUrl && supabaseAnonKey) {
     userClient = await getUserClient(request);
     if (!userClient) {
       return reply(response, 401, { error: "Sign in to use Cogni-Flow." });
     }
 
-    const { data: usedToday, error: usageError } = await userClient.rpc("ai_tokens_used_today");
+    const { data, error: usageError } = await userClient.rpc("ai_tokens_used_today");
     if (usageError) {
       return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable. Please try again later." });
     }
-    const promptEstimate = estimateTokens(messages.map((message) => message.content).join(""));
+    usedToday = Number(data) || 0;
+    const taskPrompt = task === "mcq" ? quizInstructions : task === "audio" ? audioInstructions : chatInstructions;
+    const promptEstimate = estimateTokens(messages.map((message) => message.content).join("") + tutorInstructions + taskPrompt + language);
     if (usedToday + promptEstimate >= DAILY_TOKEN_LIMIT) {
       return reply(response, 429, {
         error: "You've reached today's Cogni-Flow limit. It resets tomorrow.",
+        used: Number(usedToday) || 0,
+        limit: DAILY_TOKEN_LIMIT,
       });
     }
   }
 
-  const usage = { tokens: 0 };
+  const requestPrompt = messages.map((message) => message.content).join("");
+  const taskPrompt = task === "mcq" ? quizInstructions : task === "audio" ? audioInstructions : chatInstructions;
+  const promptEstimate = estimateTokens(requestPrompt + tutorInstructions + taskPrompt + language);
+  const responseTokenBudget = DAILY_TOKEN_LIMIT - usedToday - promptEstimate;
+  const usage = { tokens: 0, startingTokens: usedToday };
   try {
     const responseLanguage = supportedLanguages.has(language) ? language : "English";
-    const upstreamResponse = await callOpenRouter(messages, task, responseLanguage);
+    const upstreamResponse = await callOpenRouter(messages, task, responseLanguage, responseTokenBudget);
     const data = await upstreamResponse.json();
     if (upstreamResponse.ok) usage.tokens += tokensUsed(
       data,
