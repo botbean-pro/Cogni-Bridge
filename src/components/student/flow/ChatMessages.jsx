@@ -2,6 +2,7 @@
 import { ArrowUpRight, UserRound } from "lucide-react";
 import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
+import { AudioPlayer } from "./AudioNotes";
 
 function renderInline(text) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, index) => {
@@ -30,7 +31,7 @@ function FormattedAnswer({ content }) {
   );
 }
 
-function Message({ message, t }) {
+function Message({ message, language, t }) {
   const isAssistant = message.role === "assistant";
 
   return (
@@ -42,6 +43,7 @@ function Message({ message, t }) {
         <div className="message-text">
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
+        {message.audioScript && <AudioPlayer script={message.audioScript} language={language} t={t} />}
         {message.quiz && <PracticeQuestion quiz={message.quiz} t={t} />}
         <time className="message-time">
           {message.timestamp.toLocaleTimeString("en-US", {
@@ -70,10 +72,10 @@ export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
   );
 }
 
-export function ChatMessages({ messages, isLoading, messagesEndRef, t }) {
+export function ChatMessages({ messages, isLoading, messagesEndRef, language, t }) {
   return (
     <div className="ai-chat-messages" aria-live="polite">
-      {messages.map((message) => <Message key={message.id} message={message} t={t} />)}
+      {messages.map((message) => <Message key={message.id} message={message} language={language} t={t} />)}
       {isLoading && (
         <div className="ai-message assistant" aria-label={t("aiThinking")}>
           <div className="message-avatar"><LogoImage size={24} /></div>

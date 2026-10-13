@@ -262,3 +262,10 @@
   .mentor-parent-thread { padding: 12px; }
   .mentor-parent-thread form button { padding: 0 10px; }
 }
+
+.theme-dark .mentor-parent-thread { border-color: var(--line); background: var(--surface); color: var(--text); }
+.theme-dark .mentor-parent-thread-messages > p { background: var(--surface-2); color: var(--text); }
+.theme-dark .mentor-parent-thread-messages > p.from-mentor { background: #2c3b66; }
+.theme-dark .mentor-parent-thread-messages > p > strong { color: #55d4c3; }
+.theme-dark .mentor-parent-thread-messages small,.theme-dark .mentor-parent-thread > header small { color: var(--muted); }
+.theme-dark .mentor-parent-thread form input { border-color: var(--line); background: var(--surface-2); color: var(--text); }
