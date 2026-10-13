@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 
-export function ChatComposer({ input, isLoading, onChange, onSubmit, t }) {
+export function ChatComposer({ input, isLoading, disabled = false, onChange, onSubmit, t }) {
   return (
     <form className="ai-chat-input-form" onSubmit={onSubmit}>
       <div className="ai-input-wrapper">
@@ -11,13 +11,13 @@ export function ChatComposer({ input, isLoading, onChange, onSubmit, t }) {
           placeholder={t("askAnything")}
           value={input}
           onChange={(event) => onChange(event.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || disabled}
           aria-label={t("yourQuestion")}
         />
         <button
           type="submit"
           className="ai-send-btn"
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim() || isLoading || disabled}
           aria-label={t("sendMessage")}
         >
           <ChevronRight size={20} />

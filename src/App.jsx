@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { classNames, demoStudents, initialSessions, readStudents } from "./constants";
+import { classNames, demoStudents, initialSessions, readStudents, subjects } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
 import { HomePage, AboutPage, SessionsPage, StudyPage, FlowPage, MessagesPage } from "./components/LearningPages";
@@ -19,6 +19,7 @@ import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
 import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 import { ParentPortal } from "./components/parent/ParentPortal";
+import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
@@ -40,6 +41,9 @@ const App = () => {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupStudentClass, setSignupStudentClass] = useState("");
   const [studentProfile, setStudentProfile] = useState(null);
+  const [preferredSubjects, setPreferredSubjects] = useState([]);
+  const [subjectSelectionPending, setSubjectSelectionPending] = useState(false);
+  const subjectSelectionUser = useRef(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [authUserId, setAuthUserId] = useState(null);
   const [authRole, setAuthRole] = useState(null);
@@ -52,6 +56,7 @@ const App = () => {
   const [toast, setToast] = useState("");
   const [premiumCartPlan, setPremiumCartPlan] = useState(null);
   const [premiumCheckoutOpen, setPremiumCheckoutOpen] = useState(false);
+  const [premiumSubscription, setPremiumSubscription] = useState(null);
   const [pendingPremiumLogin, setPendingPremiumLogin] = useState(false);
   const t = useMemo(
     () => (key, values) => translate(studentLanguage, key, values),
@@ -66,6 +71,76 @@ const App = () => {
   );
   const classLabel = String(studentProfile?.studentClass || "").trim().toLowerCase();
   const isGrade12 = /(^|[^a-z0-9])(12(?:th)?|xii|twelfth)(?=$|[^a-z0-9])/.test(classLabel);
+  const studentSessions = preferredSubjects.length
+    ? sessions.filter((session) => preferredSubjects.includes(session.subject))
+    : sessions;
+
+  const savePreferredSubjects = async (selection) => {
+    const selected = subjects.filter((subject) => selection.includes(subject));
+    if (!selected.length) return false;
+    if (supabaseConfigured) {
+      if (!authUserId) {
+        notify(t("subjectSaveError"));
+        return false;
+      }
+      const { error } = await supabase.from("profiles").update({ preferred_subjects: selected }).eq("id", authUserId);
+      if (error) {
+        notify(t("subjectSaveError"));
+        return false;
+      }
+    } else {
+      try {
+        const updatedStudents = readStudents().map((student) => (
+          student.email?.toLowerCase() === (studentEmail || signupEmail).toLowerCase()
+            ? { ...student, preferredSubjects: selected }
+            : student
+        ));
+        localStorage.setItem("cognibridge_students", JSON.stringify(updatedStudents));
+      } catch {
+        notify(t("subjectSaveError"));
+        return false;
+      }
+    }
+    setPreferredSubjects(selected);
+    setStudentProfile((profile) => profile ? { ...profile, preferredSubjects: selected } : profile);
+    setSubjectSelectionPending(false);
+    subjectSelectionUser.current = authUserId || (studentEmail || signupEmail).toLowerCase();
+    return true;
+  };
+
+  useEffect(() => {
+    if (!studentEmail) {
+      setPremiumSubscription(null);
+      return;
+    }
+    try {
+      setPremiumSubscription(JSON.parse(localStorage.getItem(`cognibridge_premium_${studentEmail.toLowerCase()}`) || "null"));
+    } catch {
+      setPremiumSubscription(null);
+    }
+  }, [studentEmail]);
+
+  const completeDemoPurchase = (planId) => {
+    const months = { monthly: 1, quarterly: 3, yearly: 12 }[planId];
+    if (!signedIn || !studentEmail || !months) return;
+    const purchasedAt = new Date();
+    const expiresAt = new Date(purchasedAt);
+    const expiryDay = expiresAt.getDate();
+    expiresAt.setDate(1);
+    expiresAt.setMonth(expiresAt.getMonth() + months);
+    expiresAt.setDate(Math.min(expiryDay, new Date(expiresAt.getFullYear(), expiresAt.getMonth() + 1, 0).getDate()));
+    const purchase = { planId, purchasedAt: purchasedAt.toISOString(), expiresAt: expiresAt.toISOString(), paymentType: "demo" };
+    try {
+      localStorage.setItem(`cognibridge_premium_${studentEmail.toLowerCase()}`, JSON.stringify(purchase));
+    } catch {
+      // Keep the demo purchase visible for this session if browser storage is unavailable.
+    }
+    setPremiumSubscription(purchase);
+    setPremiumCheckoutOpen(false);
+    setPremiumCartPlan(null);
+    setActiveTab("settings");
+    setToast(t("pf_demoSuccessToast"));
+  };
 
   const scrollToAbout = () => {
     const aboutSection = document.getElementById("about-us");
@@ -113,6 +188,9 @@ const App = () => {
       setSignedIn(false);
       setStudentProfile(null);
       setStudentEmail("");
+      setPreferredSubjects([]);
+      setSubjectSelectionPending(false);
+      subjectSelectionUser.current = null;
       setMentorOpen(false);
       setParentOpen(false);
       setLearningNotes([]);
@@ -127,7 +205,7 @@ const App = () => {
       oauthRole = window.localStorage.getItem("cognibridge_oauth_role");
     } catch { /* storage unavailable */ }
     const loadProfile = () => supabase.from("profiles")
-      .select("id, display_name, role")
+      .select("id, display_name, role, preferred_subjects")
       .eq("id", user.id)
       .maybeSingle();
     loadProfile()
@@ -157,10 +235,16 @@ const App = () => {
         setAuthUserId(user.id);
         setAuthRole(profile.role);
         if (profile.role === "student") {
+          const selectedSubjects = Array.isArray(profile.preferred_subjects) ? profile.preferred_subjects : [];
+          setPreferredSubjects(selectedSubjects);
+          if (subjectSelectionUser.current !== user.id) {
+            setSubjectSelectionPending(true);
+            subjectSelectionUser.current = user.id;
+          }
           setMentorOpen(false);
           setSignedIn(true);
           setStudentEmail(user.email || "");
-          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "" });
+          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: selectedSubjects });
           loadLatestHandwriting(user.id).then((handwriting) => {
             if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
           }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
@@ -355,6 +439,9 @@ const App = () => {
     setActiveTab("home");
     setStudentProfile(null);
     setStudentEmail("");
+    setPreferredSubjects([]);
+    setSubjectSelectionPending(false);
+    subjectSelectionUser.current = null;
     setAttendedSessionIds(new Set());
     notify(t("loggedOut"));
   };
@@ -449,6 +536,14 @@ const App = () => {
     );
   }
 
+  if (subjectSelectionPending) {
+    return (
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+      </div>
+    );
+  }
+
   if (signupEmail) {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
@@ -462,6 +557,7 @@ const App = () => {
             setSignupStudentClass("");
             setStudentProfile(profile);
             setStudentEmail(profile.email);
+            setPreferredSubjects(preferredSubjects);
             setSignedIn(true);
             setActiveTab(pendingPremiumLogin ? "premium" : "study");
             setPendingPremiumLogin(false);
@@ -481,6 +577,7 @@ const App = () => {
           onBack={() => setProfileOpen(false)}
           onComplete={(profile) => {
             setStudentProfile(profile);
+            setPreferredSubjects(profile.preferredSubjects || preferredSubjects);
             setProfileOpen(false);
           }}
         />
@@ -499,11 +596,17 @@ const App = () => {
             if (account.requiresProfileSetup) {
               setSignupEmail(account.email);
               setSignupStudentClass(account.studentClass);
+              setPreferredSubjects([]);
+              setSubjectSelectionPending(true);
+              subjectSelectionUser.current = account.email.toLowerCase();
             } else {
               setStudentEmail(account.email);
               setStudentProfile({ id: account.id, email: account.email, name: account.name, studentClass: account.studentClass });
               setAuthUserId(account.id);
               setAuthRole("student");
+              setPreferredSubjects([]);
+              setSubjectSelectionPending(true);
+              subjectSelectionUser.current = account.id;
               setSignedIn(true);
               setActiveTab("study");
             }
@@ -548,7 +651,7 @@ const App = () => {
             <HomePage
               signedIn={signedIn}
               t={t}
-              sessions={sessions}
+              sessions={studentSessions}
               studentEmail={studentEmail}
               studentName={studentName}
               handwritingType={studentProfile?.handwritingType}
@@ -565,10 +668,11 @@ const App = () => {
           leaderboard: <LeaderboardPage signedIn={signedIn} t={t} />,
           sessions: (
             <SessionsPage
-              sessions={sessions}
+              sessions={studentSessions}
               notes={learningNotes}
               selectedSession={selectedSession}
               signedIn={signedIn}
+              preferredSubjects={preferredSubjects}
               t={t}
               registeredSessionIds={registeredSessionIds}
               attendedSessionIds={attendedSessionIds}
@@ -581,10 +685,12 @@ const App = () => {
           ),
           study: (
             <StudyPage
-              sessions={sessions}
+              sessions={studentSessions}
+              registeredSessionIds={registeredSessionIds}
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
+              onEditHandwriting={() => setProfileOpen(true)}
               t={t}
               onOpenSession={(session) => {
                 setSelectedSession(session);
@@ -593,7 +699,7 @@ const App = () => {
             />
           ),
           careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
-          flow: <FlowPage t={t} language={studentLanguage} />,
+          flow: <FlowPage t={t} language={studentLanguage} studentEmail={studentEmail} />,
           premium: <PremiumFlowPage
             t={t}
             signedIn={signedIn}
@@ -601,6 +707,7 @@ const App = () => {
             studentName={studentName}
             cartPlan={premiumCartPlan}
             checkoutOpen={premiumCheckoutOpen}
+            onCompletePurchase={completeDemoPurchase}
             onAddToCart={setPremiumCartPlan}
             onRemoveFromCart={() => setPremiumCartPlan(null)}
             onBeginCheckout={() => {
@@ -619,6 +726,9 @@ const App = () => {
               studentId={authUserId}
               studentName={studentName}
               studentProfile={studentProfile}
+              preferredSubjects={preferredSubjects}
+              onSaveSubjects={savePreferredSubjects}
+              premiumSubscription={premiumSubscription}
               activityVersion={activityVersion}
               onEditProfile={() => setProfileOpen(true)}
               t={t}
@@ -648,6 +758,10 @@ const App = () => {
               : null;
             setStudentProfile(savedStudent || null);
             setStudentEmail(normalizedEmail);
+            const selectedSubjects = profile?.preferred_subjects || savedStudent?.preferredSubjects || [];
+            setPreferredSubjects(Array.isArray(selectedSubjects) ? selectedSubjects : []);
+            setSubjectSelectionPending(true);
+            subjectSelectionUser.current = userId || normalizedEmail;
             setAuthUserId(userId || null);
             setAuthRole(profile?.role || null);
             setSignedIn(true);

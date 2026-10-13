@@ -93,7 +93,6 @@
 .sensory-history-entry em { width:max-content; padding:3px 7px; border-radius:99px; background:var(--surface-2); color:var(--muted); font-size:10px; font-style:normal; }
 .sensory-history-entry em.is-shared { background:#eaf6f3; color:var(--teal); }
 .sensory-entry-detail { padding:2px 2px 15px; color:var(--text); font-size:13px; line-height:1.5; }
-.sensory-delete { display:inline-flex; align-items:center; gap:6px; padding:7px 9px; border:1px solid #e7bebe; border-radius:8px; background:transparent; color:#9e4141; font:inherit; cursor:pointer; }
 .theme-dark .sensory-mood-options button.selected,.theme-dark .sensory-chips button.selected,.theme-dark .sensory-status,.theme-dark .sensory-history-entry em.is-shared { background:#203b3c; }
 .theme-dark .sensory-demo-banner { border-color:#63583f; background:#332f24; color:#eee0b8; }
 @media (max-width:650px) { .sensory-heading { align-items:flex-start; flex-direction:column; } .sensory-heading-actions { align-items:flex-start; flex-direction:column; } .sensory-heading > span { font-size:12px; } .break-banner { align-items:flex-start; flex-direction:column; } .break-banner > button { width:100%; } .calm-tools { grid-template-columns:1fr; } .calm-breath-card { align-items:flex-start; } .sensory-card { padding:17px; } .sensory-mood-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .sensory-submit { width:100%; } }

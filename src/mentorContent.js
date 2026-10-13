@@ -138,6 +138,13 @@ export async function deleteMentorNote(note) {
   await supabase.storage.from("mentor-notes").remove([note.filePath]);
 }
 
+export async function getNotePreviewUrl(note) {
+  if (note.dataUrl) return note.dataUrl;
+  return throwIfError(await supabase.storage
+    .from("mentor-notes")
+    .createSignedUrl(note.filePath, 60 * 60)).signedUrl;
+}
+
 export async function uploadMentorNote(mentorId, { title, subject, file }) {
   // Storage keys reject some characters (e.g. brackets or non-Latin script), so store a
   // safe name and keep the original in file_name.

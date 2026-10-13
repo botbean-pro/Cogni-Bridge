@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+import { MessageSquarePlus } from "lucide-react";
 import { ChatHeader } from "../flow/ChatHeader";
 import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
 import { QuickPrompts } from "../flow/QuickPrompts";
-import { askLearningAssistant } from "../flow/flowApi";
+import { askLearningAssistant, getLearningAssistantUsage } from "../flow/flowApi";
 import "../flow/flow.css";
 
 // "Turn these notes into audio", "read this aloud", "make this a podcast" and similar asks.
@@ -26,8 +27,22 @@ const welcomeMessage = (t) => ({
   timestamp: new Date(),
 });
 
-export function FlowPage({ t, language }) {
+const historyStorageKey = (studentEmail) => `cognibridge_flow_history_${studentEmail?.toLowerCase() || "guest"}`;
+const makeConversationId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+export function FlowPage({ t, language, studentEmail }) {
   const [messages, setMessages] = useState(() => [welcomeMessage(t)]);
+  const [usage, setUsage] = useState({ used: 0, limit: 5000 });
+  const [activeConversationId, setActiveConversationId] = useState(makeConversationId);
+  const [conversations, setConversations] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(historyStorageKey(studentEmail)) || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,6 +50,60 @@ export function FlowPage({ t, language }) {
   const hasAskedQuestion = messages.some((message) => message.role === "user");
   const latestMessage = messages[messages.length - 1];
   const relatedQuestions = latestMessage?.role === "assistant" ? latestMessage.relatedQuestions : null;
+  const remainingTokens = Math.max(0, usage.limit - usage.used);
+  const refreshUsage = async () => {
+    try {
+      setUsage(await getLearningAssistantUsage());
+    } catch {
+      // The assistant remains usable if the usage meter cannot refresh.
+    }
+  };
+
+  useEffect(() => {
+    refreshUsage();
+  }, [studentEmail]);
+
+  useEffect(() => {
+    const firstQuestion = messages.find((message) => message.role === "user");
+    if (!firstQuestion) return;
+
+    const conversation = {
+      id: activeConversationId,
+      title: firstQuestion.content.slice(0, 64),
+      updatedAt: new Date().toISOString(),
+      messages: messages.map((message) => ({
+        ...message,
+        timestamp: message.timestamp instanceof Date ? message.timestamp.toISOString() : message.timestamp,
+      })),
+    };
+    setConversations((current) => {
+      const updated = [conversation, ...current.filter((item) => item.id !== activeConversationId)].slice(0, 30);
+      try {
+        localStorage.setItem(historyStorageKey(studentEmail), JSON.stringify(updated));
+      } catch {
+        // Chat remains usable when browser storage is unavailable.
+      }
+      return updated;
+    });
+  }, [messages, activeConversationId, studentEmail]);
+
+  const openConversation = (conversation) => {
+    setActiveConversationId(conversation.id);
+    setMessages(conversation.messages.map((message) => ({
+      ...message,
+      timestamp: new Date(message.timestamp),
+    })));
+    setHistoryOpen(false);
+    setError("");
+  };
+
+  const startNewConversation = () => {
+    setActiveConversationId(makeConversationId());
+    setMessages([welcomeMessage(t)]);
+    setInput("");
+    setError("");
+    setHistoryOpen(false);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,6 +153,7 @@ export function FlowPage({ t, language }) {
     } catch (requestError) {
       setError(requestError.message);
     } finally {
+      await refreshUsage();
       setIsLoading(false);
     }
   };
@@ -108,6 +178,7 @@ export function FlowPage({ t, language }) {
     } catch (requestError) {
       setError(requestError.message);
     } finally {
+      await refreshUsage();
       setIsLoading(false);
     }
   };
@@ -141,7 +212,23 @@ export function FlowPage({ t, language }) {
   return (
     <section className="content ai-chat-page">
       <div className="ai-chat-container">
-        <ChatHeader t={t} />
+        <ChatHeader t={t} onOpenHistory={() => setHistoryOpen((open) => !open)} />
+        <div className="ai-usage-meter" role="status" aria-label={t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}>
+          <span>{t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}</span>
+          <div className="ai-usage-track" aria-hidden="true"><span style={{ width: `${Math.min(100, (usage.used / usage.limit) * 100)}%` }} /></div>
+        </div>
+        {historyOpen && <section className="ai-chat-history" aria-label={t("chatHistory")}>
+          <div className="ai-chat-history-heading">
+            <h3>{t("chatHistory")}</h3>
+            <button type="button" onClick={startNewConversation}><MessageSquarePlus size={16} />{t("newChat")}</button>
+          </div>
+          {conversations.length ? <div className="ai-chat-history-list">
+            {conversations.map((conversation) => <button type="button" key={conversation.id} onClick={() => openConversation(conversation)}>
+              <strong>{conversation.title}</strong>
+              <time>{new Date(conversation.updatedAt).toLocaleDateString()}</time>
+            </button>)}
+          </div> : <p>{t("noChatHistory")}</p>}
+        </section>}
         <ChatMessages
           messages={messages}
           isLoading={isLoading}
@@ -167,6 +254,7 @@ export function FlowPage({ t, language }) {
         <ChatComposer
           input={input}
           isLoading={isLoading}
+          disabled={remainingTokens <= 0}
           onChange={setInput}
           onSubmit={sendMessage}
           t={t}
