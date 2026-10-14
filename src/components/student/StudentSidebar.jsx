@@ -32,7 +32,7 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
       <div className="student-rail-brand">
         <span className="student-rail-logo"><LogoImage size={42} /></span>
         <span className="student-rail-brand-copy"><strong>CogniBridge</strong><small>{t("learnTogether")}</small></span>
-        <button type="button" className="student-rail-toggle" onClick={() => setPinnedOpen((open) => !open)} aria-label={pinnedOpen ? "Collapse navigation" : "Expand navigation"} aria-expanded={pinnedOpen}>
+        <button type="button" className="student-rail-toggle" onClick={() => setPinnedOpen((open) => !open)} aria-label={pinnedOpen ? t("collapseNavigation") : t("expandNavigation")} aria-expanded={pinnedOpen}>
           {pinnedOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
       </div>

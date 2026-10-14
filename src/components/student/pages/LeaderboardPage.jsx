@@ -86,7 +86,7 @@ export function LeaderboardPage({ signedIn, t }) {
             <div className="podium-medal">{index + 1}</div>
             <span className="podium-avatar">{student.name[0]}</span>
             <strong>{student.name}</strong>
-            <span className="podium-score">{student.points} pts</span>
+            <span className="podium-score">{student.points} {t("lb_pts")}</span>
             <span className="streak-badge"><Flame size={15} fill="currentColor" /> {student.streak} {t("streak")}</span>
           </article>
         ))}
@@ -101,7 +101,7 @@ export function LeaderboardPage({ signedIn, t }) {
           >
             <span className="leaderboard-rank">{index === 0 ? <Trophy size={19} /> : index + 1}</span>
             <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><strong>{student.name}</strong></span>
-            <span className="leaderboard-attendance">{student.attended} <small>of {student.registered}</small></span>
+            <span className="leaderboard-attendance">{student.attended} <small>{t("lb_of")} {student.registered}</small></span>
             <span className="leaderboard-streak"><Flame size={15} fill="currentColor" /> {student.streak}</span>
             <span className="leaderboard-points">{student.points}<small> {t("lb_pts")}</small></span>
           </div>

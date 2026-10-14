@@ -31,6 +31,18 @@ function FormattedAnswer({ content }) {
   );
 }
 
+const timeLocales = {
+  Hindi: "hi-IN",
+  Bengali: "bn-IN",
+  Telugu: "te-IN",
+  Marathi: "mr-IN",
+  Tamil: "ta-IN",
+  Gujarati: "gu-IN",
+  Kannada: "kn-IN",
+  Malayalam: "ml-IN",
+  Punjabi: "pa-IN",
+};
+
 function Message({ message, language, t }) {
   const isAssistant = message.role === "assistant";
 
@@ -46,7 +58,7 @@ function Message({ message, language, t }) {
         {message.audioScript && <AudioPlayer script={message.audioScript} language={language} t={t} />}
         {message.quiz && <PracticeQuestion quiz={message.quiz} t={t} />}
         <time className="message-time">
-          {message.timestamp.toLocaleTimeString("en-US", {
+          {message.timestamp.toLocaleTimeString(timeLocales[language] || "en-US", {
             hour: "2-digit",
             minute: "2-digit",
           })}
