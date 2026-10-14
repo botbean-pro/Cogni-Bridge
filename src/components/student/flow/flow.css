@@ -76,10 +76,13 @@
 .formatted-answer code { padding:2px 5px; border-radius:5px; background:var(--surface-2); font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.92em; }
 .related-questions { padding:12px 24px 14px; border-top:1px solid var(--line); background:var(--surface); }
 .related-question-cards { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
-.related-question-cards button { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--text); font:inherit; text-align:left; line-height:1.4; cursor:pointer; transition:border-color .2s, transform .2s, background .2s; }
-.related-question-cards button:hover { transform:translateY(-1px); border-color:var(--teal); background:#e9f6f4; }
-.related-question-cards svg { flex:0 0 auto; color:var(--teal); }
-.theme-dark .related-question-cards button:hover { background:#294444; }
+.related-question-card { position:relative; }
+.related-question-card > button:first-child { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:11px 24px 11px 13px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--text); font:inherit; text-align:left; line-height:1.4; cursor:pointer; transition:border-color .2s, transform .2s, background .2s; }
+.related-question-card > button:first-child:hover { transform:translateY(-1px); border-color:var(--teal); background:#e9f6f4; }
+.related-question-card svg { flex:0 0 auto; color:var(--teal); }
+.theme-dark .related-question-card > button:first-child:hover { background:#294444; }
+.related-question-dismiss { position:absolute; top:5px; right:5px; display:flex; align-items:center; justify-content:center; width:16px; height:16px; padding:0; border:none; border-radius:50%; background:transparent; color:var(--muted); cursor:pointer; transition:background .2s, color .2s; }
+.related-question-dismiss:hover { background:var(--surface-2); color:var(--text); }
 .ai-message.assistant .message-avatar { background:#fff; border:1px solid var(--line); }
 .quick-prompt-btn img { flex-shrink:0; }
 

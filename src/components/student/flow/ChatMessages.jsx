@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { ArrowUpRight, UserRound } from "lucide-react";
+import { ArrowUpRight, UserRound, X } from "lucide-react";
 import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
 import { AudioPlayer } from "./AudioNotes";
@@ -57,15 +57,29 @@ function Message({ message, language, t }) {
 }
 
 export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
-  if (!questions?.length) return null;
+  const [dismissed, setDismissed] = React.useState([]);
+  React.useEffect(() => setDismissed([]), [questions]);
+
+  const visible = questions?.filter((question) => !dismissed.includes(question));
+  if (!visible?.length) return null;
   return (
     <div className="related-questions">
       <p className="quick-prompts-title">{t("relatedTopics")}</p>
       <div className="related-question-cards" aria-label={t("relatedTopics")}>
-        {questions.slice(0, 4).map((question) => (
-          <button key={question} type="button" onClick={() => onAsk(question)} disabled={disabled}>
-            <span>{question}</span><ArrowUpRight size={16} />
-          </button>
+        {visible.slice(0, 4).map((question) => (
+          <div key={question} className="related-question-card">
+            <button type="button" onClick={() => onAsk(question)} disabled={disabled}>
+              <span>{question}</span><ArrowUpRight size={16} />
+            </button>
+            <button
+              type="button"
+              className="related-question-dismiss"
+              onClick={() => setDismissed((prev) => [...prev, question])}
+              aria-label={t("dismiss")}
+            >
+              <X size={11} />
+            </button>
+          </div>
         ))}
       </div>
     </div>
