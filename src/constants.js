@@ -16,7 +16,7 @@ export const demoStudents = [
   { name: "Samar", email: "samar@cognibridge.com", password: "cognibridge123", role: "Student" },
   { name: "Vardaan", email: "vardaan@cognibridge.com", password: "cognibridge123", role: "Student" },
 ];
-export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Artificial Intelligence", "Art", "Physical Education"];
+export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Artificial Intelligence", "Art"];
 export const sessionSubjectTranslations = {
   Maths: "subjectMaths",
   Science: "subjectScience",
@@ -27,7 +27,6 @@ export const sessionSubjectTranslations = {
   "Computer Science": "subjectComputerScience",
   "Artificial Intelligence": "subjectArtificialIntelligence",
   Art: "subjectArt",
-  "Physical Education": "subjectPhysicalEducation",
 };
 export const getSessionSubjectLabel = (subject, t) => sessionSubjectTranslations[subject] ? t(sessionSubjectTranslations[subject]) : subject || t("subjectMaths");
 const sessionTitleTranslations = {

@@ -84,9 +84,11 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
   const [previewUrl, setPreviewUrl] = useState("");
   const [loadingPreviewId, setLoadingPreviewId] = useState(null);
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
-  const subjectTabs = preferredSubjects.length
-    ? [...preferredSubjects, ...new Set(sessions.map((session) => session.subject).filter((subject) => subject && !preferredSubjects.includes(subject)))]
-    : [...subjects, ...new Set(sessions.map((session) => session.subject).filter((subject) => subject && !subjects.includes(subject)))];
+  const availableSessions = sessions.filter((session) => session.subject !== "Physical Education");
+  const availablePreferredSubjects = preferredSubjects.filter((subject) => subjects.includes(subject));
+  const subjectTabs = availablePreferredSubjects.length
+    ? [...availablePreferredSubjects, ...new Set(availableSessions.map((session) => session.subject).filter((subject) => subject && !availablePreferredSubjects.includes(subject)))]
+    : [...subjects, ...new Set(availableSessions.map((session) => session.subject).filter((subject) => subject && !subjects.includes(subject)))];
 
   const download = async (note) => {
     setDownloadError("");
@@ -156,7 +158,7 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
           t={t}
         />
       ) : (
-        <SessionList sessions={sessions} onSelect={onSelect} t={t} activeSubject={activeSubject} />
+        <SessionList sessions={availableSessions} onSelect={onSelect} t={t} activeSubject={activeSubject} />
       )}
     </section>
   );

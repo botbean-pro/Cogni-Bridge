@@ -71,9 +71,10 @@ const App = () => {
   );
   const classLabel = String(studentProfile?.studentClass || "").trim().toLowerCase();
   const isGrade12 = /(^|[^a-z0-9])(12(?:th)?|xii|twelfth)(?=$|[^a-z0-9])/.test(classLabel);
-  const studentSessions = preferredSubjects.length
-    ? sessions.filter((session) => preferredSubjects.includes(session.subject))
-    : sessions;
+  const studentSessions = sessions.filter((session) => (
+    session.subject !== "Physical Education"
+    && (!preferredSubjects.length || preferredSubjects.includes(session.subject))
+  ));
 
   const savePreferredSubjects = async (selection) => {
     const selected = subjects.filter((subject) => selection.includes(subject));
