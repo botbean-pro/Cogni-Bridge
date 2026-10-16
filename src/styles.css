@@ -1084,3 +1084,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   .quick-prompt-row { min-width:0; }
   .ai-chat-input-form { padding:14px 16px 16px; }
 }
+
+/* Long names end in "..." instead of pushing the log out button out of the rail. */
+.student-rail-logout { min-width:0; max-width:100%; }
+.student-rail-logout > span:not(.avatar-small) { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

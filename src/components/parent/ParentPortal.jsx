@@ -3,6 +3,7 @@ import { Accessibility, LogOut } from "lucide-react";
 import { MouseTrail } from "../Brand";
 import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
 import { ParentSidebar } from "./ParentSidebar";
+import { useRouteTab } from "../../routes";
 import { ConnectChildCard } from "./shared/ConnectChildCard";
 import { ParentMoodsPage } from "./pages/ParentMoodsPage";
 import { ParentOverviewPage } from "./pages/ParentOverviewPage";
@@ -24,12 +25,14 @@ function ParentLoading({ t }) {
   );
 }
 
+const parentTabs = ["overview", "moods", "sessions", "teachers"];
+
 const pickChild = (children, currentId) => (
   children.some((child) => child.id === currentId) ? currentId : children[0]?.id ?? null
 );
 
 export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen, onToggleAccessibility, accessibilityPanel, t }) {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useRouteTab("parent", parentTabs);
   const [portal, setPortal] = useState(null);
   const [childId, setChildId] = useState(null);
   const [childData, setChildData] = useState(null);

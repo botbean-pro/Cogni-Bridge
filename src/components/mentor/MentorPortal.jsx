@@ -4,6 +4,9 @@ import { createPrivateSession } from "../../privateSessions";
 import { createSession, deleteMentorNote, downloadNote, loadMentorNotes, updateSession, uploadMentorNote, viewNote } from "../../mentorContent";
 import { supabaseConfigured } from "../../supabaseClient";
 import { MentorDashboard } from "./pages/MentorDashboard";
+import { useRouteTab } from "../../routes";
+
+const mentorTabs = ["overview", "performance", "leaderboard", "schedule", "notes", "sensory", "settings"];
 import { MentorLoginPage } from "./pages/MentorLoginPage";
 import { LanguagePicker } from "../AccessAndAuth";
 
@@ -24,7 +27,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useRouteTab("mentor", mentorTabs);
   const [form, setForm] = useState(createSessionForm);
   const [privateVersion, setPrivateVersion] = useState(0);
   const [editingSessionId, setEditingSessionId] = useState(null);
