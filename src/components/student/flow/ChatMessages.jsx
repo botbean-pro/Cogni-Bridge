@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { ArrowUpRight, Sparkles, UserRound } from "lucide-react";
+import { ArrowUpRight, Sparkles, UserRound, X } from "lucide-react";
 import { PracticeQuestion } from "./PracticeQuestion";
 
 function renderInline(text) {
@@ -60,13 +60,20 @@ function Message({ message, t, onAskRelated, disabled }) {
 }
 
 export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
-  if (!questions?.length) return null;
+  const [dismissedQuestions, setDismissedQuestions] = React.useState([]);
+  const visibleQuestions = questions?.filter((question) => !dismissedQuestions.includes(question)) || [];
+  if (!visibleQuestions.length) return null;
   return (
     <div className="related-question-cards" aria-label={t("relatedTopics")}>
-      {questions.slice(0, 4).map((question) => (
-        <button key={question} type="button" onClick={() => onAsk(question)} disabled={disabled}>
-          <span>{question}</span><ArrowUpRight size={16} />
-        </button>
+      {visibleQuestions.slice(0, 4).map((question) => (
+        <div className="related-question-row" key={question}>
+          <button className="related-question-prompt" type="button" onClick={() => onAsk(question)} disabled={disabled}>
+            <span>{question}</span><ArrowUpRight size={16} />
+          </button>
+          <button className="related-question-dismiss" type="button" aria-label={t("close")} title={t("close")} onClick={() => setDismissedQuestions((current) => [...current, question])}>
+            <X size={15} />
+          </button>
+        </div>
       ))}
     </div>
   );

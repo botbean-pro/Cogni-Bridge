@@ -30,6 +30,8 @@
 .parent-brand strong { font-size: 17px; }
 .parent-brand small { color: #bdcecc; }
 .parent-header-user { gap: 18px; }
+.parent-header-user .language-picker-compact { width: 150px; padding: 0; border: 0; }
+.parent-header-user .language-picker-compact select { color: #203335; }
 .parent-header-user button { gap: 8px; border: 0; padding: 10px 13px; border-radius: 9px; color: inherit; background: #304547; cursor: pointer; }
 .parent-content { width: min(1080px, calc(100% - 36px)); margin: 0 auto; padding: 34px 0 64px; }
 .parent-welcome { justify-content: space-between; gap: 24px; padding: 28px 32px; border-radius: 18px; color: #fff; background: linear-gradient(120deg, #087f76, #0aa692); }
@@ -87,6 +89,43 @@
 .student-parent-code { display: flex; flex-direction: column; gap: 5px; width: fit-content; padding: 12px 15px; border-radius: 10px; color: #176a4c !important; background: #e8f8ef; }
 .student-parent-code strong { letter-spacing: .15em; font-size: 22px; }
 .parent-link-error { color: #9b3434 !important; }
+
+.theme-dark .parent-portal { color:var(--text); background:var(--canvas); }
+.theme-dark .parent-header { background:#101a1d; }
+.theme-dark .parent-header-user .language-picker-compact select { border-color:var(--line); color:var(--text); background-color:var(--surface); }
+.theme-dark .parent-connect-card,
+.theme-dark .parent-summary article,
+.theme-dark .parent-child-card { border-color:var(--line); background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+.theme-dark .parent-connect-card h2,
+.theme-dark .parent-section-heading h2,
+.theme-dark .parent-empty strong { color:var(--text); }
+.theme-dark .parent-connect-card p,
+.theme-dark .parent-connect-card form label,
+.theme-dark .parent-summary article span,
+.theme-dark .parent-child-heading p,
+.theme-dark .parent-child-stats span,
+.theme-dark .parent-subject-list small,
+.theme-dark .parent-no-teacher,
+.theme-dark .parent-link-settings > p { color:var(--muted); }
+.theme-dark .parent-connect-card input,
+.theme-dark .parent-teacher-thread input { border-color:var(--line); color:var(--text); background:var(--surface-2); }
+.theme-dark .parent-summary article svg,
+.theme-dark .parent-teachers h4 svg { color:#55d5c3; }
+.theme-dark .parent-child-stats > div { background:var(--surface-2); }
+.theme-dark .parent-child-stats strong { color:#72dfd0; }
+.theme-dark .parent-subject-list > span { color:#b8eee6; background:#294745; }
+.theme-dark .parent-teachers { border-color:var(--line); }
+.theme-dark .parent-teacher-thread { border-color:var(--line); background:#182629; }
+.theme-dark .parent-thread-messages > p { color:var(--text); background:#294745; }
+.theme-dark .parent-thread-messages > p.from-parent { background:#303b59; }
+.theme-dark .parent-thread-messages > p > span { color:#8ce5d8; }
+.theme-dark .parent-thread-messages > p > small,
+.theme-dark .parent-thread-messages > small { color:var(--muted); }
+.theme-dark .parent-empty { border-color:var(--line); color:var(--muted); }
+.theme-dark .parent-error { color:#ffb4b4; background:#45292b; }
+.theme-dark .parent-success,
+.theme-dark .student-parent-code { color:#9ce7c1 !important; background:#203b32; }
+.theme-dark .parent-link-error { color:#ffb4b4 !important; }
 
 @media (max-width: 720px) {
   .parent-header { padding: 12px 16px; }

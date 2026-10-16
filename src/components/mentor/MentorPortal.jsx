@@ -4,6 +4,7 @@ import { createSession, loadMentorNotes, updateSession, uploadMentorNote } from 
 import { supabaseConfigured } from "../../supabaseClient";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { MentorLoginPage } from "./pages/MentorLoginPage";
+import { LanguagePicker } from "../AccessAndAuth";
 
 const createSessionForm = () => ({
   title: "",
@@ -16,7 +17,7 @@ const createSessionForm = () => ({
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
-export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorId, onAddSession, onUpdateSession, onAddNote, onLoadNotes, onBack, accessibilityOpen, onToggleAccessibility, t }) {
+export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorId, language, setLanguage, onAddSession, onUpdateSession, onAddNote, onLoadNotes, onBack, accessibilityOpen, onToggleAccessibility, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -155,6 +156,8 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
 
   if (!loggedIn) {
     return (
+      <div className="mentor-login-shell">
+      <div className="mentor-login-language"><LanguagePicker compact value={language} onChange={setLanguage} t={t} /></div>
       <MentorLoginPage
         email={email}
         password={password}
@@ -165,6 +168,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
         onSubmit={signIn}
         onBack={onBack}
       />
+      </div>
     );
   }
 

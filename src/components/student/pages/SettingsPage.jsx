@@ -6,19 +6,30 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
   const [parentCode, setParentCode] = useState("");
   const [parentCodeError, setParentCodeError] = useState("");
   const [creatingParentCode, setCreatingParentCode] = useState(false);
+  const [parentCodeCopied, setParentCodeCopied] = useState(false);
+
+  const copyParentCode = async () => {
+    try {
+      await navigator.clipboard.writeText(parentCode);
+      setParentCodeCopied(true);
+    } catch {
+      setParentCodeError(t("copyCodeError"));
+    }
+  };
 
   const generateParentCode = async () => {
     if (!studentId) {
-      setParentCodeError("Sign in with your student account to create a parent connection code.");
+      setParentCodeError(t("signInForParentCode"));
       return;
     }
     setCreatingParentCode(true);
     setParentCodeError("");
     setParentCode("");
+    setParentCodeCopied(false);
     try {
       setParentCode(await createParentLinkCode(studentId));
     } catch {
-      setParentCodeError("A connection code couldn't be created. Please try again.");
+      setParentCodeError(t("createParentCodeError"));
     } finally {
       setCreatingParentCode(false);
     }
@@ -56,12 +67,20 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
         </button>
       </section>
       <section className="settings-details parent-link-settings" aria-labelledby="parent-link-heading">
-        <h3 id="parent-link-heading">Connect a parent or guardian</h3>
-        <p>Create a one-time code to let a parent connect to your learning progress and contact your assigned teachers.</p>
+        <h3 id="parent-link-heading">{t("connectParentGuardian")}</h3>
+        <p>{t("parentLinkDescription")}</p>
         <button className="secondary-btn settings-edit" type="button" onClick={generateParentCode} disabled={creatingParentCode}>
-          {creatingParentCode ? "Creating code…" : "Create connection code"}
+          {creatingParentCode ? t("creatingCode") : t("createConnectionCode")}
         </button>
-        {parentCode && <p className="student-parent-code" role="status"><span>Share this code with your parent (expires in 24 hours)</span><strong>{parentCode}</strong></p>}
+        {parentCode && (
+          <div className="student-parent-code" role="status">
+            <span>{t("shareCodeExpiry")}</span>
+            <strong>{parentCode}</strong>
+            <button className="secondary-btn" type="button" onClick={copyParentCode}>
+              {parentCodeCopied ? t("copied") : t("copyCode")}
+            </button>
+          </div>
+        )}
         {parentCodeError && <p className="parent-link-error" role="alert">{parentCodeError}</p>}
       </section>
       <StudentStats

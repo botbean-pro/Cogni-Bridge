@@ -30,12 +30,19 @@ export const mentorHelpOptions = [
   ["specific_mentor", "I'd like to talk to a specific mentor"],
 ];
 
+const demoCheckinsByStudent = new Map();
+const demoStudentKey = (studentId) => String(studentId || "").trim().toLowerCase();
+
 const throwIfError = ({ data, error }) => {
   if (error) throw error;
   return data;
 };
 
 export async function loadStudentCheckins(studentId) {
+  if (!supabase) {
+    const entries = demoCheckinsByStudent.get(demoStudentKey(studentId)) || [];
+    return [...entries].sort((first, second) => second.created_at.localeCompare(first.created_at));
+  }
   return throwIfError(await supabase
     .from("sensory_checkins")
     .select("*")
@@ -44,6 +51,7 @@ export async function loadStudentCheckins(studentId) {
 }
 
 export async function loadAssignedMentors(studentId) {
+  if (!supabase) return [];
   const assignments = throwIfError(await supabase
     .from("mentor_student_assignments")
     .select("mentor_id")
@@ -56,6 +64,34 @@ export async function loadAssignedMentors(studentId) {
 }
 
 export async function saveStudentCheckin(studentId, checkin) {
+  if (!supabase) {
+    const key = demoStudentKey(studentId);
+    if (!key) throw new Error("A signed-in demo student is required.");
+    const entry = {
+      checkin_type: "quick",
+      mood: 3,
+      mood_note: "",
+      emotions: [],
+      energy: null,
+      comfort: null,
+      day_note: "",
+      causes: [],
+      overwhelm_note: "",
+      helpful_actions: [],
+      mentor_help: "none",
+      mentor_message: "",
+      shared_with_mentor: false,
+      ...checkin,
+      id: `demo-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      student_id: key,
+      created_at: new Date().toISOString(),
+      mentor_help: "none",
+      mentor_message: "",
+      shared_with_mentor: false,
+    };
+    demoCheckinsByStudent.set(key, [entry, ...(demoCheckinsByStudent.get(key) || [])]);
+    return entry;
+  }
   return throwIfError(await supabase
     .from("sensory_checkins")
     .insert({ ...checkin, student_id: studentId })
@@ -64,6 +100,11 @@ export async function saveStudentCheckin(studentId, checkin) {
 }
 
 export async function deleteStudentCheckin(studentId, checkinId) {
+  if (!supabase) {
+    const key = demoStudentKey(studentId);
+    demoCheckinsByStudent.set(key, (demoCheckinsByStudent.get(key) || []).filter((entry) => entry.id !== checkinId));
+    return;
+  }
   return throwIfError(await supabase
     .from("sensory_checkins")
     .delete()
@@ -72,6 +113,7 @@ export async function deleteStudentCheckin(studentId, checkinId) {
 }
 
 export async function loadStudentResponses() {
+  if (!supabase) return [];
   return throwIfError(await supabase
     .from("sensory_notifications")
     .select("checkin_id, addressed_at, mentor_message")

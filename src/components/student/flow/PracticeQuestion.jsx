@@ -3,11 +3,17 @@ import { CheckCircle2, RotateCcw, X } from "lucide-react";
 
 export function PracticeQuestion({ quiz, t }) {
   const [selected, setSelected] = useState(null);
+  const [isDismissed, setIsDismissed] = useState(false);
   const answered = selected !== null;
   const isCorrect = selected === quiz.answerIndex;
 
+  if (isDismissed) return null;
+
   return (
     <section className="practice-question" aria-label={t("practiceQuestion")}>
+      <button className="practice-question-dismiss" type="button" aria-label={t("close")} title={t("close")} onClick={() => setIsDismissed(true)}>
+        <X size={16} />
+      </button>
       <h3>{quiz.question}</h3>
       <div className="practice-options">
         {quiz.options.map((option, index) => {

@@ -21,12 +21,12 @@ import {
 } from "../constants";
 import { supabase, supabaseConfigured } from "../supabaseClient";
 
-const LanguagePicker = ({ value, onChange, t }) => (
-  <label className="language-picker">
-    <span>
+export const LanguagePicker = ({ value, onChange, t, compact = false }) => (
+  <label className={`language-picker${compact ? " language-picker-compact" : ""}`}>
+    {!compact && <span>
       <Languages size={18} />
       <strong>{t("language")}</strong>
-    </span>
+    </span>}
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -38,7 +38,7 @@ const LanguagePicker = ({ value, onChange, t }) => (
         </option>
       ))}
     </select>
-    <small>{t("languageHint")}</small>
+    {!compact && <small>{t("languageHint")}</small>}
   </label>
 );
 
@@ -151,7 +151,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("id, display_name, role")
+        .select("id, display_name, role, preferred_subjects")
         .eq("id", data.user.id)
         .maybeSingle();
       if (profileError || !profile || profile.role !== tab) {
@@ -412,9 +412,12 @@ const AccessibilityPanel = ({
 }) => (
   <aside className="accessibility-panel" aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
-      <strong>{t("accessibility")}</strong>
+      <div className="accessibility-panel-title">
+        <span className="accessibility-panel-icon"><Sparkles size={18} /></span>
+        <strong>{t("accessibility")}</strong>
+      </div>
       <button
-        className="icon-btn"
+        className="icon-btn accessibility-close"
         onClick={onClose}
         aria-label={t("close")}
       >

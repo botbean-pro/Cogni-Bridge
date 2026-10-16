@@ -68,7 +68,7 @@ const careers = [
   { title: "Community organizer or public service", tags: ["leadership", "people", "communication"], summary: "Work with people to improve services and solve community problems.", explore: "Find out how a local group is helping people in your community." },
 ];
 
-export function CareerOptionsPage() {
+export function CareerOptionsPage({ t }) {
   const [answers, setAnswers] = useState({});
   const [step, setStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
@@ -86,20 +86,20 @@ export function CareerOptionsPage() {
 
   return (
     <section className="content career-page">
-      <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">Explore what could fit you</p><h1>Career Options</h1><p>Answer a few simple questions to find career ideas worth exploring.</p></div></header>
+      <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">{t("Explore what could fit you")}</p><h1>{t("Career Options")}</h1><p>{t("Answer a few simple questions to find career ideas worth exploring.")}</p></div></header>
       {!showResults ? (
         <section className="career-card">
-          <div className="career-progress-label"><span>Question {step + 1} of {questions.length}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
+          <div className="career-progress-label"><span>{t("Question {step} of {total}", { step: step + 1, total: questions.length })}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
           <div className="career-progress"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
-          <h2>{questions[step].prompt}</h2>
-          <div className="career-choices">{questions[step].choices.map((choice) => <button key={choice.label} type="button" className={answers[step]?.label === choice.label ? "selected" : ""} aria-pressed={answers[step]?.label === choice.label} onClick={() => choose(choice)}>{choice.label}</button>)}</div>
-          <div className="career-actions">{step > 0 ? <button type="button" className="career-back" onClick={() => setStep((value) => value - 1)}><ArrowLeft size={17} /> Back</button> : <span />}{step < questions.length - 1 ? <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setStep((value) => value + 1)}>Next <ArrowRight size={17} /></button> : <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setShowResults(true)}>See my ideas <Sparkles size={17} /></button>}</div>
+          <h2>{t(questions[step].prompt)}</h2>
+          <div className="career-choices">{questions[step].choices.map((choice) => <button key={choice.label} type="button" className={answers[step]?.label === choice.label ? "selected" : ""} aria-pressed={answers[step]?.label === choice.label} onClick={() => choose(choice)}>{t(choice.label)}</button>)}</div>
+          <div className="career-actions">{step > 0 ? <button type="button" className="career-back" onClick={() => setStep((value) => value - 1)}><ArrowLeft size={17} /> {t("Back")}</button> : <span />}{step < questions.length - 1 ? <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setStep((value) => value + 1)}>{t("Next")} <ArrowRight size={17} /></button> : <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setShowResults(true)}>{t("See my ideas")} <Sparkles size={17} /></button>}</div>
         </section>
       ) : (
         <section className="career-card career-results">
-          <div className="career-results-heading"><div><p className="eyebrow">A few paths to explore</p><h2>Your answers point to these ideas</h2></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> Start over</button></div>
-          <div className="career-result-list">{results.map((career, index) => <article className="career-result" key={career.title}><span className="career-result-number">{index + 1}</span><div><h3>{career.title}</h3><p>{career.summary}</p><small><strong>Try this:</strong> {career.explore}</small></div></article>)}</div>
-          <p className="career-disclaimer">These are ideas based on what you chose today, not a test or a decision about your future. Your interests can change, and there are many paths you may enjoy.</p>
+          <div className="career-results-heading"><div><p className="eyebrow">{t("A few paths to explore")}</p><h2>{t("Your answers point to these ideas")}</h2></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("Start over")}</button></div>
+          <div className="career-result-list">{results.map((career, index) => <article className="career-result" key={career.title}><span className="career-result-number">{index + 1}</span><div><h3>{t(career.title)}</h3><p>{t(career.summary)}</p><small><strong>{t("Try this:")}</strong> {t(career.explore)}</small></div></article>)}</div>
+          <p className="career-disclaimer">{t("These are ideas based on what you chose today, not a test or a decision about your future. Your interests can change, and there are many paths you may enjoy.")}</p>
         </section>
       )}
     </section>

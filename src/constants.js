@@ -27,7 +27,7 @@ export const sessionSubjectTranslations = {
 export const getSessionSubjectLabel = (subject, t) => t(sessionSubjectTranslations[subject] || "subjectMaths");
 export const indianLanguages = [["English", "English"], ["हिन्दी", "Hindi"], ["বাংলा", "Bengali"], ["తెలుగు", "Telugu"], ["मराठी", "Marathi"], ["தமிழ்", "Tamil"], ["ગુજરાતી", "Gujarati"], ["ಕನ್ನಡ", "Kannada"], ["മലയാളം", "Malayalam"], ["ਪੰਜਾਬੀ", "Punjabi"]];
 
-export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"]];
+export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"], ["Español", "Spanish"]];
 export const classNames = (...names) => names.filter(Boolean).join(" ");
 export const formatSession = (s) => `${new Date(`${s.date}T${s.time}`).toLocaleDateString(typeof document !== "undefined" ? (document.documentElement.lang || "en-IN") : "en-IN", { weekday: "short", month: "short", day: "numeric" })}, ${s.time} – ${s.endTime}`;
 export const readStudents = () => {

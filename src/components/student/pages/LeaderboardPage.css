@@ -71,6 +71,30 @@
 .theme-dark .leaderboard-points small { color:var(--muted); }
 .theme-dark .streak-badge { color:#ffad83; background:#49332c; }
 .theme-dark .leaderboard-streak { color:#ffad83; }
+.podium-card { position:relative; overflow:hidden; transition:transform .2s ease, box-shadow .2s ease; }
+.podium-card:hover { transform:translateY(-4px); box-shadow:0 14px 30px rgba(8,127,119,.13); }
+.podium-card-1:hover { transform:translateY(-11px); }
+.podium-card-1 { background:linear-gradient(155deg,#fff8e7 0%,#fff 62%); border-color:#edcb73; box-shadow:0 12px 30px rgba(190,137,25,.14); }
+.podium-card-1 .podium-medal { color:#fff; background:linear-gradient(145deg,#f5c84b,#d99a19); box-shadow:0 4px 12px rgba(190,137,25,.28); }
+.podium-rank-title { color:var(--teal-dark); font-size:10px; font-weight:900; letter-spacing:.14em; }
+.leaderboard-student-details { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:3px; }
+.leaderboard-student-details .leaderboard-rank-title { font-size:9px; letter-spacing:.08em; }
+.podium-card-1 .podium-rank-title { color:#a46a07; }
+.podium-motivation { max-width:220px; margin:2px 0 0; color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); line-height:1.45; text-align:center; }
+.leaderboard-rank-2 .leaderboard-rank { color:#68727e; background:#edf0f4; }
+.leaderboard-rank-3 .leaderboard-rank { color:#a9663c; background:#fff0e7; }
+.theme-dark .podium-card-1 { background:linear-gradient(155deg,#493f29,#263738 70%); border-color:#927435; }
+.theme-dark .podium-card-1 .podium-medal { color:#292312; background:linear-gradient(145deg,#f5d36b,#c9911c); }
+.theme-dark .podium-rank-title { color:#75dfd1; }
+.theme-dark .leaderboard-student-details .leaderboard-rank-title { color:#75dfd1; }
+.theme-dark .podium-card-1 .podium-rank-title { color:#f3d477; }
+.theme-dark .podium-motivation { color:var(--muted); }
+.theme-dark .leaderboard-rank-2 .leaderboard-rank { color:#d5dce4; background:#354149; }
+.theme-dark .leaderboard-rank-3 .leaderboard-rank { color:#ffb68e; background:#49332c; }
+@media (prefers-reduced-motion: reduce) {
+  .podium-card { transition:none; }
+  .podium-card:hover, .podium-card-1:hover { transform:none; }
+}
 @media (max-width:700px) {
   .leaderboard-heading { align-items:flex-start; }
   .leaderboard-table-header, .leaderboard-row { grid-template-columns:38px 1fr 72px 48px 65px; gap:7px; padding:14px 10px; }

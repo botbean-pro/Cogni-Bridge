@@ -152,6 +152,13 @@
 }
 
 .theme-dark .mentor-cancel-edit { background: transparent; }
+.theme-dark .mentor-parent-thread { border-color:var(--line); background:var(--surface); color:var(--text); }
+.theme-dark .mentor-parent-thread-messages > p { color:var(--text); background:var(--surface-2); }
+.theme-dark .mentor-parent-thread-messages > p.from-mentor { background:#294745; }
+.theme-dark .mentor-parent-thread-messages > p > strong { color:#80dfd1; }
+.theme-dark .mentor-parent-thread > header small,.theme-dark .mentor-parent-thread-messages small { color:var(--muted); }
+.theme-dark .support-requested { color:#ffc29d; background:#49352f; }
+.theme-dark .addressed { color:#9de0bd; background:#203b32; }
 
 @media (max-width: 760px) {
   .schedule-form {
@@ -250,3 +257,8 @@
   .mentor-parent-thread { padding: 12px; }
   .mentor-parent-thread form button { padding: 0 10px; }
 }
+.mentor-login-shell { position: relative; min-height: 100vh; }
+.mentor-login-language { position: absolute; z-index: 2; top: 88px; right: clamp(18px, 5vw, 72px); width: 170px; }
+.mentor-login-language .language-picker-compact { padding: 0; border: 0; }
+.mentor-login-language select { color: var(--text); }
+@media (max-width: 760px) { .mentor-login-language { top: 82px; right: 18px; } }

@@ -1,0 +1,15 @@
+.student-subject-setup { display:grid; min-height:100vh; place-items:center; padding:28px 18px; background:var(--canvas); color:var(--text); }
+.student-subject-setup-card { width:min(100%, 600px); padding:clamp(24px, 5vw, 42px); border:1px solid var(--line); border-radius:24px; background:var(--surface); box-shadow:var(--shadow); }
+.student-subject-setup-icon { display:grid; width:50px; height:50px; margin-bottom:20px; place-items:center; border-radius:16px; background:var(--surface-2); color:var(--teal); }
+.student-subject-setup-card > .eyebrow { margin:0 0 8px; }
+.student-subject-setup-card h1 { margin:0; font-size:clamp(26px, 4vw, 34px); }
+.student-subject-setup-copy { margin:10px 0 22px; color:var(--muted); line-height:1.55; }
+.student-subject-options { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+.student-subject-options button { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:54px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); font:inherit; font-weight:700; text-align:left; cursor:pointer; }
+.student-subject-options button:hover,.student-subject-options button.selected { border-color:var(--teal); background:var(--surface-2); }
+.student-subject-check { display:grid; width:22px; height:22px; flex:0 0 auto; place-items:center; border:1px solid var(--line); border-radius:7px; color:var(--teal); }
+.student-subject-options button.selected .student-subject-check { border-color:var(--teal); background:var(--teal); color:#fff; }
+.student-subject-continue { width:100%; margin-top:20px; padding:13px 16px; border:0; border-radius:12px; background:var(--teal); color:#fff; font:inherit; font-weight:800; cursor:pointer; }
+.student-subject-continue:disabled { opacity:.55; cursor:not-allowed; }
+.student-subject-validation { margin:10px 0 0; color:var(--muted); font-size:13px; text-align:center; }
+@media(max-width:480px) { .student-subject-options { grid-template-columns:1fr; } }

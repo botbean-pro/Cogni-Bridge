@@ -1,5 +1,5 @@
-import React from "react";
-import { BookOpen, CheckCircle2, FileText, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { BookOpen, CheckCircle2, FileText, Sparkles, X } from "lucide-react";
 
 const prompts = [
   { icon: BookOpen, label: "explainTopic", prompt: "promptExplain" },
@@ -9,14 +9,30 @@ const prompts = [
 ];
 
 export function QuickPrompts({ onSelect, t }) {
+  const [dismissedPrompts, setDismissedPrompts] = useState([]);
+  const visiblePrompts = prompts.filter(({ label }) => !dismissedPrompts.includes(label));
+
+  if (!visiblePrompts.length) return null;
+
   return (
     <div className="quick-prompts">
       <p className="quick-prompts-title">{t("choosePrompt")}</p>
       <div className="quick-prompts-grid">
-        {prompts.map(({ icon: Icon, label, prompt }) => (
-          <button key={label} className="quick-prompt-btn" onClick={() => onSelect(t(prompt))}>
-            <Icon size={18} /><span>{t(label)}</span>
-          </button>
+        {visiblePrompts.map(({ icon: Icon, label, prompt }) => (
+          <div className="quick-prompt-row" key={label}>
+            <button className="quick-prompt-btn" onClick={() => onSelect(t(prompt))}>
+              <Icon size={18} /><span>{t(label)}</span>
+            </button>
+            <button
+              type="button"
+              className="quick-prompt-dismiss"
+              onClick={() => setDismissedPrompts((current) => [...current, label])}
+              aria-label={t("close")}
+              title={t("close")}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
         ))}
       </div>
     </div>

@@ -36,6 +36,12 @@
 .low-sensory-mode .breathing-cue { transform:none !important; }
 .theme-dark .break-banner { background:#1d302e; border-color:#334744; }
 .theme-dark .calm-breath-card { background:#a99aed; }
+.theme-dark .calm-breath-card .breathing-copy p { color:#302852; }
+.theme-dark .breathing-ring { border-color:rgba(36,28,65,.8); }
+.theme-dark .breathing-cue { background:#192529; color:#e8f2f2; }
+.theme-dark .calm-breath-card .calm-action { border:1px solid rgba(49,39,82,.3); color:#302852; background:#f1edff; }
+.theme-dark .sensory-field input:not([type="range"]),.theme-dark .sensory-field textarea,.theme-dark .sensory-field select { color:var(--text); border-color:var(--line); background:var(--surface-2); }
+.theme-dark .sensory-history-entry > button { color:var(--text); }
 .theme-dark .calm-videos a { background:var(--surface); }
 .sensory-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:3px; }
 .sensory-heading h1 { margin:2px 0 6px; color:var(--text); font-size:clamp(28px,4vw,38px); }

@@ -32,18 +32,18 @@ import {
 function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
-    ["performance", TrendingUp, "Student Performance"],
+    ["performance", TrendingUp, t("studentPerformance")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
-    ...(mentorId ? [["parentMessages", MessageCircle, "Parent consultations"]] : []),
+    ...(mentorId ? [["parentMessages", MessageCircle, t("parentConsultations")]] : []),
   ];
 
   return (
     <aside className="mentor-nav">
       <div className="mentor-rail-brand">
         <span className="mentor-rail-logo"><LogoImage size={42} /></span>
-        <span className="mentor-rail-brand-copy"><strong>CogniBridge</strong><small>Mentor space</small></span>
+        <span className="mentor-rail-brand-copy"><strong>CogniBridge</strong><small>{t("mentorSpace")}</small></span>
       </div>
       {items.map(([key, Icon, label]) => (
         <button
@@ -135,7 +135,7 @@ function useMentorSupport(mentorId) {
   };
 }
 
-function SensorySupportPage({ support }) {
+function SensorySupportPage({ support, t }) {
   const { checkins, notifications, students, error, markAllViewed, respond } = support;
   const [replies, setReplies] = React.useState({});
   const notificationFor = (entry) => notifications.find((item) => item.checkin_id === entry.id);
@@ -149,31 +149,31 @@ function SensorySupportPage({ support }) {
 
   return (
     <>
-      <p className="mentor-kicker">STUDENT WELLBEING</p>
-      <h1 className="mentor-title">Shared check-ins</h1>
-      <p className="mentor-subtitle">Only check-ins your assigned students chose to share are shown here.</p>
+      <p className="mentor-kicker">{t("studentWellbeing")}</p>
+      <h1 className="mentor-title">{t("sharedCheckins")}</h1>
+      <p className="mentor-subtitle">{t("sharedCheckinsDescription")}</p>
       {error && <p className="error-popup">{error}</p>}
-      {sortedEntries.length === 0 ? <p className="mentor-subtitle">No shared check-ins yet.</p> : <div className="mentor-sensory-list">
+      {sortedEntries.length === 0 ? <p className="mentor-subtitle">{t("noSharedCheckins")}</p> : <div className="mentor-sensory-list">
         {sortedEntries.map((entry) => {
           const requestsHelp = entry.mentor_help !== "none";
           const notification = notificationFor(entry);
           const addressed = Boolean(notification?.addressed_at);
           const studentName = students.find((student) => student.id === entry.student_id)?.display_name || "Student";
           return <article className="mentor-sensory-card" key={entry.id}>
-            <div className="mentor-sensory-top"><div><strong>{studentName}</strong><small>{new Date(entry.created_at).toLocaleString()}</small></div>{requestsHelp && <span className={addressed ? "addressed" : "support-requested"}>{addressed ? "Addressed" : "Student requested support"}</span>}</div>
-            <p><strong>Mood:</strong> {moodLabels[entry.mood - 1]} · <strong>Emotions:</strong> {entry.emotions?.length ? entry.emotions.map((key) => labelFor(emotionOptions, key)).join(", ") : "Not listed"}</p>
-            {entry.energy != null && <p><strong>Energy:</strong> {entry.energy}/5 · <strong>Comfort:</strong> {entry.comfort}/5</p>}
-            {requestsHelp && <p><strong>Help requested:</strong> {labelFor(mentorHelpOptions, entry.mentor_help)}</p>}
+            <div className="mentor-sensory-top"><div><strong>{studentName}</strong><small>{new Date(entry.created_at).toLocaleString(document.documentElement.lang || "en-IN")}</small></div>{requestsHelp && <span className={addressed ? "addressed" : "support-requested"}>{addressed ? t("addressed") : t("studentRequestedSupport")}</span>}</div>
+            <p><strong>{t("mood")}:</strong> {moodLabels[entry.mood - 1]} · <strong>{t("emotions")}:</strong> {entry.emotions?.length ? entry.emotions.map((key) => labelFor(emotionOptions, key)).join(", ") : t("notListed")}</p>
+            {entry.energy != null && <p><strong>{t("energy")}:</strong> {entry.energy}/5 · <strong>{t("comfort")}:</strong> {entry.comfort}/5</p>}
+            {requestsHelp && <p><strong>{t("helpRequested")}:</strong> {labelFor(mentorHelpOptions, entry.mentor_help)}</p>}
             {entry.mentor_message && <blockquote>{entry.mentor_message}</blockquote>}
             {entry.day_note && <p>{entry.day_note}</p>}
             {notification && (addressed ? (
-              notification.mentor_message && <p><strong>Your reply:</strong> {notification.mentor_message}</p>
+              notification.mentor_message && <p><strong>{t("yourReply")}:</strong> {notification.mentor_message}</p>
             ) : <div className="mentor-sensory-actions">
               <form onSubmit={(event) => { event.preventDefault(); if (replies[entry.id]?.trim()) respond(notification.id, replies[entry.id], false); }}>
-                <input value={replies[entry.id] ?? ""} maxLength={2000} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder="Write an optional reply" aria-label={`Reply to ${studentName}`} />
-                <button type="submit">Send reply</button>
+                <input value={replies[entry.id] ?? ""} maxLength={2000} onChange={(event) => setReplies((current) => ({ ...current, [entry.id]: event.target.value }))} placeholder={t("optionalReply")} aria-label={`${t("replyTo")} ${studentName}`} />
+                <button type="submit">{t("sendReply")}</button>
               </form>
-              <button type="button" onClick={() => respond(notification.id, replies[entry.id] || "", true)}>Mark addressed</button>
+              <button type="button" onClick={() => respond(notification.id, replies[entry.id] || "", true)}>{t("markAddressed")}</button>
             </div>)}
           </article>;
         })}
@@ -316,7 +316,7 @@ function NotesPage({ notes, form, setForm, onSubmit, t }) {
   );
 }
 
-function StudentPerformancePage({ mentorId, assignedStudents }) {
+function StudentPerformancePage({ mentorId, assignedStudents, t }) {
   const [activities, setActivities] = useState([]);
   const [localStudents, setLocalStudents] = useState([]);
   const [loading, setLoading] = useState(Boolean(mentorId));
@@ -368,30 +368,30 @@ function StudentPerformancePage({ mentorId, assignedStudents }) {
   const activeStudents = rows.filter((row) => row.stats.sessionsAttended > 0).length;
 
   return <>
-    <p className="mentor-kicker">LEARNING PROGRESS</p>
-    <h1 className="mentor-title">Student Performance</h1>
-    <p className="mentor-subtitle">Track recorded session attendance, learning time, and subjects explored.</p>
+    <p className="mentor-kicker">{t("learningProgress")}</p>
+    <h1 className="mentor-title">{t("studentPerformance")}</h1>
+    <p className="mentor-subtitle">{t("performanceDescription")}</p>
     <div className="performance-summary">
-      <article><Users size={20} /><strong>{rows.length}</strong><span>Students</span></article>
-      <article><CalendarDays size={20} /><strong>{totalSessions}</strong><span>Sessions attended</span></article>
-      <article><Clock3 size={20} /><strong>{formatLearningTime(totalMinutes)}</strong><span>Learning time</span></article>
-      <article><TrendingUp size={20} /><strong>{activeStudents}</strong><span>Students with activity</span></article>
+      <article><Users size={20} /><strong>{rows.length}</strong><span>{t("students")}</span></article>
+      <article><CalendarDays size={20} /><strong>{totalSessions}</strong><span>{t("sessionsAttendedShort")}</span></article>
+      <article><Clock3 size={20} /><strong>{formatLearningTime(totalMinutes)}</strong><span>{t("learningTime")}</span></article>
+      <article><TrendingUp size={20} /><strong>{activeStudents}</strong><span>{t("studentsWithActivity")}</span></article>
     </div>
     {error && <p className="error-popup" role="alert">{error}</p>}
-    {loading ? <p className="mentor-subtitle">Loading student progress…</p>
-      : rows.length === 0 ? <div className="performance-empty"><Users size={24} /><h2>No students to show yet</h2><p>Students assigned to your mentor account will appear here.</p></div>
+    {loading ? <p className="mentor-subtitle">{t("loadingStudentProgress")}</p>
+      : rows.length === 0 ? <div className="performance-empty"><Users size={24} /><h2>{t("noStudentsToShow")}</h2><p>{t("assignedStudentsAppear")}</p></div>
         : <div className="performance-grid">{rows.map((student) => {
           const subjects = [...new Set(student.activities.map((item) => item.subject))];
           return <article className="performance-card" key={student.id}>
-            <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? `Last activity ${new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString()}` : "No sessions recorded yet"}</small></div></div>
-            <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>Sessions</span></div><div><strong>{student.stats.learningTime}</strong><span>Learning time</span></div><div><strong>{student.stats.learningStreak}</strong><span>Day streak</span></div></div>
-            <div className="performance-subjects"><strong>Subjects</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>No subjects recorded</small>}</div>
+            <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? `${t("lastActivity")} ${new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString(document.documentElement.lang || "en-IN")}` : t("noSessionsRecorded")}</small></div></div>
+            <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>{t("sessions")}</span></div><div><strong>{student.stats.learningTime}</strong><span>{t("learningTime")}</span></div><div><strong>{student.stats.learningStreak}</strong><span>{t("dayStreak")}</span></div></div>
+            <div className="performance-subjects"><strong>{t("subjects")}</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>{t("noSubjectsRecorded")}</small>}</div>
           </article>;
         })}</div>}
   </>;
 }
 
-function ParentConsultationsPage({ mentorId, students }) {
+function ParentConsultationsPage({ mentorId, students, t }) {
   const [messages, setMessages] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -408,10 +408,10 @@ function ParentConsultationsPage({ mentorId, students }) {
     loadMentorParentMessages(mentorId).then((rows) => {
       if (current) { setMessages(rows); setError(""); }
     }).catch(() => {
-      if (current) setError("Parent conversations couldn't be loaded.");
+      if (current) setError(t("parentConversationsLoadError"));
     }).finally(() => { if (current) setLoading(false); });
     return () => { current = false; };
-  }, [mentorId]);
+  }, [mentorId, t]);
 
   const threads = new Map();
   messages.forEach((message) => {
@@ -430,23 +430,23 @@ function ParentConsultationsPage({ mentorId, students }) {
       setDrafts((current) => ({ ...current, [key]: "" }));
       await refresh();
     } catch {
-      setError("Your reply couldn't be sent. Please try again.");
+      setError(t("replySendError"));
     } finally { setSending(false); }
   };
 
   return <>
-    <p className="mentor-kicker">FAMILY CONNECTION</p>
-    <h1 className="mentor-title">Parent consultations</h1>
-    <p className="mentor-subtitle">Private conversations with parents of your assigned students.</p>
+    <p className="mentor-kicker">{t("familyConnection")}</p>
+    <h1 className="mentor-title">{t("parentConsultations")}</h1>
+    <p className="mentor-subtitle">{t("parentConsultationsDescription")}</p>
     {error && <p className="error-popup" role="alert">{error}</p>}
-    {loading ? <p className="mentor-subtitle">Loading conversations…</p>
-      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>No parent messages yet</h2><p>Messages from connected parents will appear here.</p></div>
+    {loading ? <p className="mentor-subtitle">{t("loadingConversations")}</p>
+      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>{t("noParentMessages")}</h2><p>{t("parentMessagesAppear")}</p></div>
         : <div className="mentor-parent-threads">{[...threads.entries()].map(([key, thread]) => {
           const student = students.find((item) => item.id === thread[0].student_id);
           return <article className="mentor-parent-thread" key={key}>
-            <header><div><strong>{student?.display_name || "Student"}</strong><small>Parent consultation · {thread.length} messages</small></div></header>
-            <div className="mentor-parent-thread-messages">{thread.map((message) => <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}><strong>{message.sender_role === "mentor" ? "You" : "Parent"}</strong>{message.message}<small>{new Date(message.created_at).toLocaleString()}</small></p>)}</div>
-            <form onSubmit={(event) => sendReply(event, key, thread)}><input aria-label={`Reply to parent of ${student?.display_name || "student"}`} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder="Write a reply…" required /><button type="submit" disabled={sending}><Send size={16} /> Reply</button></form>
+            <header><div><strong>{student?.display_name || t("student")}</strong><small>{t("parentConsultationCount", { count: thread.length })}</small></div></header>
+            <div className="mentor-parent-thread-messages">{thread.map((message) => <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}><strong>{message.sender_role === "mentor" ? t("mentorYou") : t("parent")}</strong>{message.message}<small>{new Date(message.created_at).toLocaleString(document.documentElement.lang || "en-IN")}</small></p>)}</div>
+            <form onSubmit={(event) => sendReply(event, key, thread)}><input aria-label={`${t("replyToParentOf")} ${student?.display_name || t("student")}`} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder={t("writeReply")} required /><button type="submit" disabled={sending}><Send size={16} /> {t("reply")}</button></form>
           </article>;
         })}</div>}
   </>;
@@ -481,11 +481,11 @@ export function MentorDashboard({
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} t={t} />}
-          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} />}
-          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} />}
+          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
+          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} t={t} />}
           {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
-          {tab === "sensory" && mentorId && <SensorySupportPage support={support} />}
+          {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
         </section>
       </div>
     </main>

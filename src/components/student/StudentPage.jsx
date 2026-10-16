@@ -35,7 +35,7 @@ export const StudentPage = ({
       </div>
     )}
     <div className="student-app-shell">
-      <aside className="student-rail">
+      <aside className={`student-rail${accessibilityOpen ? " accessibility-open" : ""}`}>
         <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(true); setCalmCornerOpen(true); }} />
         <div className="student-rail-footer">
           <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
@@ -46,7 +46,7 @@ export const StudentPage = ({
       </aside>
       <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
     </div>
-    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? "Breathing exercise" : "My calm corner"}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label="Close calm corner"><X size={20} /></button><CalmCorner startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} /></div></div>}
+    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? t("Breathing exercise") : t("My calm corner")}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label={t("Close calm corner")}><X size={20} /></button><CalmCorner t={t} startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} /></div></div>}
     {accessibilityOpen && accessibilityPanel}
   </>
 };
