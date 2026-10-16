@@ -46,7 +46,7 @@ export const StudentPage = ({
       </div>
     )}
     <div className="student-app-shell">
-      <aside className="student-rail">
+      <aside className={`student-rail${accessibilityOpen ? " accessibility-open" : ""}`}>
         <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(false); setCalmCornerOpen(true); }} />
         <div className="student-rail-footer">
           {studentId && <StudentNotifications studentId={studentId} t={t} />}

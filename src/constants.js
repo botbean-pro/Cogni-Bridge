@@ -41,7 +41,7 @@ export const getSessionTitle = (session, t) => {
 };
 export const indianLanguages = [["English", "English"], ["हिन्दी", "Hindi"], ["বাংলा", "Bengali"], ["తెలుగు", "Telugu"], ["मराठी", "Marathi"], ["தமிழ்", "Tamil"], ["ગુજરાતી", "Gujarati"], ["ಕನ್ನಡ", "Kannada"], ["മലയാളം", "Malayalam"], ["ਪੰਜਾਬੀ", "Punjabi"]];
 
-export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"]];
+export const learningLanguages = [...indianLanguages, ["Français", "French"], ["Deutsch", "German"], ["Español", "Spanish"]];
 export const classNames = (...names) => names.filter(Boolean).join(" ");
 export const formatLocalizedDate = (date, options) => new Date(date).toLocaleDateString(
   typeof document !== "undefined" ? (document.documentElement.lang || "en-IN") : "en-IN",

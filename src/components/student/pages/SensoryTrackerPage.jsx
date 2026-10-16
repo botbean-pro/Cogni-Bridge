@@ -84,6 +84,8 @@ export function CalmCorner({ onClose, startBreathing = false, t }) {
   </section>;
 }
 
+const MAX_FULL_CHECKINS_PER_DAY = 3;
+
 export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
@@ -98,7 +100,9 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
   const [lowSensory, setLowSensory] = useState(false);
   const [showCalmCorner, setShowCalmCorner] = useState(false);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
-  const todayFullEntry = sortedEntries.find((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
+  const todayFullEntries = sortedEntries.filter((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
+  const todayFullEntry = todayFullEntries[0];
+  const fullLimitReached = todayFullEntries.length >= MAX_FULL_CHECKINS_PER_DAY;
 
   useEffect(() => {
     if (!showCalmCorner) return undefined;
@@ -249,7 +253,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
       <section className="sensory-card sensory-checkin">
           <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_todayEyebrow")}</span><h2>{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</h2></div><Activity size={22} /></div>
           {todayFullEntry && <p className="sensory-status" role="status">{t(todayFullEntry.shared_with_mentor ? "sn_fullDoneShared" : "sn_fullDonePrivate")}</p>}
-          <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">{t("sn_quick")}</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button" disabled={Boolean(todayFullEntry)} title={todayFullEntry ? t("sn_fullSaved") : undefined}>{t("sn_full")}</button></div>
+          <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">{t("sn_quick")}</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button" disabled={fullLimitReached} title={fullLimitReached ? t("sn_fullLimit") : undefined}>{t("sn_full")}</button></div>
           <form onSubmit={(event) => submit(event, view === "quick")}>
             <fieldset className="sensory-field"><legend>{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</legend><div className="sensory-mood-options">{[1, 2, 3, 4, 5].map((_, index) => <button type="button" key={index} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true" style={{ color: moodColors[index] }}>{React.createElement(moodIcons[index], { size: 28, strokeWidth: 1.9 })}</span>{t(`mood_${index + 1}`)}</button>)}</div></fieldset>
             {view === "quick" ? (

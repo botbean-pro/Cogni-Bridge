@@ -22,6 +22,16 @@ import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
 
+const readPreferredSubjects = (email) => {
+  if (!email) return [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(`cognibridge_subjects_${email.toLowerCase()}`) || "[]");
+    return Array.isArray(saved) ? saved.filter((subject) => subjects.includes(subject)) : [];
+  } catch {
+    return [];
+  }
+};
+
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
   const [learningNotes, setLearningNotes] = useState([]);
@@ -34,9 +44,21 @@ const App = () => {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [parentOpen, setParentOpen] = useState(false);
   const [accessibilityOpen, setAccessibilityOpen] = useState(false);
-  const [appearance, setAppearance] = useState("light");
+  const [appearance, setAppearance] = useState(() => {
+    try {
+      return localStorage.getItem("cognibridge_appearance") || "light";
+    } catch {
+      return "light";
+    }
+  });
   const [textScale, setTextScale] = useState(1);
-  const [studentLanguage, setStudentLanguage] = useState("English");
+  const [studentLanguage, setStudentLanguage] = useState(() => {
+    try {
+      return localStorage.getItem("cognibridge_language") || "English";
+    } catch {
+      return "English";
+    }
+  });
   const [readAloud, setReadAloud] = useState({ enabled: false, volume: 0.8 });
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
@@ -259,16 +281,15 @@ const App = () => {
         setAuthUserId(user.id);
         setAuthRole(profile.role);
         if (profile.role === "student") {
-          const selectedSubjects = Array.isArray(profile.preferred_subjects) ? profile.preferred_subjects : [];
-          setPreferredSubjects(selectedSubjects);
-          if (subjectSelectionUser.current !== user.id) {
-            setSubjectSelectionPending(true);
-            subjectSelectionUser.current = user.id;
-          }
+          const savedSubjects = Array.isArray(profile.preferred_subjects) && profile.preferred_subjects.length
+            ? profile.preferred_subjects
+            : readPreferredSubjects(user.email || "");
+          setPreferredSubjects(savedSubjects);
+          setSubjectSelectionPending(savedSubjects.length === 0);
           setMentorOpen(false);
           setSignedIn(true);
           setStudentEmail(user.email || "");
-          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: selectedSubjects });
+          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: savedSubjects });
           loadLatestHandwriting(user.id).then((handwriting) => {
             if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
           }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
@@ -376,6 +397,20 @@ const App = () => {
   }, [readAloud.volume]);
 
   useEffect(() => {
+    try {
+      localStorage.setItem("cognibridge_appearance", appearance);
+    } catch {
+      // Keep the selected theme for this session if browser storage is unavailable.
+    }
+    document.documentElement.style.colorScheme = appearance;
+  }, [appearance]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("cognibridge_language", studentLanguage);
+    } catch {
+      // Keep language selection available when browser storage is disabled.
+    }
     document.documentElement.lang = ({
       English: "en",
       Hindi: "hi",
@@ -389,6 +424,7 @@ const App = () => {
       Punjabi: "pa",
       French: "fr",
       German: "de",
+      Spanish: "es",
     })[studentLanguage] || "en";
   }, [studentLanguage]);
 
@@ -530,6 +566,8 @@ const App = () => {
           notes={learningNotes}
           initialLoggedIn
           mentorId={authRole === "mentor" ? authUserId : null}
+          language={studentLanguage}
+          setLanguage={setStudentLanguage}
           t={t}
           onAddSession={(session) => setSessions((items) => [session, ...items])}
           onUpdateSession={(updatedSession) => setSessions((items) => items.map((session) => (
@@ -603,6 +641,14 @@ const App = () => {
     );
   }
 
+  if (subjectSelectionPending && signedIn && authRole !== "mentor" && !parentOpen) {
+    return (
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+      </div>
+    );
+  }
+
   if (signupEmail) {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
@@ -616,7 +662,9 @@ const App = () => {
             setSignupStudentClass("");
             setStudentProfile(profile);
             setStudentEmail(profile.email);
-            setPreferredSubjects(preferredSubjects);
+            const savedSubjects = readPreferredSubjects(profile.email);
+            setPreferredSubjects(savedSubjects);
+            setSubjectSelectionPending(savedSubjects.length === 0);
             setSignedIn(true);
             setActiveTab(pendingPremiumLogin ? "premium" : "study");
             setPendingPremiumLogin(false);
@@ -661,6 +709,9 @@ const App = () => {
             } else {
               setStudentEmail(account.email);
               setStudentProfile({ id: account.id, email: account.email, name: account.name, studentClass: account.studentClass });
+              const savedSubjects = readPreferredSubjects(account.email);
+              setPreferredSubjects(savedSubjects);
+              setSubjectSelectionPending(savedSubjects.length === 0);
               setAuthUserId(account.id);
               setAuthRole("student");
               setPreferredSubjects([]);
@@ -828,10 +879,11 @@ const App = () => {
               : null;
             setStudentProfile(savedStudent || null);
             setStudentEmail(normalizedEmail);
-            const selectedSubjects = profile?.preferred_subjects || savedStudent?.preferredSubjects || [];
-            setPreferredSubjects(Array.isArray(selectedSubjects) ? selectedSubjects : []);
-            setSubjectSelectionPending(true);
-            subjectSelectionUser.current = userId || normalizedEmail;
+            const savedSubjects = Array.isArray(profile?.preferred_subjects) && profile.preferred_subjects.length
+              ? profile.preferred_subjects
+              : savedStudent?.preferredSubjects || readPreferredSubjects(normalizedEmail);
+            setPreferredSubjects(savedSubjects);
+            setSubjectSelectionPending(savedSubjects.length === 0);
             setAuthUserId(userId || null);
             setAuthRole(profile?.role || null);
             setSignedIn(true);

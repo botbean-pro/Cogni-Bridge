@@ -8,7 +8,7 @@ const plans = [
   { id: "yearly", nameKey: "pf_planYearly", price: 1500, periodKey: "pf_perYear", detailKey: "pf_detailYearly" },
 ];
 
-const money = (amount) => `₹${amount.toLocaleString("en-IN")}`;
+const money = (amount) => new Intl.NumberFormat(document.documentElement.lang || "en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
 
 export const PremiumFlowPage = ({ t, signedIn, studentEmail, studentName, cartPlan, checkoutOpen, onAddToCart, onRemoveFromCart, onBeginCheckout, onCompletePurchase, onBackToPlans }) => {
   const selectedPlan = plans.find((plan) => plan.id === cartPlan);

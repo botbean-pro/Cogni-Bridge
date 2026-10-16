@@ -24,6 +24,16 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     await onSaveSubjects(subjectSelection);
     setSavingSubjects(false);
   };
+  const [parentCodeCopied, setParentCodeCopied] = useState(false);
+
+  const copyParentCode = async () => {
+    try {
+      await navigator.clipboard.writeText(parentCode);
+      setParentCodeCopied(true);
+    } catch {
+      setParentCodeError(t("copyCodeError"));
+    }
+  };
 
   const generateParentCode = async () => {
     if (!studentId) {
@@ -33,6 +43,8 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     setCreatingParentCode(true);
     setParentCodeError("");
     setParentCode("");
+    setParentCodeCopied(false);
+    setParentCodeCopied(false);
     try {
       setParentCode(await createParentLinkCode(studentId));
     } catch {
@@ -112,7 +124,15 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
         <button className="secondary-btn settings-edit" type="button" onClick={generateParentCode} disabled={creatingParentCode}>
           {t(creatingParentCode ? "ms_pcCreating" : "ms_pcCreate")}
         </button>
-        {parentCode && <p className="student-parent-code" role="status"><span>{t("ms_pcShare")}</span><strong>{parentCode}</strong></p>}
+        {parentCode && (
+          <div className="student-parent-code" role="status">
+            <span>{t("ms_pcShare")}</span>
+            <strong>{parentCode}</strong>
+            <button className="secondary-btn" type="button" onClick={copyParentCode}>
+              {t(parentCodeCopied ? "copied" : "copyCode")}
+            </button>
+          </div>
+        )}
         {parentCodeError && <p className="parent-link-error" role="alert">{parentCodeError}</p>}
       </section>
       <StudentStats

@@ -9,6 +9,18 @@ const leaderboardStudents = [
   { name: "Harsh", registered: 4, attended: 3, mentorGood: 2, streak: 1 },
   { name: "Samar", registered: 3, attended: 2, mentorGood: 1, streak: 7 },
   { name: "Vardaan", registered: 2, attended: 1, mentorGood: 0, streak: 10 },
+  { name: "Aanya", registered: 3, attended: 1, mentorGood: 1, streak: 2 },
+  { name: "Kabir", registered: 2, attended: 1, mentorGood: 0, streak: 3 },
+  { name: "Meera", registered: 1, attended: 1, mentorGood: 0, streak: 1 },
+];
+
+const rankTitles = [
+  "BRAINWAVE BOSS",
+  "MOMENTUM MAKER",
+  "CURIOSITY CATALYST",
+  "IDEA IGNITER",
+  "FOCUS FORCE",
+  "SPARK STARTER",
 ];
 
 const scoreStudent = (student) => {
@@ -40,6 +52,8 @@ export function LeaderboardPage({ signedIn, t }) {
       isCurrent = false;
     };
   }, [signedIn, retry, t]);
+
+  const rankCopy = [t("lb_paceLine"), t("lb_greatSessionLine"), t("lb_closerLine")];
 
   const status = supabaseConfigured && !signedIn
     ? t("leaderboardSignIn")
@@ -83,11 +97,13 @@ export function LeaderboardPage({ signedIn, t }) {
         <div className="podium-zone-label"><Trophy size={17} /> {t("topThreeZone")}</div>
         {rows.slice(0, 3).map((student, index) => (
           <article className={`podium-card podium-card-${index + 1}`} key={`${index}-${student.name}`}>
-            <div className="podium-medal">{index + 1}</div>
+            <div className="podium-medal" aria-label={t("lb_rank", { n: index + 1 })}>{index + 1}</div>
             <span className="podium-avatar">{student.name[0]}</span>
             <strong>{student.name}</strong>
+            <span className="podium-rank-title">{rankTitles[index]}</span>
             <span className="podium-score">{student.points} {t("lb_pts")}</span>
             <span className="streak-badge"><Flame size={15} fill="currentColor" /> {student.streak} {t("streak")}</span>
+            <p className="podium-motivation">{rankCopy[index]}</p>
           </article>
         ))}
       </section>
@@ -99,8 +115,8 @@ export function LeaderboardPage({ signedIn, t }) {
             className={`leaderboard-row leaderboard-rank-${index + 1}${student.isMe ? " leaderboard-row-me" : ""}`}
             key={`${index}-${student.name}`}
           >
-            <span className="leaderboard-rank">{index === 0 ? <Trophy size={19} /> : index + 1}</span>
-            <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><strong>{student.name}</strong></span>
+            <span className="leaderboard-rank" aria-label={t("lb_rank", { n: index + 1 })}>{index === 0 ? <Trophy size={19} /> : `#${index + 1}`}</span>
+            <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><span className="leaderboard-student-details"><strong>{student.name}</strong><small className="leaderboard-rank-title">{rankTitles[index] || `LEVEL ${index + 1}`}</small></span></span>
             <span className="leaderboard-attendance">{student.attended} <small>{t("lb_of")} {student.registered}</small></span>
             <span className="leaderboard-streak"><Flame size={15} fill="currentColor" /> {student.streak}</span>
             <span className="leaderboard-points">{student.points}<small> {t("lb_pts")}</small></span>

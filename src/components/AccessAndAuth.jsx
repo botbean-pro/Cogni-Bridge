@@ -22,12 +22,12 @@ import {
 } from "../constants";
 import { supabase, supabaseConfigured } from "../supabaseClient";
 
-const LanguagePicker = ({ value, onChange, t }) => (
-  <label className="language-picker">
-    <span>
+export const LanguagePicker = ({ value, onChange, t, compact = false }) => (
+  <label className={`language-picker${compact ? " language-picker-compact" : ""}`}>
+    {!compact && <span>
       <Languages size={18} />
       <strong>{t("language")}</strong>
-    </span>
+    </span>}
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -39,7 +39,7 @@ const LanguagePicker = ({ value, onChange, t }) => (
         </option>
       ))}
     </select>
-    <small>{t("languageHint")}</small>
+    {!compact && <small>{t("languageHint")}</small>}
   </label>
 );
 
@@ -434,9 +434,12 @@ const AccessibilityPanel = ({
 }) => (
   <aside className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
-      <strong>{t("accessibility")}</strong>
+      <div className="accessibility-panel-title">
+        <span className="accessibility-panel-icon"><Sparkles size={18} /></span>
+        <strong>{t("accessibility")}</strong>
+      </div>
       <button
-        className="icon-btn"
+        className="icon-btn accessibility-close"
         onClick={onClose}
         aria-label={t("close")}
       >

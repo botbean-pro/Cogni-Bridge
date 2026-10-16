@@ -108,7 +108,11 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const messagesPanel = messagesEndRef.current?.parentElement;
+    messagesPanel?.scrollTo({
+      top: messagesPanel.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages, isLoading]);
 
   useEffect(() => {
@@ -243,7 +247,7 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
   const selectPrompt = (prompt) => setInput(prompt);
 
   return (
-    <section className="content ai-chat-page">
+    <section className="ai-chat-page">
       <div className="ai-chat-container">
         <ChatHeader t={t} onOpenHistory={() => setHistoryOpen((open) => !open)} />
         <div className="ai-usage-meter" role="status" aria-label={t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}>
