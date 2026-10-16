@@ -300,7 +300,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
         <p className="modal-copy">{description}</p>
 
         <form className="auth-form" onSubmit={submit}>
-          {tab === "parent" && parentSignUp && <label className="input-label">Full name<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
+          {tab === "parent" && parentSignUp && <label className="input-label">{t("fullName")}<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
           <label className="input-label">
             {t("email")}
             <input
@@ -384,8 +384,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             </div>
           ) : tab === "parent" ? (
             <div className="auth-button-group">
-              <button className="auth-login-btn" type="submit">{parentSignUp ? "Create parent account" : t("logIn")} <ChevronRight size={18} /></button>
-              <div className="create-account-prompt"><span>{parentSignUp ? "Already have a parent account?" : "New to the parent portal?"}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
+              <button className="auth-login-btn" type="submit">{parentSignUp ? t("createParentAccount") : t("logIn")} <ChevronRight size={18} /></button>
+              <div className="create-account-prompt"><span>{t(parentSignUp ? "alreadyHaveParentAccount" : "newToParentPortal")}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">

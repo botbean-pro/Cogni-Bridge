@@ -293,13 +293,13 @@ const App = () => {
         localStorage.setItem("cognibridge_students", JSON.stringify(updatedStudents));
       }
     } catch {
-      notify("Your subjects could not be saved. Please try again.");
+      notify(t("subjectSaveError"));
       return false;
     }
     if (supabaseConfigured && authUserId) {
       const { error } = await supabase.from("profiles").update({ preferred_subjects: selected }).eq("id", authUserId);
       if (error) {
-        notify("Your subjects could not be saved. Please try again.");
+        notify(t("subjectSaveError"));
         return false;
       }
     }

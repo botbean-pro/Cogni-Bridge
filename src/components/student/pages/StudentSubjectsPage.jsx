@@ -24,9 +24,9 @@ export function StudentSubjectsPage({ selectedSubjects = [], onContinue, t }) {
     <main className="student-subject-setup">
       <section className="student-subject-setup-card" aria-labelledby="student-subject-setup-title">
         <span className="student-subject-setup-icon"><BookOpen size={24} /></span>
-        <p className="eyebrow">Personalize your learning</p>
-        <h1 id="student-subject-setup-title">What would you like to study?</h1>
-        <p className="student-subject-setup-copy">Choose one or more subjects. Your Sessions page will show sessions for those subjects.</p>
+        <p className="eyebrow">{t("personalizeLearning")}</p>
+        <h1 id="student-subject-setup-title">{t("chooseStudySubjects")}</h1>
+        <p className="student-subject-setup-copy">{t("chooseStudySubjectsCopy")}</p>
         <div className="student-subject-options">
           {subjects.map((subject) => {
             const selected = selection.includes(subject);
@@ -43,9 +43,9 @@ export function StudentSubjectsPage({ selectedSubjects = [], onContinue, t }) {
           })}
         </div>
         <button type="button" className="student-subject-continue" disabled={!selection.length || saving} onClick={continueToLearning}>
-          {saving ? "Saving…" : "Continue to sessions"}
+          {t(saving ? "savingSubjects" : "continueToSessions")}
         </button>
-        {!selection.length && <p className="student-subject-validation" role="status">Choose at least one subject to continue.</p>}
+        {!selection.length && <p className="student-subject-validation" role="status">{t("chooseAtLeastOneSubject")}</p>}
       </section>
     </main>
   );

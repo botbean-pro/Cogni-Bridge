@@ -43,7 +43,7 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
             <Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{t(navigationLabels[tab])}</span>
           </button>
         })}
-        {signedIn && <button type="button" className="student-rail-link calm-rail-button" onClick={onOpenCalm} title="I need a break"><Wind size={20} /><span>I need a break</span></button>}
+        {signedIn && <button type="button" className="student-rail-link calm-rail-button" onClick={onOpenCalm} title={t("I need a break")}><Wind size={20} /><span>{t("I need a break")}</span></button>}
       </nav>
     </div>
   );

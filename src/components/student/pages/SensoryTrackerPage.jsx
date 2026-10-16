@@ -225,7 +225,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
       <header className="sensory-heading"><div><p className="eyebrow">{t("A private space for you")}</p><h1>{t("Sensory Tracker")}</h1><p>{t("Check in with yourself. Share only what you choose.")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {lowSensory ? t("Low sensory on") : t("Low sensory mode")}</button><span><Heart size={18} /> {t("No judgement, just your own notes")}</span></div></header>
       <section className="break-banner"><div><span className="sensory-step">{t("IT'S OKAY TO PAUSE")}</span><h2>{t("Need a little break?")}</h2><p>{t("Take a moment for yourself. There is no rush to continue.")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("I need a break")}</button></section>
       {showCalmCorner && <CalmCorner t={t} onClose={() => setShowCalmCorner(false)} />}
-      <div className="sensory-privacy"><LockKeyhole size={17} /> {t(demoMode ? "Demo check-ins stay private in this session and aren't shared with a mentor." : "Your check-ins are private by default. You'll see a clear label when you choose to share one.")}</div>
+      <div className="sensory-privacy"><LockKeyhole size={17} /> {t(demoMode ? "demoPrivateMessage" : "Your check-ins are private by default. You'll see a clear label when you choose to share one.")}</div>
       {status && <p className="sensory-status" role="status">{status}</p>}
 
       {shouldShowCheckinForm ? (
