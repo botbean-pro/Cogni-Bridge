@@ -60,6 +60,59 @@ const translationInstructions =
   "Keep JSON keys, formulas, code, names, and numbers unchanged. Preserve the meaning and return only valid JSON " +
   "with this exact shape: {\"translatedQuestion\": string, \"answer\": string, \"relatedQuestions\": [string, string, string, string]}.";
 
+const appPages = ["study", "sessions", "sensory", "leaderboard", "premium", "careers", "messages", "settings"];
+const settingValues = { textSize: ["larger", "smaller", "reset"], appearance: ["light", "dark"], readAloud: ["on", "off"] };
+
+// The browser sends the student's own app state so the assistant can answer about it and act on it.
+function sanitizeAppContext(context) {
+  if (!context || typeof context !== "object") return null;
+  const text = (value, max = 120) => (typeof value === "string" ? value.slice(0, max) : "");
+  return {
+    today: text(context.today, 10),
+    signedIn: Boolean(context.signedIn),
+    checkInAvailable: Boolean(context.checkInAvailable),
+    subjects: Array.isArray(context.subjects) ? context.subjects.slice(0, 12).map((subject) => text(subject, 40)).filter(Boolean) : [],
+    sessions: Array.isArray(context.sessions)
+      ? context.sessions.slice(0, 15).map((session) => ({
+        id: text(session?.id, 64),
+        title: text(session?.title),
+        subject: text(session?.subject, 40),
+        date: text(session?.date, 10),
+        time: text(session?.time, 5),
+        endTime: text(session?.endTime, 5),
+        registered: Boolean(session?.registered),
+      })).filter((session) => session.id)
+      : [],
+  };
+}
+
+const appActionInstructions = (context) =>
+  `Student app context (the only source of truth about the student's sessions): ${JSON.stringify(context)}. ` +
+  "When the student asks about sessions, answer only from this context with titles, dates, and times. Never invent sessions; say so if none match. " +
+  "You can act inside the app: in addition to the other fields, include \"actions\" in the JSON object, an array that is empty unless the student asks for something. Allowed actions: " +
+  "{\"type\": \"open\", \"page\": one of \"study\" (dashboard), \"sessions\", \"sensory\" (daily mood check-in / sensory tracker), \"leaderboard\" (Cogni Board), \"premium\", \"careers\", \"messages\", \"settings\"}; " +
+  "{\"type\": \"openSession\", \"sessionId\": string}; " +
+  "{\"type\": \"register\", \"sessionId\": string}, only when the student asks to register for or join a session they are not registered for; " +
+  "{\"type\": \"setting\", \"name\": \"textSize\", \"value\": \"larger\" | \"smaller\" | \"reset\"}; {\"type\": \"setting\", \"name\": \"appearance\", \"value\": \"light\" | \"dark\"}; " +
+  "{\"type\": \"setting\", \"name\": \"readAloud\", \"value\": \"on\" | \"off\"}. " +
+  "Only use session IDs from the context. If checkInAvailable is false, explain that the check-in needs a student sign-in instead of opening it. " +
+  "When you add an action, say briefly in the answer what you did; for register, say they can tap the button to confirm.";
+
+function sanitizeActions(actions, context) {
+  if (!Array.isArray(actions) || !context) return [];
+  const sessionIds = new Set(context.sessions.map((session) => session.id));
+  return actions
+    .filter((action) => {
+      if (!action || typeof action !== "object") return false;
+      if (action.type === "open") return appPages.includes(action.page);
+      if (action.type === "openSession" || action.type === "register") return sessionIds.has(action.sessionId);
+      if (action.type === "setting") return Boolean(settingValues[action.name]?.includes(action.value));
+      return false;
+    })
+    .slice(0, 3)
+    .map(({ type, page, sessionId, name, value }) => ({ type, page, sessionId, name, value }));
+}
+
 const supportedLanguages = new Set([
   "English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Kannada", "Malayalam", "Punjabi", "French", "German",
 ]);
@@ -79,7 +132,7 @@ function isValidMessages(messages) {
   );
 }
 
-async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE_TOKENS) {
+async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE_TOKENS, extraInstructions = "") {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL;
   if (!apiKey || !model) {
@@ -94,7 +147,7 @@ async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE
       : task === "audio"
         ? audioInstructions
         : chatInstructions;
-  const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions}`;
+  const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions} ${extraInstructions}`.trim();
 
   return fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -155,7 +208,7 @@ export default async function handler(request, response) {
     return reply(response, 405, { error: "Only POST requests are supported." });
   }
 
-  const { task = "chat", messages, language = "English" } = request.body || {};
+  const { task = "chat", messages, language = "English", context } = request.body || {};
   if (task === "usage") {
     if (!supabaseUrl || !supabaseAnonKey) {
       return reply(response, 200, { used: 0, limit: DAILY_TOKEN_LIMIT });
@@ -170,6 +223,9 @@ export default async function handler(request, response) {
   if (!["chat", "mcq", "audio"].includes(task) || !isValidMessages(messages)) {
     return reply(response, 400, { error: "A valid task and conversation are required." });
   }
+
+  const appContext = task === "chat" ? sanitizeAppContext(context) : null;
+  const extraInstructions = appContext ? appActionInstructions(appContext) : "";
 
   // Without Supabase (demo mode) there are no accounts, so the per-user limit can't apply.
   let userClient = null;
@@ -186,7 +242,7 @@ export default async function handler(request, response) {
     }
     usedToday = Number(data) || 0;
     const taskPrompt = task === "mcq" ? quizInstructions : task === "audio" ? audioInstructions : chatInstructions;
-    const promptEstimate = estimateTokens(messages.map((message) => message.content).join("") + tutorInstructions + taskPrompt + language);
+    const promptEstimate = estimateTokens(messages.map((message) => message.content).join("") + tutorInstructions + taskPrompt + language + extraInstructions);
     if (usedToday + promptEstimate >= DAILY_TOKEN_LIMIT) {
       return reply(response, 429, {
         error: "You've reached today's Cogni-Flow limit. It resets tomorrow.",
@@ -198,12 +254,12 @@ export default async function handler(request, response) {
 
   const requestPrompt = messages.map((message) => message.content).join("");
   const taskPrompt = task === "mcq" ? quizInstructions : task === "audio" ? audioInstructions : chatInstructions;
-  const promptEstimate = estimateTokens(requestPrompt + tutorInstructions + taskPrompt + language);
+  const promptEstimate = estimateTokens(requestPrompt + tutorInstructions + taskPrompt + language + extraInstructions);
   const responseTokenBudget = DAILY_TOKEN_LIMIT - usedToday - promptEstimate;
   const usage = { tokens: 0, startingTokens: usedToday };
   try {
     const responseLanguage = supportedLanguages.has(language) ? language : "English";
-    const upstreamResponse = await callOpenRouter(messages, task, responseLanguage, responseTokenBudget);
+    const upstreamResponse = await callOpenRouter(messages, task, responseLanguage, responseTokenBudget, extraInstructions);
     const data = await upstreamResponse.json();
     if (upstreamResponse.ok) usage.tokens += tokensUsed(
       data,
@@ -221,6 +277,7 @@ export default async function handler(request, response) {
     if (task === "chat") {
       const latestUserMessage = messages.filter((message) => message.role === "user").at(-1);
       let chatResult;
+      let actions = [];
       try {
         const parsed = JSON.parse(content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
         chatResult = {
@@ -232,6 +289,7 @@ export default async function handler(request, response) {
           ? parsed.relatedQuestions.filter((question) => typeof question === "string").slice(0, 4)
             : [],
         };
+        actions = sanitizeActions(parsed.actions, appContext);
       } catch {
         chatResult = {
           answer: content,
@@ -247,6 +305,7 @@ export default async function handler(request, response) {
         content: localizedResult.answer,
         translatedQuestion: localizedResult.translatedQuestion,
         relatedQuestions: localizedResult.relatedQuestions,
+        actions,
       });
     }
 

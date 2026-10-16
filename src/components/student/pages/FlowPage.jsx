@@ -5,6 +5,7 @@ import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
 import { QuickPrompts } from "../flow/QuickPrompts";
 import { askLearningAssistant, getLearningAssistantUsage } from "../flow/flowApi";
+import { speak, stopSpeaking } from "../flow/readAloud";
 import "../flow/flow.css";
 
 // "Turn these notes into audio", "read this aloud", "make this a podcast" and similar asks.
@@ -30,8 +31,9 @@ const welcomeMessage = (t) => ({
 const historyStorageKey = (studentEmail) => `cognibridge_flow_history_${studentEmail?.toLowerCase() || "guest"}`;
 const makeConversationId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-export function FlowPage({ t, language, studentEmail }) {
+export function FlowPage({ t, language, studentEmail, readAloud, assistantContext, onAction }) {
   const [messages, setMessages] = useState(() => [welcomeMessage(t)]);
+  const [speakingId, setSpeakingId] = useState(null);
   const [usage, setUsage] = useState({ used: 0, limit: 5000 });
   const [activeConversationId, setActiveConversationId] = useState(makeConversationId);
   const [conversations, setConversations] = useState(() => {
@@ -117,18 +119,44 @@ export function FlowPage({ t, language, studentEmail }) {
     )));
   }, [t]);
 
+  useEffect(() => {
+    if (!readAloud.enabled) setSpeakingId(null);
+  }, [readAloud.enabled]);
+
+  const speakMessage = (id, content) => {
+    setSpeakingId(id);
+    speak(content, {
+      language,
+      volume: readAloud.volume,
+      onEnd: () => setSpeakingId((current) => (current === id ? null : current)),
+    });
+  };
+
+  const toggleSpeaking = (message) => {
+    if (speakingId === message.id) {
+      stopSpeaking();
+      setSpeakingId(null);
+    } else {
+      speakMessage(message.id, message.content);
+    }
+  };
+
   const requestAssistant = async (conversation, userMessageId = null) => {
     setIsLoading(true);
     setError("");
 
     try {
-      const answer = await askLearningAssistant(conversation, "chat", language);
+      const answer = await askLearningAssistant(conversation, "chat", language, assistantContext);
       let quiz = null;
-      try {
-        quiz = await askLearningAssistant(conversation, "mcq", language);
-      } catch {
-        // Keep the tutor's answer available when practice generation is unavailable.
+      // Requests like "register me" or "open the check-in" don't need a practice question.
+      if (!answer.actions.length) {
+        try {
+          quiz = await askLearningAssistant(conversation, "mcq", language);
+        } catch {
+          // Keep the tutor's answer available when practice generation is unavailable.
+        }
       }
+      const answerId = `${Date.now()}-chat`;
       setMessages((current) => {
         const translatedMessages = answer.translatedQuestion
           ? current.map((message) => (
@@ -141,15 +169,20 @@ export function FlowPage({ t, language, studentEmail }) {
         return [
           ...translatedMessages,
           {
-            id: `${Date.now()}-chat`,
+            id: answerId,
             role: "assistant",
             content: answer.content,
             relatedQuestions: answer.relatedQuestions,
             quiz,
+            actions: answer.actions,
             timestamp: new Date(),
           },
         ];
       });
+      const readAloudSetting = answer.actions.find((action) => action.type === "setting" && action.name === "readAloud");
+      if (readAloudSetting ? readAloudSetting.value === "on" : readAloud.enabled) speakMessage(answerId, answer.content);
+      // Registration waits for the student to tap the confirm button in the reply.
+      answer.actions.filter((action) => action.type !== "register").forEach(onAction);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -234,6 +267,11 @@ export function FlowPage({ t, language, studentEmail }) {
           isLoading={isLoading}
           messagesEndRef={messagesEndRef}
           language={language}
+          readAloudEnabled={readAloud.enabled}
+          speakingId={speakingId}
+          onToggleSpeaking={toggleSpeaking}
+          sessions={assistantContext.sessions}
+          onAction={onAction}
           t={t}
         />
         {error && (

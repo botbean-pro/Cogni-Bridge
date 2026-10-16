@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { ArrowUpRight, UserRound, X } from "lucide-react";
+import { ArrowUpRight, CalendarPlus, CheckCircle2, Square, UserRound, Volume2, X } from "lucide-react";
 import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
 import { AudioPlayer } from "./AudioNotes";
@@ -43,7 +43,32 @@ const timeLocales = {
   Punjabi: "pa-IN",
 };
 
-function Message({ message, language, t }) {
+function RegisterButtons({ actions, sessions, onAction, t }) {
+  const sessionsToRegister = (actions || [])
+    .filter((action) => action.type === "register")
+    .map((action) => sessions.find((session) => session.id === action.sessionId))
+    .filter(Boolean);
+  if (!sessionsToRegister.length) return null;
+  return (
+    <div className="ai-message-actions">
+      {sessionsToRegister.map((session) => (
+        <button
+          type="button"
+          key={session.id}
+          className="ai-action-button"
+          disabled={session.registered}
+          onClick={() => onAction({ type: "register", sessionId: session.id })}
+        >
+          {session.registered
+            ? <><CheckCircle2 size={16} /> {t("registered")}</>
+            : <><CalendarPlus size={16} /> {t("aiRegisterFor", { title: session.title })}</>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Message({ message, language, readAloudEnabled, speaking, onToggleSpeaking, sessions, onAction, t }) {
   const isAssistant = message.role === "assistant";
 
   return (
@@ -55,6 +80,12 @@ function Message({ message, language, t }) {
         <div className="message-text">
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
+        {isAssistant && readAloudEnabled && (
+          <button type="button" className="ai-listen-button" onClick={() => onToggleSpeaking(message)} aria-pressed={speaking}>
+            {speaking ? <><Square size={14} /> {t("audioStop")}</> : <><Volume2 size={16} /> {t("listen")}</>}
+          </button>
+        )}
+        {isAssistant && <RegisterButtons actions={message.actions} sessions={sessions} onAction={onAction} t={t} />}
         {message.audioScript && <AudioPlayer script={message.audioScript} language={language} t={t} />}
         {message.quiz && <PracticeQuestion quiz={message.quiz} t={t} />}
         <time className="message-time">
@@ -98,10 +129,33 @@ export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
   );
 }
 
-export function ChatMessages({ messages, isLoading, messagesEndRef, language, t }) {
+export function ChatMessages({
+  messages,
+  isLoading,
+  messagesEndRef,
+  language,
+  readAloudEnabled,
+  speakingId,
+  onToggleSpeaking,
+  sessions,
+  onAction,
+  t,
+}) {
   return (
     <div className="ai-chat-messages" aria-live="polite">
-      {messages.map((message) => <Message key={message.id} message={message} language={language} t={t} />)}
+      {messages.map((message) => (
+        <Message
+          key={message.id}
+          message={message}
+          language={language}
+          readAloudEnabled={readAloudEnabled}
+          speaking={speakingId === message.id}
+          onToggleSpeaking={onToggleSpeaking}
+          sessions={sessions}
+          onAction={onAction}
+          t={t}
+        />
+      ))}
       {isLoading && (
         <div className="ai-message assistant" aria-label={t("aiThinking")}>
           <div className="message-avatar"><LogoImage size={24} /></div>

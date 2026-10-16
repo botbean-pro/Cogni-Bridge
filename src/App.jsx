@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { classNames, demoStudents, initialSessions, readStudents, subjects } from "./constants";
+import { classNames, demoStudents, getSessionTitle, initialSessions, readStudents, subjects } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
 import { HomePage, AboutPage, SessionsPage, StudyPage, FlowPage, MessagesPage } from "./components/LearningPages";
@@ -20,6 +20,7 @@ import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage"
 import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
+import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
 
 const App = () => {
   const [sessions, setSessions] = useState(initialSessions);
@@ -36,6 +37,7 @@ const App = () => {
   const [appearance, setAppearance] = useState("light");
   const [textScale, setTextScale] = useState(1);
   const [studentLanguage, setStudentLanguage] = useState("English");
+  const [readAloud, setReadAloud] = useState({ enabled: false, volume: 0.8 });
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState("");
@@ -75,6 +77,27 @@ const App = () => {
     session.subject !== "Physical Education"
     && (!preferredSubjects.length || preferredSubjects.includes(session.subject))
   ));
+  const today = new Date().toLocaleDateString("en-CA");
+  // Upcoming sessions first (soonest first), then recent past ones, so Cogni-Flow sees what the student sees.
+  const assistantSessions = [
+    ...studentSessions.filter((session) => session.date >= today).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)),
+    ...studentSessions.filter((session) => session.date < today).sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`)),
+  ].slice(0, 15);
+  const assistantContext = {
+    today,
+    signedIn,
+    checkInAvailable: sensoryTrackerEnabled,
+    subjects: preferredSubjects,
+    sessions: assistantSessions.map((session) => ({
+      id: session.id,
+      title: getSessionTitle(session, t),
+      subject: session.subject,
+      date: session.date,
+      time: session.time,
+      endTime: session.endTime,
+      registered: registeredSessionIds.includes(session.id),
+    })),
+  };
 
   const savePreferredSubjects = async (selection) => {
     const selected = subjects.filter((subject) => selection.includes(subject));
@@ -345,6 +368,14 @@ const App = () => {
   }, [textScale]);
 
   useEffect(() => {
+    if (!readAloud.enabled) stopSpeaking();
+  }, [readAloud.enabled]);
+
+  useEffect(() => {
+    setSpeakingVolume(readAloud.volume);
+  }, [readAloud.volume]);
+
+  useEffect(() => {
     document.documentElement.lang = ({
       English: "en",
       Hindi: "hi",
@@ -463,6 +494,32 @@ const App = () => {
 
     setActiveTab(tab);
     if (tab !== "sessions") setSelectedSession(null);
+  };
+
+  // Actions requested by Cogni-Flow; api/chat.js has already checked them against the context it was sent.
+  const handleAssistantAction = (action) => {
+    if (action.type === "open") {
+      goToTab(action.page);
+    } else if (action.type === "openSession") {
+      const session = sessions.find((item) => item.id === action.sessionId);
+      if (session) {
+        setSelectedSession(session);
+        setActiveTab("sessions");
+      }
+    } else if (action.type === "register") {
+      if (signedIn) registerForSession(action.sessionId);
+      else setLoginOpen(true);
+    } else if (action.type === "setting") {
+      if (action.name === "textSize") {
+        setTextScale((scale) => (action.value === "reset"
+          ? 1
+          : Math.min(1.35, Math.max(0.85, Math.round((scale + (action.value === "larger" ? 0.1 : -0.1)) * 100) / 100))));
+      } else if (action.name === "appearance") {
+        setAppearance(action.value);
+      } else if (action.name === "readAloud") {
+        setReadAloud((current) => ({ ...current, enabled: action.value === "on" }));
+      }
+    }
   };
 
   if (mentorOpen) {
@@ -644,6 +701,8 @@ const App = () => {
             setAppearance={setAppearance}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
+            readAloud={readAloud}
+            setReadAloud={setReadAloud}
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
@@ -701,7 +760,16 @@ const App = () => {
             />
           ),
           careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
-          flow: <FlowPage t={t} language={studentLanguage} studentEmail={studentEmail} />,
+          flow: (
+            <FlowPage
+              t={t}
+              language={studentLanguage}
+              studentEmail={studentEmail}
+              readAloud={readAloud}
+              assistantContext={assistantContext}
+              onAction={handleAssistantAction}
+            />
+          ),
           premium: <PremiumFlowPage
             t={t}
             signedIn={signedIn}

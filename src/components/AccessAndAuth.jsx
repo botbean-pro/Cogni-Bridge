@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Volume2,
   X,
 } from "lucide-react";
 import {
@@ -425,6 +426,8 @@ const AccessibilityPanel = ({
   language,
   setLanguage,
   showLanguage = true,
+  readAloud,
+  setReadAloud,
   onClose,
   className = "",
   t,
@@ -456,6 +459,33 @@ const AccessibilityPanel = ({
     </label>
 
     {showLanguage && <LanguagePicker value={language} onChange={setLanguage} t={t} />}
+
+    {readAloud && (
+      <div className="read-aloud-settings">
+        <label className="appearance-row">
+          <strong><Volume2 size={17} /> {t("readAloud")}</strong>
+          <input
+            type="checkbox"
+            role="switch"
+            className="read-aloud-switch"
+            checked={readAloud.enabled}
+            onChange={(event) => setReadAloud((current) => ({ ...current, enabled: event.target.checked }))}
+          />
+        </label>
+        <label className="range-row">
+          <span>{t("readAloudVolume")}</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step=".05"
+            value={readAloud.volume}
+            disabled={!readAloud.enabled}
+            onChange={(event) => setReadAloud((current) => ({ ...current, volume: Number(event.target.value) }))}
+          />
+        </label>
+      </div>
+    )}
 
     <label className="appearance-row">
       <strong>{t("appearance")}</strong>

@@ -7,7 +7,7 @@ async function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function fetchWithAuth(url, options) {
+export async function fetchWithAuth(url, options) {
   const makeRequest = async () => fetch(url, {
     ...options,
     headers: { ...options.headers, ...(await authHeaders()) },
@@ -31,13 +31,14 @@ export async function getLearningAssistantUsage() {
   return { used: Number(data.used) || 0, limit: Number(data.limit) || 5000 };
 }
 
-export async function askLearningAssistant(conversation, task = "chat", language = "English") {
+export async function askLearningAssistant(conversation, task = "chat", language = "English", context = null) {
   const response = await fetchWithAuth("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       task,
       language,
+      context: task === "chat" ? context : undefined,
       messages: conversation
         .filter((message) => message.role === "user" || message.role === "assistant")
         .map(({ role, content }) => ({ role, content })),
@@ -55,6 +56,7 @@ export async function askLearningAssistant(conversation, task = "chat", language
       content: data.content,
       translatedQuestion: data.translatedQuestion || "",
       relatedQuestions: data.relatedQuestions || [],
+      actions: Array.isArray(data.actions) ? data.actions : [],
     }
     : data.quiz;
 }
