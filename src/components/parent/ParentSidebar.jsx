@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CalendarDays, Heart, Home, MessageCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CalendarDays, Heart, Home, MessageCircle, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { classNames } from "../../constants";
 import { LogoImage } from "../Brand";
 
@@ -8,6 +8,7 @@ const items = [
   [Heart, "moods", "parentMoods"],
   [CalendarDays, "sessions", "sessions"],
   [MessageCircle, "teachers", "parentTeachers"],
+  [Settings, "settings", "settings"],
 ];
 
 // Same collapsible rail as the student sidebar (shares its student-rail-* styles).

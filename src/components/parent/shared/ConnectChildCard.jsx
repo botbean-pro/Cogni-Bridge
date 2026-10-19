@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { ArrowRight, Link2 } from "lucide-react";
+import { ArrowRight, Link2, X } from "lucide-react";
 
 // A student creates a one-time code in their Settings; entering it here links the
 // accounts (connect_parent_with_code in 20261012000300_parent_portal.sql).
-export function ConnectChildCard({ title, intro, onConnect, delay = 0, t }) {
+export function ConnectChildCard({ title, intro, onConnect, onDismiss, delay = 0, t }) {
   const [code, setCode] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -27,7 +27,12 @@ export function ConnectChildCard({ title, intro, onConnect, delay = 0, t }) {
   };
 
   return (
-    <section className="parent-card parent-connect-card parent-rise" style={{ "--rise-delay": `${delay}ms` }}>
+    <section className={`parent-card parent-connect-card parent-rise${onDismiss ? " is-dismissible" : ""}`} style={{ "--rise-delay": `${delay}ms` }}>
+      {onDismiss && (
+        <button type="button" className="parent-connect-dismiss" onClick={onDismiss} aria-label={t("close")} title={t("close")}>
+          <X size={16} />
+        </button>
+      )}
       <div className="parent-connect-copy">
         <span className="parent-card-icon"><Link2 size={20} /></span>
         <div>

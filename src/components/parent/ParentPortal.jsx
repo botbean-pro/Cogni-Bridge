@@ -25,7 +25,9 @@ function ParentLoading({ t }) {
   );
 }
 
-const parentTabs = ["overview", "moods", "sessions", "teachers"];
+const parentTabs = ["overview", "moods", "sessions", "teachers", "settings"];
+
+const connectHiddenKey = (parentId) => `cognibridge_parent_connect_hidden:${parentId}`;
 
 const pickChild = (children, currentId) => (
   children.some((child) => child.id === currentId) ? currentId : children[0]?.id ?? null
@@ -38,6 +40,23 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   const [childData, setChildData] = useState(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  // The overview's "Connect another child" card can be crossed out; it stays available under Settings.
+  const [connectHidden, setConnectHidden] = useState(() => {
+    try {
+      return localStorage.getItem(connectHiddenKey(parentId)) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  const hideConnectCard = () => {
+    setConnectHidden(true);
+    try {
+      localStorage.setItem(connectHiddenKey(parentId), "1");
+    } catch {
+      // Hidden for this session only if browser storage is unavailable.
+    }
+  };
 
   useEffect(() => {
     let isCurrent = true;
@@ -99,6 +118,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     moods: [t("parentMoods"), ""],
     sessions: [t("childSessionsHeading"), t("attentionRatedBy")],
     teachers: [t("consultTeachers"), child ? t("consultTeachersCopy", { child: childName }) : ""],
+    settings: [t("settings"), ""],
   }[tab];
 
   let body;
@@ -113,6 +133,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     body = <ParentLoading t={t} />;
   } else if (!child) {
     body = <ConnectChildCard title={t("connectChild")} intro={t("noChildLinked")} onConnect={connectChild} t={t} />;
+  } else if (tab === "settings") {
+    body = <ConnectChildCard title={t("connectAnotherChild")} onConnect={connectChild} t={t} />;
   } else if (tab === "teachers") {
     body = <ParentTeachersPage key={child.id} child={child} messages={portal.messages.filter((message) => message.student_id === child.id)} onSend={sendMessage} t={t} />;
   } else if (!childData) {
@@ -122,7 +144,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   } else if (tab === "sessions") {
     body = <ParentSessionsPage child={child} sessions={childData.sessions} t={t} />;
   } else {
-    body = <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} t={t} />;
+    body = <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} showConnect={!connectHidden} onDismissConnect={hideConnectCard} t={t} />;
   }
 
   return (

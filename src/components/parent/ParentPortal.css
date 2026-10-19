@@ -88,6 +88,9 @@
 
 /* Connect a child */
 .parent-connect-card { display:flex; align-items:center; justify-content:space-between; gap:24px; }
+.parent-connect-card.is-dismissible { position:relative; padding-right:58px; }
+.parent-connect-card .parent-connect-dismiss { position:absolute; top:12px; right:12px; display:grid; width:34px; height:34px; place-items:center; padding:0; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--muted); }
+.parent-connect-card .parent-connect-dismiss:hover { border-color:var(--teal); background:var(--surface-2); color:var(--text); transform:none; }
 .parent-connect-copy { display:flex; align-items:flex-start; gap:14px; }
 .parent-connect-copy h2 { margin:0; font-size:calc(19px * var(--text-scale, 1)); }
 .parent-connect-copy p { max-width:520px; margin:6px 0 0; color:var(--muted); line-height:1.5; }
