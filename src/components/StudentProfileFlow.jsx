@@ -51,36 +51,55 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
     }
   };
 
-  // Saves edited account details (class) without a new handwriting sample.
+  // Saves the edited account details: in Supabase the name is the profile's display_name and the
+  // rest lives in the auth user's metadata; in demo mode it all goes to the localStorage record.
   const saveDetails = async () => {
-    const studentClass = profile.studentClass.trim();
-    if (!studentClass) return;
-    analyzingRef.current = true;
-    try {
-      if (supabaseConfigured && existingProfile?.id) {
-        const { error: updateError } = await supabase.auth.updateUser({ data: { student_class: studentClass } });
-        if (updateError) throw updateError;
-      } else {
-        const students = readStudents();
-        localStorage.setItem("cognibridge_students", JSON.stringify(
-          students.map((student) => student.email === email ? { ...student, studentClass } : student),
-        ));
+    const details = {
+      name: profile.name.trim(),
+      studentClass: profile.studentClass.trim(),
+      age: String(profile.age ?? "").trim(),
+      section: (profile.section || "").trim(),
+      school: (profile.school || "").trim(),
+    };
+    if (supabaseConfigured && existingProfile?.id) {
+      // Name first: updateUser makes App reload the profile, which should already see the new name.
+      if (details.name !== existingProfile.name) {
+        const { error: nameError } = await supabase.from("profiles").update({ display_name: details.name }).eq("id", existingProfile.id);
+        if (nameError) throw nameError;
       }
-      onComplete({ ...existingProfile, studentClass });
-    } catch {
-      setError("profileSaveFail");
-    } finally {
-      analyzingRef.current = false;
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { full_name: details.name, student_class: details.studentClass, age: details.age, section: details.section, school: details.school },
+      });
+      if (metadataError) throw metadataError;
+    } else {
+      const students = readStudents();
+      localStorage.setItem("cognibridge_students", JSON.stringify(
+        students.map((student) => student.email === email ? { ...student, ...details } : student),
+      ));
     }
+    return details;
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     // Analysis needs a real image and only runs once per submission (double-clicks are ignored).
     if (analyzingRef.current || step !== "form") return;
-    if (!image && existingProfile) {
-      saveDetails();
-      return;
+    if (existingProfile) {
+      // Details save on their own; a new handwriting photo is optional.
+      analyzingRef.current = true;
+      let details;
+      try {
+        details = await saveDetails();
+      } catch {
+        analyzingRef.current = false;
+        setError("profileSaveFail");
+        return;
+      }
+      analyzingRef.current = false;
+      if (!image) {
+        onComplete({ ...existingProfile, ...details });
+        return;
+      }
     }
     if (!image) {
       setError("chooseHandwritingImage");
@@ -163,25 +182,21 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
       <section className="profile-flow-card">
         <div className="profile-flow-icon"><ImagePlus size={24} /></div>
         <p className="eyebrow">{existingProfile ? t("studentAccount") : t("newStudentProfile")}</p>
-        <h1>{existingProfile ? t("updateHandwriting") : t("setUpLearningProfile")}</h1>
-        <p className="profile-flow-copy">{existingProfile ? t("analyzeNewImage") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
+        <h1>{existingProfile ? t("editProfile") : t("setUpLearningProfile")}</h1>
+        <p className="profile-flow-copy">{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></p>
         {existingProfile && <>
-          <div className="profile-locked-name"><span>{t("profileName")}</span><strong>{existingProfile.name}</strong></div>
           <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{typeLabel(t, existingProfile.handwritingType) || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
         </>}
         <form className="profile-details-form" onSubmit={submit}>
-          {existingProfile && <label>{t("class")}<input value={profile.studentClass || ""} onChange={(event) => setProfile({ ...profile, studentClass: event.target.value })} required /></label>}
-          {!existingProfile && <>
-            <label>{t("childName")}<input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>
-            <div className="profile-form-row">
-              <label>{t("class")}<input value={profile.studentClass} onChange={(event) => setProfile({ ...profile, studentClass: event.target.value })} required /></label>
-              <label>{t("age")}<input type="number" min="5" max="25" value={profile.age} onChange={(event) => setProfile({ ...profile, age: event.target.value })} required /></label>
-            </div>
-            <div className="profile-form-row">
-              <label>{t("section")}<input value={profile.section} onChange={(event) => setProfile({ ...profile, section: event.target.value })} required /></label>
-              <label>{t("school")}<input value={profile.school} onChange={(event) => setProfile({ ...profile, school: event.target.value })} required /></label>
-            </div>
-          </>}
+          <label>{existingProfile ? t("profileName") : t("childName")}<input value={profile.name || ""} maxLength={80} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>
+          <div className="profile-form-row">
+            <label>{t("class")}<input value={profile.studentClass || ""} onChange={(event) => setProfile({ ...profile, studentClass: event.target.value })} required /></label>
+            <label>{t("age")}<input type="number" min="5" max="25" value={profile.age || ""} onChange={(event) => setProfile({ ...profile, age: event.target.value })} required={!existingProfile} /></label>
+          </div>
+          <div className="profile-form-row">
+            <label>{t("section")}<input value={profile.section || ""} onChange={(event) => setProfile({ ...profile, section: event.target.value })} required={!existingProfile} /></label>
+            <label>{t("school")}<input value={profile.school || ""} onChange={(event) => setProfile({ ...profile, school: event.target.value })} required={!existingProfile} /></label>
+          </div>
           <input ref={fileRef} className="profile-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} />
           <button type="button" className="handwriting-upload" onClick={() => fileRef.current?.click()}>
             {image ? <img src={image} alt={t("hw_altPreview")} /> : <Upload size={22} />}

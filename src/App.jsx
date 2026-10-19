@@ -303,7 +303,16 @@ const App = () => {
           setMentorOpen(false);
           setSignedIn(true);
           setStudentEmail(user.email || "");
-          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: savedSubjects });
+          setStudentProfile({
+            id: user.id,
+            email: user.email,
+            name: profile.display_name,
+            studentClass: user.user_metadata?.student_class || "",
+            age: user.user_metadata?.age || "",
+            section: user.user_metadata?.section || "",
+            school: user.user_metadata?.school || "",
+            preferredSubjects: savedSubjects,
+          });
           loadLatestHandwriting(user.id).then((handwriting) => {
             if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
           }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
