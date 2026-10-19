@@ -961,7 +961,13 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   .student-rail.accessibility-open .student-rail-nav,
   .student-rail.accessibility-open .student-rail-footer,
   .student-rail.accessibility-open .student-rail-account { justify-items:stretch; }
-  .student-rail.accessibility-open .student-rail-link { width:100%; justify-content:flex-start; margin:0; padding:0 13px; }
+  .student-rail.accessibility-open .student-rail-link { width:100%; justify-content:flex-start; gap:13px; margin:0; padding:0 13px; }
+  .student-rail.accessibility-open .student-rail-brand { width:100%; min-height:48px; flex-direction:row; justify-content:flex-start; padding:0 3px; }
+  .student-rail.accessibility-open .student-rail-toggle { width:32px; height:32px; margin-left:auto; border-radius:9px; }
+  .student-rail.accessibility-open .student-rail-account-split { display:flex; align-items:center; gap:6px; }
+  .student-rail.accessibility-open .student-rail-account-split .student-rail-logout { width:auto; flex:none; }
+  .student-rail.accessibility-open .student-rail-account-split .student-rail-profile { width:auto; flex:1; min-width:0; justify-content:flex-start; }
+  .student-rail.accessibility-open .student-rail-logout-icon { display:block; }
   .student-rail.accessibility-open .student-rail-link > span:not(.avatar-small) { width:auto; opacity:1; }
   .student-app-shell:has(.student-rail.accessibility-open) ~ .accessibility-panel,
   .app:has(.student-rail.accessibility-open) > .accessibility-panel { left:268px; right:auto; }
