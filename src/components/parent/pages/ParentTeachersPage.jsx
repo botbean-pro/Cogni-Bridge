@@ -1,5 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
+import { formatLocalizedDate } from "../../../constants";
+
+// Keeps a thread scrolled to its newest message.
+function ThreadMessages({ thread, t }) {
+  const listRef = useRef(null);
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [thread.length]);
+  return (
+    <div className="parent-thread-messages" ref={listRef}>
+      {thread.length ? thread.map((message) => (
+        <p key={message.id} className={message.sender_role === "parent" ? "from-parent" : "from-teacher"}>
+          <span>{message.sender_role === "parent" ? t("youLabel") : t("teacherLabel")}</span>
+          {message.message}
+          <small>{formatLocalizedDate(message.created_at, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</small>
+        </p>
+      )) : <small>{t("startConversation")}</small>}
+    </div>
+  );
+}
 
 // Parent-teacher threads for one child, one per assigned mentor.
 export function ParentTeachersPage({ child, messages, onSend, t }) {
@@ -37,15 +57,7 @@ export function ParentTeachersPage({ child, messages, onSend, t }) {
             <div className="parent-card-title">
               <h2><span className="parent-card-icon"><MessageCircle size={18} /></span> {mentor.display_name}</h2>
             </div>
-            <div className="parent-thread-messages">
-              {thread.length ? thread.map((message) => (
-                <p key={message.id} className={message.sender_role === "parent" ? "from-parent" : "from-teacher"}>
-                  <span>{message.sender_role === "parent" ? t("youLabel") : t("teacherLabel")}</span>
-                  {message.message}
-                  <small>{new Date(message.created_at).toLocaleString()}</small>
-                </p>
-              )) : <small>{t("startConversation")}</small>}
-            </div>
+            <ThreadMessages thread={thread} t={t} />
             <form onSubmit={(event) => send(event, mentor)}>
               <input aria-label={`${t("writeMessage")} ${mentor.display_name}`} maxLength={4000} value={drafts[mentor.id] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [mentor.id]: event.target.value }))} placeholder={t("writeMessage")} required />
               <button type="submit" disabled={sendingTo === mentor.id}><Send size={16} /><span>{t("sendMessage")}</span></button>

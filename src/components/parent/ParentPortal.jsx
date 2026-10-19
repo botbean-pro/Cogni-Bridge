@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Accessibility, LogOut } from "lucide-react";
 import { MouseTrail } from "../Brand";
-import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
+import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentMessages, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
 import { ParentSidebar } from "./ParentSidebar";
 import { useRouteTab } from "../../routes";
 import { ConnectChildCard } from "./shared/ConnectChildCard";
@@ -92,6 +92,25 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     };
   }, [childId, retry]);
 
+  // While the teachers tab is open, re-read the messages every 5 seconds so mentor replies show up.
+  useEffect(() => {
+    if (tab !== "teachers" || !portal) return undefined;
+    let isCurrent = true;
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return;
+      loadParentMessages(parentId)
+        .then((messages) => { if (isCurrent) setPortal((current) => current && { ...current, messages }); })
+        .catch(() => { /* keep the last messages; the next poll tries again */ });
+    };
+    const interval = window.setInterval(refresh, 5000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      isCurrent = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [tab, parentId, Boolean(portal)]);
+
   const refreshPortal = async () => {
     const next = await loadParentPortal(parentId);
     setPortal(next);
@@ -107,7 +126,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
 
   const sendMessage = async (mentorId, message) => {
     await sendParentTeacherMessage({ parentId, studentId: childId, mentorId, message });
-    await refreshPortal();
+    const messages = await loadParentMessages(parentId);
+    setPortal((current) => current && { ...current, messages });
   };
 
   const children = portal?.children || [];

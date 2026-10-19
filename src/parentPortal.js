@@ -73,6 +73,12 @@ export async function loadChildSessions(studentId) {
   }));
 }
 
+export async function loadParentMessages(parentId) {
+  return throwIfError(await supabase.from("parent_teacher_messages")
+    .select("id, student_id, mentor_id, sender_id, sender_role, message, created_at")
+    .eq("parent_id", parentId).order("created_at", { ascending: true }));
+}
+
 export async function sendParentTeacherMessage({ parentId, studentId, mentorId, message }) {
   return throwIfError(await supabase.from("parent_teacher_messages").insert({
     parent_id: parentId,
