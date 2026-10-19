@@ -3,7 +3,7 @@ import { ArrowLeft, CheckCircle2, ImagePlus, Loader2, Upload } from "lucide-reac
 import { readStudents } from "../constants";
 import { LogoImage } from "./Brand";
 import { typeLabel } from "../handwriting";
-import { supabaseConfigured } from "../supabaseClient";
+import { supabase, supabaseConfigured } from "../supabaseClient";
 import { saveHandwriting } from "../studentHandwriting";
 import "./StudentProfileFlow.css";
 
@@ -51,10 +51,37 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
     }
   };
 
+  // Saves edited account details (class) without a new handwriting sample.
+  const saveDetails = async () => {
+    const studentClass = profile.studentClass.trim();
+    if (!studentClass) return;
+    analyzingRef.current = true;
+    try {
+      if (supabaseConfigured && existingProfile?.id) {
+        const { error: updateError } = await supabase.auth.updateUser({ data: { student_class: studentClass } });
+        if (updateError) throw updateError;
+      } else {
+        const students = readStudents();
+        localStorage.setItem("cognibridge_students", JSON.stringify(
+          students.map((student) => student.email === email ? { ...student, studentClass } : student),
+        ));
+      }
+      onComplete({ ...existingProfile, studentClass });
+    } catch {
+      setError("profileSaveFail");
+    } finally {
+      analyzingRef.current = false;
+    }
+  };
+
   const submit = (event) => {
     event.preventDefault();
     // Analysis needs a real image and only runs once per submission (double-clicks are ignored).
     if (analyzingRef.current || step !== "form") return;
+    if (!image && existingProfile) {
+      saveDetails();
+      return;
+    }
     if (!image) {
       setError("chooseHandwritingImage");
       return;
@@ -143,6 +170,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
           <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{typeLabel(t, existingProfile.handwritingType) || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
         </>}
         <form className="profile-details-form" onSubmit={submit}>
+          {existingProfile && <label>{t("class")}<input value={profile.studentClass || ""} onChange={(event) => setProfile({ ...profile, studentClass: event.target.value })} required /></label>}
           {!existingProfile && <>
             <label>{t("childName")}<input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>
             <div className="profile-form-row">
@@ -160,7 +188,7 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
             <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("optionalHandwritingHint")}</small></span>
           </button>
           {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
-          <button className="primary-btn" type="submit" disabled={!image}>{existingProfile ? t("analyzeNewImageButton") : t("analyzeImage")}</button>
+          <button className="primary-btn" type="submit" disabled={!image && !existingProfile}>{existingProfile ? (image ? t("analyzeNewImageButton") : t("saveChanges")) : t("analyzeImage")}</button>
         </form>
       </section>
     </main>

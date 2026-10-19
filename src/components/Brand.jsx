@@ -42,6 +42,8 @@ export function AnimatedLogo() {
 }
 export function MouseTrail() {
   useEffect(() => {
+    // Phones and tablets have no cursor to follow.
+    if (window.matchMedia?.('(hover: none), (pointer: coarse)').matches) return undefined;
     const circle = document.createElement('div');
     circle.className = 'mouse-trail-circle';
     document.body.appendChild(circle);

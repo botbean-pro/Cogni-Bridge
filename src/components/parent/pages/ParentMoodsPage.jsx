@@ -2,6 +2,7 @@ import React from "react";
 import { LockKeyhole } from "lucide-react";
 import { MoodTrendChart } from "../../student/shared/MoodTrendChart";
 import { MoodBadge } from "../shared/MoodBadge";
+import { formatLocalizedDate } from "../../../constants";
 
 function RatingMeter({ label, value }) {
   return (
@@ -40,7 +41,7 @@ export function ParentMoodsPage({ child, checkins, t }) {
                 <div className="parent-checkin-body">
                   <div className="parent-checkin-top">
                     <strong>{t(`mood_${entry.mood}`)}</strong>
-                    <small>{new Date(entry.created_at).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</small>
+                    <small>{formatLocalizedDate(entry.created_at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</small>
                     {entry.checkin_type === "quick" && <em>{t("quickCheckin")}</em>}
                   </div>
                   {entry.emotions?.length > 0 && (

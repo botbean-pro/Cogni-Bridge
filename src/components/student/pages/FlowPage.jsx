@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus, X } from "lucide-react";
 import { ChatHeader } from "../flow/ChatHeader";
 import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
@@ -257,7 +257,10 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
         {historyOpen && <section className="ai-chat-history" aria-label={t("chatHistory")}>
           <div className="ai-chat-history-heading">
             <h3>{t("chatHistory")}</h3>
-            <button type="button" onClick={startNewConversation}><MessageSquarePlus size={16} />{t("newChat")}</button>
+            <div className="ai-chat-history-actions">
+              <button type="button" onClick={startNewConversation}><MessageSquarePlus size={16} />{t("newChat")}</button>
+              <button type="button" className="ai-chat-history-close" onClick={() => setHistoryOpen(false)} aria-label={t("close")} title={t("close")}><X size={16} /></button>
+            </div>
           </div>
           {conversations.length ? <div className="ai-chat-history-list">
             {conversations.map((conversation) => <button type="button" key={conversation.id} onClick={() => openConversation(conversation)}>

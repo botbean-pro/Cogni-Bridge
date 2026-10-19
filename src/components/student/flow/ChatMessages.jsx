@@ -111,16 +111,20 @@ export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
       <div className="related-question-cards" aria-label={t("relatedTopics")}>
         {visible.slice(0, 4).map((question) => (
           <div key={question} className="related-question-card">
-            <button type="button" onClick={() => onAsk(question)} disabled={disabled}>
-              <span>{question}</span><ArrowUpRight size={16} />
+            <button type="button" className="related-question-text" onClick={() => onAsk(question)} disabled={disabled}>
+              <span>{question}</span>
+            </button>
+            <button type="button" className="related-question-ask" onClick={() => onAsk(question)} disabled={disabled} aria-label={question} title={question}>
+              <ArrowUpRight size={18} />
             </button>
             <button
               type="button"
               className="related-question-dismiss"
               onClick={() => setDismissed((prev) => [...prev, question])}
               aria-label={t("dismiss")}
+              title={t("dismiss")}
             >
-              <X size={11} />
+              <X size={16} />
             </button>
           </div>
         ))}

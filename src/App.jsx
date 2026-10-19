@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { classNames, demoStudents, getSessionTitle, initialSessions, readStudents, subjects } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
@@ -21,6 +22,7 @@ import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
+import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
 
 const readPreferredSubjects = (email) => {
   if (!email) return [];
@@ -37,9 +39,17 @@ const App = () => {
   const [learningNotes, setLearningNotes] = useState([]);
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
-  const [activeTab, setActiveTab] = useState("home");
+  const location = useLocation();
+  const navigate = useNavigate();
+  // The URL decides which student page (and open session) shows; App state decides who may see it.
+  const route = parseStudentPath(location.pathname);
+  const activeTab = route.tab || "home";
+  const setActiveTab = (next) => {
+    const tab = typeof next === "function" ? next(activeTab) : next;
+    const path = studentTabPaths[tab];
+    if (path && normalizePath(location.pathname) !== path) navigate(path);
+  };
   const [scrollToAboutOnHome, setScrollToAboutOnHome] = useState(false);
-  const [selectedSession, setSelectedSession] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mentorOpen, setMentorOpen] = useState(false);
   const [parentOpen, setParentOpen] = useState(false);
@@ -86,6 +96,11 @@ const App = () => {
     () => (key, values) => translate(studentLanguage, key, values),
     [studentLanguage],
   );
+  const selectedSession = route.sessionId
+    ? sessions.find((session) => String(session.id) === route.sessionId) || null
+    : null;
+  const openSession = (session) => navigate(sessionPath(session.id));
+  const closeSession = () => navigate(studentTabPaths.sessions);
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
@@ -240,7 +255,6 @@ const App = () => {
       setMentorOpen(false);
       setParentOpen(false);
       setLearningNotes([]);
-      if (activeTab === "sensory") setActiveTab("home");
       return undefined;
     }
 
@@ -346,9 +360,23 @@ const App = () => {
     setScrollToAboutOnHome(false);
   }, [activeTab, scrollToAboutOnHome]);
 
+  // Auth is settled once Supabase has answered and, for a signed-in user, the profile role has loaded.
+  const authSettled = authReady && (!authSession?.user || authRole !== null);
+
+  // Gated or unknown URLs fall back to home, but only once auth has settled so a reload keeps its page.
   useEffect(() => {
-    if (!sensoryTrackerEnabled && activeTab === "sensory") setActiveTab("home");
-  }, [sensoryTrackerEnabled, activeTab]);
+    if (!authSettled || mentorOpen || parentOpen) return;
+    const path = normalizePath(location.pathname);
+    const gated = (activeTab === "sensory" && !sensoryTrackerEnabled) || (activeTab === "careers" && !(signedIn && isGrade12));
+    const unknown = !route.tab && path !== "/";
+    if (gated || unknown) navigate("/", { replace: true });
+  }, [authSettled, mentorOpen, parentOpen, location.pathname, sensoryTrackerEnabled, signedIn, isGrade12]);
+
+  // Portals keep their own tab in the URL under /mentor and /parent.
+  useEffect(() => {
+    if (mentorOpen && !isPortalPath(location.pathname, "mentor")) navigate("/mentor", { replace: true });
+    else if (parentOpen && !isPortalPath(location.pathname, "parent")) navigate("/parent", { replace: true });
+  }, [mentorOpen, parentOpen, location.pathname]);
 
   useEffect(() => {
     if (supabaseConfigured) {
@@ -519,7 +547,6 @@ const App = () => {
     if (tab === "careers" && (!signedIn || !isGrade12)) return;
     if (tab === "about") {
       setActiveTab("about");
-      setSelectedSession(null);
       scrollToAbout();
       return;
     }
@@ -529,7 +556,6 @@ const App = () => {
     }
 
     setActiveTab(tab);
-    if (tab !== "sessions") setSelectedSession(null);
   };
 
   // Actions requested by Cogni-Flow; api/chat.js has already checked them against the context it was sent.
@@ -538,10 +564,7 @@ const App = () => {
       goToTab(action.page);
     } else if (action.type === "openSession") {
       const session = sessions.find((item) => item.id === action.sessionId);
-      if (session) {
-        setSelectedSession(session);
-        setActiveTab("sessions");
-      }
+      if (session) openSession(session);
     } else if (action.type === "register") {
       if (signedIn) registerForSession(action.sessionId);
       else setLoginOpen(true);
@@ -771,10 +794,7 @@ const App = () => {
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}
               onScrollToAbout={scrollToAbout}
-              onOpenSession={(session) => {
-                setSelectedSession(session);
-                setActiveTab("sessions");
-              }}
+              onOpenSession={openSession}
             />
           ),
           leaderboard: <LeaderboardPage signedIn={signedIn} t={t} />,
@@ -788,8 +808,8 @@ const App = () => {
               t={t}
               registeredSessionIds={registeredSessionIds}
               attendedSessionIds={attendedSessionIds}
-              onSelect={setSelectedSession}
-              onBack={() => setSelectedSession(null)}
+              onSelect={openSession}
+              onBack={closeSession}
               onSignIn={() => setLoginOpen(true)}
               onRegister={registerForSession}
               onMarkAttended={markSessionAttended}
@@ -804,10 +824,7 @@ const App = () => {
               activityVersion={activityVersion}
               onEditHandwriting={() => setProfileOpen(true)}
               t={t}
-              onOpenSession={(session) => {
-                setSelectedSession(session);
-                setActiveTab("sessions");
-              }}
+              onOpenSession={openSession}
             />
           ),
           careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
