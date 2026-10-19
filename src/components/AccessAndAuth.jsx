@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronRight,
@@ -431,8 +431,22 @@ const AccessibilityPanel = ({
   onClose,
   className = "",
   t,
-}) => (
-  <aside className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
+}) => {
+  const panelRef = useRef(null);
+
+  // Clicking or tapping anywhere outside the panel closes it. The toggle buttons are skipped
+  // (they carry data-accessibility-toggle) so they can still close it themselves.
+  useEffect(() => {
+    const closeOnOutsidePress = (event) => {
+      if (panelRef.current?.contains(event.target) || event.target.closest?.("[data-accessibility-toggle]")) return;
+      onClose();
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [onClose]);
+
+  return (
+  <aside ref={panelRef} className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
       <div className="accessibility-panel-title">
         <span className="accessibility-panel-icon"><Sparkles size={18} /></span>
@@ -505,7 +519,8 @@ const AccessibilityPanel = ({
       {t("resetTextSize")}
     </button>
   </aside>
-);
+  );
+};
 
 const SignupPage = ({ email, onBack, onComplete, t }) => {
   const [form, setForm] = useState({ name: "", studentClass: "", age: "" });

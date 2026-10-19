@@ -132,7 +132,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
         <aside className="student-rail">
           <ParentSidebar activeTab={tab} onNavigate={setTab} t={t} />
           <div className="student-rail-footer">
-            <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
+            <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
               <Accessibility size={19} /><span>{t("accessibility")}</span>
             </button>
             <div className="student-rail-account">

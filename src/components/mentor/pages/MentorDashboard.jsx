@@ -61,7 +61,7 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
         </button>
       ))}
       <div className="mentor-rail-footer">
-        <button type="button" aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")} onClick={onToggleAccessibility}>
+        <button type="button" data-accessibility-toggle aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")} onClick={onToggleAccessibility}>
           <Accessibility size={19} /><span className="mentor-nav-label">{t("accessibility")}</span>
         </button>
         <button type="button" className="mentor-rail-logout" aria-label={t("mentorLogout")} title={t("mentorLogout")} onClick={onBack}>

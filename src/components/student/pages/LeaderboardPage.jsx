@@ -53,8 +53,6 @@ export function LeaderboardPage({ signedIn, t }) {
     };
   }, [signedIn, retry, t]);
 
-  const rankCopy = [t("lb_paceLine"), t("lb_greatSessionLine"), t("lb_closerLine")];
-
   const status = supabaseConfigured && !signedIn
     ? t("leaderboardSignIn")
     : error || (rows && !rows.length ? t("leaderboardEmpty") : "");
@@ -103,7 +101,6 @@ export function LeaderboardPage({ signedIn, t }) {
             <span className="podium-rank-title">{rankTitles[index]}</span>
             <span className="podium-score">{student.points} {t("lb_pts")}</span>
             <span className="streak-badge"><Flame size={15} fill="currentColor" /> {student.streak} {t("streak")}</span>
-            <p className="podium-motivation">{rankCopy[index]}</p>
           </article>
         ))}
       </section>

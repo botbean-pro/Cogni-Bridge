@@ -82,7 +82,6 @@
 .leaderboard-student-details { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:3px; }
 .leaderboard-student-details .leaderboard-rank-title { font-size:9px; letter-spacing:.08em; }
 .podium-card-1 .podium-rank-title { color:#a46a07; }
-.podium-motivation { max-width:220px; margin:2px 0 0; color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); line-height:1.45; text-align:center; }
 .leaderboard-rank-2 .leaderboard-rank { color:#68727e; background:#edf0f4; }
 .leaderboard-rank-3 .leaderboard-rank { color:#a9663c; background:#fff0e7; }
 .theme-dark .podium-card-1 { background:linear-gradient(155deg,#493f29,#263738 70%); border-color:#927435; }
@@ -90,7 +89,6 @@
 .theme-dark .podium-rank-title { color:#75dfd1; }
 .theme-dark .leaderboard-student-details .leaderboard-rank-title { color:#75dfd1; }
 .theme-dark .podium-card-1 .podium-rank-title { color:#f3d477; }
-.theme-dark .podium-motivation { color:var(--muted); }
 .theme-dark .leaderboard-rank-2 .leaderboard-rank { color:#d5dce4; background:#354149; }
 .theme-dark .leaderboard-rank-3 .leaderboard-rank { color:#ffb68e; background:#49332c; }
 @media (prefers-reduced-motion: reduce) {

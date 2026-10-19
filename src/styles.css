@@ -1051,6 +1051,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .ai-header-icon { width:52px; height:52px; border-radius:17px; background:linear-gradient(135deg, #13c7b6, #477bea); color:white; box-shadow:0 12px 24px rgba(29, 159, 165, .25); }
 .ai-chat-header h2 { font-size:calc(23px * var(--text-scale, 1)); letter-spacing:-.03em; }
 .ai-status { padding:9px 14px; background:rgba(229, 255, 250, .78); box-shadow:0 7px 18px rgba(20, 96, 93, .08); }
+.theme-dark .ai-status { background:rgba(8,169,150,.16); color:#7fe3d5; box-shadow:none; }
 .ai-chat-messages { padding:clamp(24px, 4vw, 54px) clamp(20px, 7vw, 12vw) 38px; gap:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--canvas) 94%, #e2fffb), color-mix(in srgb, var(--canvas) 96%, #edf3ff)); }
 .message-avatar { width:42px; height:42px; background:linear-gradient(135deg, #16c6b4, #3b81e8); box-shadow:0 8px 18px rgba(16, 157, 153, .2); }
 .message-content { max-width:min(78%, 840px); }
@@ -1089,6 +1090,18 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail-logout { min-width:0; max-width:100%; }
 .student-rail-logout > span:not(.avatar-small) { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
+/* Mentor pages: the content column, its headings and the narrower forms and lists sit centred
+   in the space beside the rail. */
+.mentor-layout { padding-left:76px; }
+.mentor-content { width:auto; margin:0 auto; }
+.mentor-content > .mentor-kicker,.mentor-content > .mentor-title,.mentor-content > .mentor-subtitle { text-align:center; }
+.mentor-content > .mentor-subtitle { max-width:720px; margin-inline:auto; }
+.mentor-content .schedule-form,.mentor-content .uploaded-notes,.mentor-leaderboard,.mentor-parent-threads { margin-inline:auto; }
+@media (max-width:760px) {
+  .mentor-layout { padding-left:64px; }
+  .mentor-content { width:auto; margin:0 auto; }
+}
+
 /* Phone layout: the side rails (student, parent, mentor) become a bottom tab bar, pages use the
    full width, and the cursor-following circle is hidden on touch screens. */
 @media (hover:none),(pointer:coarse) { .mouse-trail-circle { display:none; } }
@@ -1120,6 +1133,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   .student-profile-menu { position:fixed; bottom:calc(76px + env(safe-area-inset-bottom)); left:auto; right:12px; }
   .mentor-nav .mentor-notification-count,.mentor-nav:is(:hover,:focus-within) .mentor-notification-count { position:absolute; top:3px; right:6px; margin:0; }
   .student-app-shell > .main,.mentor-content { width:100%; margin-left:0; padding-bottom:calc(84px + env(safe-area-inset-bottom)); }
+  .mentor-layout { padding-left:0; }
   .student-app-shell ~ .accessibility-panel,.accessibility-panel-left { inset:auto 12px calc(80px + env(safe-area-inset-bottom)) 12px; width:auto; max-height:70vh; overflow-y:auto; }
   .toast { bottom:calc(84px + env(safe-area-inset-bottom)); }
   .student-calm-overlay { padding:12px; }

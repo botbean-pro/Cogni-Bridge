@@ -50,7 +50,7 @@ export const StudentPage = ({
         <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(false); setCalmCornerOpen(true); }} />
         <div className="student-rail-footer">
           {studentId && <StudentNotifications studentId={studentId} t={t} />}
-          <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
+          <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>
           </button>
           <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} onOpenAccount={onOpenAccount} onOpenSettings={() => setSettingsOpen(true)} t={t} />
