@@ -36,7 +36,8 @@ export function ParentTeachersPage({ child, messages, onSend, t }) {
     try {
       await onSend(mentor.id, message);
       setDrafts((current) => ({ ...current, [mentor.id]: "" }));
-    } catch {
+    } catch (sendError) {
+      console.error("Parent message failed to send:", sendError);
       setError(t("messageSendError"));
     } finally {
       setSendingTo(null);

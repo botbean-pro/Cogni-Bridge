@@ -92,14 +92,15 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     };
   }, [childId, retry]);
 
-  // While the teachers tab is open, re-read the messages every 5 seconds so mentor replies show up.
+  // While the teachers tab is open, re-read the portal every 5 seconds so mentor replies and newly
+  // assigned mentors show up without a reload.
   useEffect(() => {
     if (tab !== "teachers" || !portal) return undefined;
     let isCurrent = true;
     const refresh = () => {
       if (document.visibilityState === "hidden") return;
-      loadParentMessages(parentId)
-        .then((messages) => { if (isCurrent) setPortal((current) => current && { ...current, messages }); })
+      loadParentPortal(parentId)
+        .then((next) => { if (isCurrent) setPortal(next); })
         .catch(() => { /* keep the last messages; the next poll tries again */ });
     };
     const interval = window.setInterval(refresh, 5000);

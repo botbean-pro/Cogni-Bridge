@@ -610,7 +610,10 @@ function useParentMessages(mentorId, viewing) {
       if (document.visibilityState === "hidden") return;
       loadMentorParentMessages(mentorId)
         .then((rows) => { if (current) { setMessages(rows); setError(false); } })
-        .catch(() => { if (current) setError(true); })
+        .catch((loadError) => {
+          console.error("Loading parent messages failed:", loadError);
+          if (current) setError(true);
+        })
         .finally(() => { if (current) setLoading(false); });
     };
     refresh();
