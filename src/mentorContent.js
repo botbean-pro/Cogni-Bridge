@@ -19,6 +19,12 @@ const toClientSession = (row) => ({
   attendees: row.attendees,
 });
 
+// The signed-in mentor's own display name, shown in the rail and the overview greeting.
+export async function loadMentorName(mentorId) {
+  const profile = throwIfError(await supabase.from("profiles").select("display_name").eq("id", mentorId).maybeSingle());
+  return profile?.display_name || "";
+}
+
 export async function fetchSessions() {
   const rows = throwIfError(await supabase
     .from("sessions")

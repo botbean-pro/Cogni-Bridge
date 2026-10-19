@@ -28,14 +28,14 @@ import { calculateStudentStats, formatLearningTime, readStudentActivities } from
 import { LogoImage } from "../../Brand";
 import { SessionStudents } from "../SessionStudents";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
-import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, setMyStudent } from "../../../mentorContent";
+import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
   respondToMentorRequest,
 } from "../../../studentSensory";
 
-function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, unreadParentCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
+function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCount, unreadParentCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["performance", TrendingUp, t("md_perfNav")],
@@ -68,11 +68,27 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, unreadPar
           <Accessibility size={19} /><span className="mentor-nav-label">{t("accessibility")}</span>
         </button>
         <button type="button" className="mentor-rail-logout" aria-label={t("mentorLogout")} title={t("mentorLogout")} onClick={onBack}>
-          <span className="mentor-avatar-small">P</span><span className="mentor-nav-label">Priya Sharma</span><LogOut size={16} className="mentor-logout-icon" />
+          <span className="mentor-avatar-small">{(mentorName || "Priya Sharma").charAt(0).toUpperCase()}</span><span className="mentor-nav-label">{mentorName || "Priya Sharma"}</span><LogOut size={16} className="mentor-logout-icon" />
         </button>
       </div>
     </aside>
   );
+}
+
+// The signed-in mentor's name; empty in demo mode, where the rail keeps the demo mentor's name.
+function useMentorName(mentorId) {
+  const [name, setName] = useState("");
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let isCurrent = true;
+    loadMentorName(mentorId)
+      .then((value) => { if (isCurrent) setName(value); })
+      .catch((loadError) => console.error("Loading the mentor's name failed:", loadError));
+    return () => {
+      isCurrent = false;
+    };
+  }, [mentorId]);
+  return name;
 }
 
 // Loads shared check-ins for the mentor's assigned students; refreshes every 30s
@@ -195,7 +211,7 @@ function SensorySupportPage({ support, t }) {
   );
 }
 
-function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
+function OverviewPage({ sessions, notes, mentorId, mentorName, setTab, onEditSession, t }) {
   const [openStudentsId, setOpenStudentsId] = useState(null);
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -210,7 +226,7 @@ function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
       <div className="mentor-hero">
         <div>
           <p className="mentor-kicker">{t("mentorDashboard")}</p>
-          <h1>{t("goodMorningPriya")}</h1>
+          <h1>{mentorName ? t("md_greeting", { name: mentorName.split(" ")[0] }) : t("goodMorningPriya")}</h1>
           <span>{t("onlyUpcomingMaths")}</span>
         </div>
         <button className="mentor-primary" onClick={() => setTab("schedule")}>
@@ -739,14 +755,15 @@ export function MentorDashboard({
   t,
 }) {
   const support = useMentorSupport(mentorId, t);
+  const mentorName = useMentorName(mentorId);
   const parentMessages = useParentMessages(mentorId, tab === "messages");
   return (
     <main className="mentor-page">
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
+        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
-          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
           {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
