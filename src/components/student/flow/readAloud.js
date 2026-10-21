@@ -132,9 +132,17 @@ function speakWithBrowser(text, language, volume, token, onEnd) {
   });
 }
 
+// Read aloud is only offered in these languages; every other language stays silent.
+const readAloudLanguages = new Set(["English", "Hindi"]);
+export const supportsReadAloud = (language) => readAloudLanguages.has(language);
+
 // `stillWanted` lets a hovered label give up if the pointer left while its clip was loading.
 export async function speak(text, { language = "English", volume = 1, kind = "reply", onEnd: onFinish, stillWanted = () => true } = {}) {
   if (labelsMuted && kind === "label") return;
+  if (!supportsReadAloud(language)) {
+    onFinish?.();
+    return;
+  }
   stopSpeaking();
   const token = playToken;
   activeKind = kind;

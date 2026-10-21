@@ -3,6 +3,7 @@ import { ArrowUpRight, CalendarPlus, CheckCircle2, Square, UserRound, Volume2, X
 import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
 import { AudioPlayer } from "./AudioNotes";
+import { supportsReadAloud } from "./readAloud";
 
 function renderInline(text) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, index) => {
@@ -80,7 +81,7 @@ function Message({ message, language, readAloudEnabled, speaking, onToggleSpeaki
         <div className="message-text">
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
-        {isAssistant && readAloudEnabled && (
+        {isAssistant && readAloudEnabled && supportsReadAloud(language) && (
           <button type="button" className="ai-listen-button" onClick={() => onToggleSpeaking(message)} aria-pressed={speaking}>
             {speaking ? <><Square size={14} /> {t("audioStop")}</> : <><Volume2 size={16} /> {t("listen")}</>}
           </button>

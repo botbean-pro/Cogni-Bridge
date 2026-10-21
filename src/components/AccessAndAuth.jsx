@@ -21,6 +21,7 @@ import {
   readStudents,
 } from "../constants";
 import { supabase, supabaseConfigured } from "../supabaseClient";
+import { supportsReadAloud } from "./student/flow/readAloud";
 
 export const LanguagePicker = ({ value, onChange, t, compact = false }) => (
   <label className={`language-picker${compact ? " language-picker-compact" : ""}`}>
@@ -515,10 +516,12 @@ const AccessibilityPanel = ({
             type="checkbox"
             role="switch"
             className="read-aloud-switch"
-            checked={readAloud.enabled}
+            checked={readAloud.enabled && supportsReadAloud(language)}
+            disabled={!supportsReadAloud(language)}
             onChange={(event) => setReadAloud((current) => ({ ...current, enabled: event.target.checked }))}
           />
         </label>
+        {!supportsReadAloud(language) && <p className="read-aloud-note">{t("readAloudLanguageNote")}</p>}
         <label className="range-row">
           <span>{t("readAloudVolume")}</span>
           <input
@@ -527,7 +530,7 @@ const AccessibilityPanel = ({
             max="1"
             step=".05"
             value={readAloud.volume}
-            disabled={!readAloud.enabled}
+            disabled={!readAloud.enabled || !supportsReadAloud(language)}
             onChange={(event) => setReadAloud((current) => ({ ...current, volume: Number(event.target.value) }))}
           />
         </label>
