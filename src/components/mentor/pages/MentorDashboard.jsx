@@ -11,7 +11,6 @@ import {
   Trash2,
   FileText,
   Home,
-  Headphones,
   Heart,
   LogOut,
   MessageCircle,
@@ -27,7 +26,6 @@ import { formatLocalizedDate, formatSession, getSessionSubjectLabel, readStudent
 import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage, MouseTrail } from "../../Brand";
-import { RelaxationRoom } from "../../RelaxationRoom";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
@@ -42,7 +40,6 @@ import {
 function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCount, unreadParentCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
-    ["relax", Headphones, t("quietSpaceTitle")],
     ["performance", TrendingUp, t("md_perfNav")],
     ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
@@ -795,7 +792,6 @@ export function MentorDashboard({
         <section className="mentor-content route-transition" key={tab}>
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
-          {tab === "relax" && <RelaxationRoom onBack={() => setTab("overview")} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
           {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}

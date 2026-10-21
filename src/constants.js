@@ -13,7 +13,6 @@ export const initialSessions = [
 export const navigation = [[Home, "Home", "home"], [CalendarDays, "Sessions", "sessions"], [Trophy, "Cogni Board", "leaderboard"], [Sparkles, "Cogni-Flow AI", "flow"]];
 export const demoStudents = [
   { name: "Aarav", email: "aarav@cognibridge.com", password: "password123", role: "Student" },
-  { name: "Aastha", email: "aastha@cognibridge.com", password: "password123", role: "Student" },
   { name: "Meera", email: "meera@cognibridge.com", password: "password123", role: "Student" },
   { name: "Harsh", email: "harsh@cognibridge.com", password: "password123", role: "Student" },
   { name: "Saanvi", email: "saanvi@cognibridge.com", password: "password123", role: "Student" },
