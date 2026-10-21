@@ -190,7 +190,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     body = <>
       <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} showConnect={!connectHidden} onDismissConnect={hideConnectCard} t={t} />
       <ScreenTimeSummary rows={portal.screenTime || []} studentId={child.id} t={t} />
-      <section className="parent-teachers parent-journal-shares"><h4>{t("sharedJournalHeading")}</h4>{journalEntries.length ? journalEntries.map((item) => <article className="parent-shared-journal-entry" key={item.id}><time>{new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</time><p>{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>) : <p className="parent-no-teacher">{t("sharedJournalEmpty")}</p>}</section>
+      <section className="parent-card parent-journal-shares"><h4>{t("sharedJournalHeading")}</h4>{journalEntries.length ? journalEntries.map((item) => <article className="parent-shared-journal-entry" key={item.id}><time>{new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</time><p>{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>) : <p className="parent-no-teacher">{t("sharedJournalEmpty")}</p>}</section>
     </>;
   }
 

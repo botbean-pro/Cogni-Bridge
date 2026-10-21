@@ -157,3 +157,4 @@
 .parent-shared-journal-entry>time { color:#71847e;font-size:12px; }
 .parent-shared-journal-entry>p { color:#344c45;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere; }
 .parent-journal-shares { margin-top:20px; }
+.parent-journal-shares > h4 { margin:0 0 6px; font-size:17px; }
