@@ -803,7 +803,7 @@ export function MentorDashboard({
     <main className="mentor-page">
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
-        <section className="mentor-content">
+        <section className="mentor-content route-transition" key={tab}>
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "relax" && <RelaxationRoom onBack={() => setTab("overview")} t={t} />}

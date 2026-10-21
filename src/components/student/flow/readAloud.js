@@ -11,6 +11,10 @@ let currentAudio = null;
 let playToken = 0;
 let activeKind = null;
 let labelsMuted = false;
+// Chrome garbage-collects utterances it is still speaking, which drops their onend; hold them here.
+let liveUtterances = [];
+let watchdog = null;
+const TTS_TIMEOUT_MS = 6000;
 
 const speechSupported = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
@@ -41,6 +45,8 @@ export const toSpeechText = (text, language = "English") => String(text || "")
 export function stopSpeaking() {
   playToken += 1;
   activeKind = null;
+  window.clearTimeout(watchdog);
+  liveUtterances = [];
   if (currentAudio) {
     currentAudio.pause();
     currentAudio = null;
@@ -51,6 +57,7 @@ export function stopSpeaking() {
 // Hover reading checks these so it never cuts off a reply, or a label mid-word.
 export const isReadingReply = () => activeKind === "reply";
 export const isSpeaking = () => activeKind !== null;
+export const isReadingLabel = () => activeKind === "label";
 
 // Voice input mutes hover labels so the microphone doesn't record them.
 export function muteLabels(muted) {
@@ -65,11 +72,15 @@ export function setSpeakingVolume(volume) {
 async function elevenLabsClip(text, language) {
   const key = `${language}:${text}`;
   if (audioCache.has(key)) return audioCache.get(key);
+  // A slow or stuck request would otherwise hold up every later read.
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), TTS_TIMEOUT_MS);
   const response = await fetchWithAuth("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, language }),
-  });
+    signal: controller.signal,
+  }).finally(() => window.clearTimeout(timeout));
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(`Read aloud is unavailable (${response.status}): ${data.error || "unknown error"}`);
@@ -92,21 +103,37 @@ function speakWithBrowser(text, language, volume, token, onEnd) {
   }
   // Long utterances get cut off in some browsers, so read sentence by sentence.
   const sentences = (text.match(/[^.!?।\n]+[.!?।]*/g) || [text]).map((part) => part.trim()).filter(Boolean);
+  // Some browsers silently drop an utterance (no onend, no onerror); don't let that block reading forever.
+  let finished = false;
+  const finish = () => {
+    if (finished || token !== playToken) return;
+    finished = true;
+    window.clearTimeout(watchdog);
+    liveUtterances = [];
+    onEnd?.();
+  };
+  window.clearTimeout(watchdog);
+  watchdog = window.setTimeout(finish, 2000 + text.length * 110);
+  // Chrome can get stuck paused after cancel(); resume() unsticks it.
+  window.speechSynthesis.resume();
+  liveUtterances = [];
   sentences.forEach((sentence, index) => {
     const utterance = new SpeechSynthesisUtterance(sentence);
     utterance.lang = speechLanguages[language] || "en-IN";
     utterance.rate = 0.92;
     utterance.volume = volume;
-    if (index === sentences.length - 1) utterance.onend = () => { if (token === playToken) onEnd?.(); };
+    if (index === sentences.length - 1) utterance.onend = finish;
     utterance.onerror = (event) => {
-      console.error("Read aloud: browser voice failed", event.error);
-      if (token === playToken) onEnd?.();
+      if (event.error !== "interrupted" && event.error !== "canceled") console.error("Read aloud: browser voice failed", event.error);
+      finish();
     };
+    liveUtterances.push(utterance);
     window.speechSynthesis.speak(utterance);
   });
 }
 
-export async function speak(text, { language = "English", volume = 1, kind = "reply", onEnd: onFinish } = {}) {
+// `stillWanted` lets a hovered label give up if the pointer left while its clip was loading.
+export async function speak(text, { language = "English", volume = 1, kind = "reply", onEnd: onFinish, stillWanted = () => true } = {}) {
   if (labelsMuted && kind === "label") return;
   stopSpeaking();
   const token = playToken;
@@ -125,6 +152,10 @@ export async function speak(text, { language = "English", volume = 1, kind = "re
     try {
       const url = await elevenLabsClip(spoken, language);
       if (token !== playToken) return;
+      if (!stillWanted()) {
+        onEnd();
+        return;
+      }
       const audio = new Audio(url);
       audio.volume = volume;
       audio.onended = () => {
@@ -132,6 +163,7 @@ export async function speak(text, { language = "English", volume = 1, kind = "re
         currentAudio = null;
         onEnd?.();
       };
+      audio.onerror = audio.onended;
       currentAudio = audio;
       await audio.play();
       return;
@@ -139,6 +171,10 @@ export async function speak(text, { language = "English", volume = 1, kind = "re
       console.error("Read aloud: ElevenLabs playback failed, using the browser voice", error);
       if (token !== playToken) return;
       currentAudio = null;
+      if (!stillWanted()) {
+        onEnd();
+        return;
+      }
     }
   }
   speakWithBrowser(spoken, language, volume, token, onEnd);
