@@ -6,12 +6,14 @@ import "./LeaderboardPage.css";
 
 // Demo-mode sample data; with Supabase the leaderboard comes from public.leaderboard().
 const leaderboardStudents = [
-  { name: "Harsh", registered: 4, attended: 3, mentorGood: 2, streak: 1 },
-  { name: "Samar", registered: 3, attended: 2, mentorGood: 1, streak: 7 },
-  { name: "Vardaan", registered: 2, attended: 1, mentorGood: 0, streak: 10 },
-  { name: "Aanya", registered: 3, attended: 1, mentorGood: 1, streak: 2 },
-  { name: "Kabir", registered: 2, attended: 1, mentorGood: 0, streak: 3 },
-  { name: "Meera", registered: 1, attended: 1, mentorGood: 0, streak: 1 },
+  { name: "Saanvi", registered: 7, attended: 7, mentorGood: 4, streak: 2 },
+  { name: "Harsh", registered: 9, attended: 6, mentorGood: 3, streak: 2 },
+  { name: "Aarav", registered: 7, attended: 6, mentorGood: 3, streak: 1 },
+  { name: "Aastha", registered: 6, attended: 6, mentorGood: 2, streak: 2 },
+  { name: "Shruti", registered: 5, attended: 5, mentorGood: 1, streak: 1 },
+  { name: "Debolina", registered: 5, attended: 4, mentorGood: 2, streak: 0 },
+  { name: "Samar", registered: 4, attended: 3, mentorGood: 1, streak: 1 },
+  { name: "Vibhor", registered: 4, attended: 3, mentorGood: 1, streak: 1 },
 ];
 
 // Catalog keys for the titles shown under the top six names.

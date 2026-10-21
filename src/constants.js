@@ -12,9 +12,14 @@ export const initialSessions = [
 
 export const navigation = [[Home, "Home", "home"], [CalendarDays, "Sessions", "sessions"], [Trophy, "Cogni Board", "leaderboard"], [Sparkles, "Cogni-Flow AI", "flow"]];
 export const demoStudents = [
-  { name: "HarshDiddy", email: "harsh@cognibridge.com", password: "cognibridge123", role: "Student" },
-  { name: "Samar", email: "samar@cognibridge.com", password: "cognibridge123", role: "Student" },
-  { name: "Vardaan", email: "vardaan@cognibridge.com", password: "cognibridge123", role: "Student" },
+  { name: "Aarav", email: "aarav@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Aastha", email: "aastha@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Debolina", email: "debolina@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Harsh", email: "harsh@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Saanvi", email: "saanvi@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Samar", email: "samar@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Shruti", email: "shruti@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Vibhor", email: "vibhor@cognibridge.com", password: "password123", role: "Student" },
 ];
 export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Artificial Intelligence", "Art"];
 export const sessionSubjectTranslations = {
