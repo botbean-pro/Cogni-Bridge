@@ -15,7 +15,7 @@
 .career-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:23px; }
 .career-back,.career-next,.career-retake { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:0 15px; border-radius:10px; font:inherit; font-weight:750; cursor:pointer; }
 .career-back,.career-retake { border:1px solid var(--line); background:var(--surface); color:var(--text); }
-.career-next { border:1px solid var(--teal); background:var(--teal); color:white; }
+.career-next { border:1px solid var(--teal); background:var(--teal-fill); color:white; }
 .career-next:disabled { opacity:.45; cursor:not-allowed; }
 .career-results-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
 .career-results-heading h2 { margin-bottom:23px; }

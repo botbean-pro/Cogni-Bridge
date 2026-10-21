@@ -213,7 +213,7 @@
   color: #fff;
   box-shadow: 0 7px 18px rgba(8, 169, 150, .2);
 }
-.mentor-page .mentor-avatar-small { background: #08a996; }
+.mentor-page .mentor-avatar-small { background: var(--teal-fill); }
 .performance-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:24px 0; }
 .performance-summary article { display:grid; grid-template-columns:auto 1fr; align-items:center; column-gap:10px; row-gap:4px; padding:17px; border:1px solid var(--line); border-radius:15px; background:var(--surface); }
 .performance-summary article > svg { grid-row:span 2; color:var(--teal); }
@@ -251,7 +251,7 @@
 .mentor-sensory-actions form { display:flex; flex:1 1 320px; gap:8px; }
 .mentor-sensory-actions input { flex:1; min-width:0; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; }
 .mentor-sensory-actions button { padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--teal); font:inherit; font-size: calc((12px) * var(--text-scale, 1)); font-weight:750; cursor:pointer; }
-.mentor-sensory-actions form button { border-color:var(--teal); background:var(--teal); color:white; }
+.mentor-sensory-actions form button { border-color:var(--teal); background:var(--teal-fill); color:white; }
 .mentor-parent-threads { display: grid; gap: 14px; max-width: 850px; }
 .mentor-parent-thread { padding: 17px; border: 1px solid #dce8e5; border-radius: 13px; background: #fff; }
 .mentor-parent-thread > header { display: flex; justify-content: space-between; margin-bottom: 12px; }
@@ -310,7 +310,7 @@
 .mentor-students-table td:first-child { display:flex; align-items:center; gap:10px; font-weight:700; }
 .mentor-student-toggle { padding:8px 14px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:inherit; font-weight:700; cursor:pointer; }
 .mentor-student-toggle:hover { border-color:var(--teal); }
-.mentor-student-toggle.active { border-color:var(--teal); background:var(--teal); color:#fff; }
+.mentor-student-toggle.active { border-color:var(--teal); background:var(--teal-fill); color:#fff; }
 .mentor-student-toggle:disabled { opacity:.5; cursor:wait; }
 
 .form-hint { display:block; margin-top:6px; color:var(--muted); font-size: calc((.85rem) * var(--text-scale, 1)); font-weight:400; }

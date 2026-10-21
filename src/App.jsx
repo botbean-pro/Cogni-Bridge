@@ -22,6 +22,7 @@ import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
+import { useHoverReadAloud } from "./components/student/flow/useHoverReadAloud";
 import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
 
 const readPreferredSubjects = (email) => {
@@ -432,6 +433,8 @@ const App = () => {
   useEffect(() => {
     setSpeakingVolume(readAloud.volume);
   }, [readAloud.volume]);
+
+  useHoverReadAloud({ enabled: readAloud.enabled, language: studentLanguage, volume: readAloud.volume });
 
   useEffect(() => {
     try {

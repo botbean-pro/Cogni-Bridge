@@ -20,7 +20,7 @@
   place-items: center;
   margin-bottom: 22px;
   border-radius: 16px;
-  background: var(--teal);
+  background:var(--teal-fill);
   color: #fff;
 }
 .profile-flow-card h1 { margin: 0 0 10px; font-size: calc((clamp(25px, 4vw, 34px)) * var(--text-scale, 1)); }

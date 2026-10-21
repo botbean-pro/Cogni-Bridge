@@ -152,8 +152,8 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
     try {
       const answer = await askLearningAssistant(conversation, "chat", language, assistantContext);
       let quiz = null;
-      // Requests like "register me" or "open the check-in" don't need a practice question.
-      if (!answer.actions.length) {
+      // The tutor flags when a practice question would help; app requests like "register me" never get one.
+      if (answer.practice && !answer.actions.length) {
         try {
           quiz = await askLearningAssistant(conversation, "mcq", language);
         } catch {
@@ -185,10 +185,10 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
       });
       const readAloudSetting = answer.actions.find((action) => action.type === "setting" && action.name === "readAloud");
       if (readAloudSetting ? readAloudSetting.value === "on" : readAloud.enabled) speakMessage(answerId, answer.content);
-      // Registration waits for the student to tap the confirm button in the reply.
-      answer.actions.filter((action) => action.type !== "register").forEach(onAction);
+      // Registration happens straight away so a student can sign up just by asking; the reply's button then shows it as registered.
+      answer.actions.forEach(onAction);
     } catch (requestError) {
-      setError(requestError.message);
+      setError(t(requestError.messageKey || "flowRequestError"));
     } finally {
       await refreshUsage();
       setIsLoading(false);
@@ -213,7 +213,7 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
       const script = await askLearningAssistant([{ role: "user", content: notes.slice(0, 4000) }], "audio", language);
       reply({ content: t("audioReadyMsg"), audioScript: script });
     } catch (requestError) {
-      setError(requestError.message);
+      setError(t(requestError.messageKey || "flowRequestError"));
     } finally {
       await refreshUsage();
       setIsLoading(false);
@@ -300,8 +300,10 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
           input={input}
           isLoading={isLoading}
           disabled={remainingTokens <= 0}
+          language={language}
           onChange={setInput}
           onSubmit={sendMessage}
+          onVoiceText={askQuestion}
           t={t}
         />
       </div>

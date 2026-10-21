@@ -20,6 +20,25 @@ export async function fetchWithAuth(url, options) {
   return response;
 }
 
+const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+  reader.onerror = () => reject(reader.error);
+  reader.readAsDataURL(blob);
+});
+
+// Voice input: api/stt.js sends the recording to ElevenLabs and returns the spoken text.
+export async function transcribeSpeech(blob, language = "English") {
+  const response = await fetchWithAuth("/api/stt", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ audio: await blobToBase64(blob), mimeType: blob.type || "audio/webm", language }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Voice input is unavailable.");
+  return data.text || "";
+}
+
 export async function getLearningAssistantUsage() {
   const response = await fetchWithAuth("/api/chat", {
     method: "POST",
@@ -47,7 +66,10 @@ export async function askLearningAssistant(conversation, task = "chat", language
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || "Cogni-Flow couldn't respond. Please try again.");
+    const error = new Error(data.error || "Cogni-Flow couldn't respond. Please try again.");
+    // A catalog key so the page can show the error in the student's language.
+    error.messageKey = response.status === 429 ? "flowLimitReached" : response.status === 401 ? "flowSignInRequired" : "flowRequestError";
+    throw error;
   }
 
   if (task === "audio") return data.script;
@@ -56,6 +78,7 @@ export async function askLearningAssistant(conversation, task = "chat", language
       content: data.content,
       translatedQuestion: data.translatedQuestion || "",
       relatedQuestions: data.relatedQuestions || [],
+      practice: data.practice === true,
       actions: Array.isArray(data.actions) ? data.actions : [],
     }
     : data.quiz;

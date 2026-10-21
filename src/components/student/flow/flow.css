@@ -21,7 +21,7 @@
 .ai-chat-history-actions { display:flex; align-items:center; gap:6px; }
 .ai-chat-history-heading .ai-chat-history-close { display:grid; width:32px; height:32px; place-items:center; padding:0; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); }
 .ai-chat-history-heading h3 { margin:0; font-size: calc((15px) * var(--text-scale, 1)); }
-.ai-chat-history-heading button { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:0; border-radius:9px; background:var(--teal); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
+.ai-chat-history-heading button { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:0; border-radius:9px; background:var(--teal-fill); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .ai-chat-history > p { margin:0; color:var(--muted); font-size: calc((13px) * var(--text-scale, 1)); }
 .ai-chat-history-list { display:grid; gap:7px; max-height:220px; overflow-y:auto; }
 .ai-chat-history-list button { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
@@ -191,11 +191,21 @@
 .audio-notes-error { margin:0; color:#c0392b; font-size: calc((13px) * var(--text-scale, 1)); }
 
 .audio-player { margin-top:10px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
-.audio-controls button { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
+.audio-controls button { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal-fill); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .audio-controls button:disabled { opacity:.5; cursor:not-allowed; }
 
 .ai-listen-button { display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--text); font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .ai-listen-button[aria-pressed="true"] { border-color:var(--teal); color:var(--teal); }
 .ai-message-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.ai-action-button { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
+.ai-action-button { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:0; border-radius:10px; background:var(--teal-fill); color:#fff; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .ai-action-button:disabled { background:transparent; color:var(--teal); border:1px solid var(--teal); cursor:default; }
+.ai-mic-btn { flex:none; width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--line); border-radius:50%; background:var(--surface); color:var(--teal); cursor:pointer; transition:all 0.2s ease; }
+.ai-mic-btn:hover:not(:disabled) { border-color:var(--teal); transform:scale(1.05); }
+.ai-mic-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.ai-mic-btn.recording { border-color:#d64545; background:#d64545; color:white; animation:ai-mic-pulse 1.4s ease-in-out infinite; }
+.ai-mic-btn .spin { animation:ai-mic-spin 0.9s linear infinite; }
+.ai-voice-status { margin:0 0 6px; color:var(--teal); font-size:calc(13px * var(--text-scale, 1)); font-weight:600; }
+.ai-voice-status.error { color:#d64545; }
+@keyframes ai-mic-pulse { 0%, 100% { box-shadow:0 0 0 0 rgba(214,69,69,.45); } 50% { box-shadow:0 0 0 8px rgba(214,69,69,0); } }
+@keyframes ai-mic-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ai-mic-btn.recording, .ai-mic-btn .spin { animation:none; } }

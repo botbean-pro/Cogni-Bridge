@@ -19,7 +19,7 @@
 .podium-card-2 { order:1; }
 .podium-card-3 { order:3; }
 .podium-medal { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; color:var(--teal-dark); background:#d1ebe6; font-size: calc((12px) * var(--text-scale, 1)); font-weight:900; }
-.podium-card-1 .podium-medal { color:#fff; background:var(--teal); }
+.podium-card-1 .podium-medal { color:#fff; background:var(--teal-fill); }
 .podium-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:15px; color:var(--teal-dark); background:#dff4f0; font-size: calc((19px) * var(--text-scale, 1)); font-weight:900; }
 .podium-card strong { color:var(--charcoal-2); font-size:calc(16px * var(--text-scale, 1)); }
 .podium-score { color:var(--teal-dark); font-size:calc(16px * var(--text-scale, 1)); font-weight:900; }

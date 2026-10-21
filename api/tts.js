@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const MAX_TEXT_LENGTH = 1200;
+const MAX_TEXT_LENGTH = 5000;
 const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;

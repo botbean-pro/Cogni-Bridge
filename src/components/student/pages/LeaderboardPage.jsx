@@ -14,14 +14,8 @@ const leaderboardStudents = [
   { name: "Meera", registered: 1, attended: 1, mentorGood: 0, streak: 1 },
 ];
 
-const rankTitles = [
-  "BRAINWAVE BOSS",
-  "MOMENTUM MAKER",
-  "CURIOSITY CATALYST",
-  "IDEA IGNITER",
-  "FOCUS FORCE",
-  "SPARK STARTER",
-];
+// Catalog keys for the titles shown under the top six names.
+const rankTitles = ["rankTitle1", "rankTitle2", "rankTitle3", "rankTitle4", "rankTitle5", "rankTitle6"];
 
 const scoreStudent = (student) => {
   const missed = Math.max(student.registered - student.attended, 0);
@@ -98,7 +92,7 @@ export function LeaderboardPage({ signedIn, t }) {
             <div className="podium-medal" aria-label={t("lb_rank", { n: index + 1 })}>{index + 1}</div>
             <span className="podium-avatar">{student.name[0]}</span>
             <strong>{student.name}</strong>
-            <span className="podium-rank-title">{rankTitles[index]}</span>
+            <span className="podium-rank-title">{t(rankTitles[index])}</span>
             <span className="podium-score">{student.points} {t("lb_pts")}</span>
             <span className="streak-badge"><Flame size={15} fill="currentColor" /> {student.streak} {t("streak")}</span>
           </article>
@@ -113,7 +107,7 @@ export function LeaderboardPage({ signedIn, t }) {
             key={`${index}-${student.name}`}
           >
             <span className="leaderboard-rank" aria-label={t("lb_rank", { n: index + 1 })}>{index === 0 ? <Trophy size={19} /> : `#${index + 1}`}</span>
-            <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><span className="leaderboard-student-details"><strong>{student.name}</strong><small className="leaderboard-rank-title">{rankTitles[index] || `LEVEL ${index + 1}`}</small></span></span>
+            <span className="leaderboard-name"><span className="student-avatar">{student.name[0]}</span><span className="leaderboard-student-details"><strong>{student.name}</strong><small className="leaderboard-rank-title">{rankTitles[index] ? t(rankTitles[index]) : t("rankLevel", { n: index + 1 })}</small></span></span>
             <span className="leaderboard-attendance">{student.attended} <small>{t("lb_of")} {student.registered}</small></span>
             <span className="leaderboard-streak"><Flame size={15} fill="currentColor" /> {student.streak}</span>
             <span className="leaderboard-points">{student.points}<small> {t("lb_pts")}</small></span>

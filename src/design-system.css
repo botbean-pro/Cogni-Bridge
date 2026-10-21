@@ -2,6 +2,9 @@
   --charcoal: #172629;
   --charcoal-2: #20383c;
   --teal: #08b3a7;
+  /* Teal behind white text: lighter teals fall below 4.5:1 contrast with white. */
+  --teal-fill: #087f77;
+  --teal-fill-hover: #066b64;
   --teal-dark: #087f77;
   --canvas: #edf3f2;
   --surface: #fbfdfc;
@@ -97,7 +100,7 @@ select {
 .mentor-primary {
   min-height: 48px;
   border-radius: 13px;
-  background: var(--teal);
+  background: var(--teal-fill);
   box-shadow: 0 8px 20px rgba(8, 179, 167, .2);
   transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
@@ -106,7 +109,7 @@ select {
 .primary-btn:hover,
 .mentor-primary:hover {
   transform: translateY(-2px);
-  background: #06a699;
+  background: var(--teal-fill-hover);
   box-shadow: 0 12px 25px rgba(8, 179, 167, .27);
 }
 
