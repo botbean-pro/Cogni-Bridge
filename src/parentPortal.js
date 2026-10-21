@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient";
+import { loadScreenTime } from "./screenTime";
 
 const throwIfError = ({ data, error }) => {
   if (error) throw error;
@@ -30,11 +31,20 @@ export async function loadParentPortal(parentId) {
   const links = throwIfError(await supabase.from("parent_student_links")
     .select("student_id, created_at").eq("parent_id", parentId));
   const studentIds = links.map((link) => link.student_id);
+<<<<<<< HEAD
+  if (!studentIds.length) return { children: [], activities: [], messages: [], journalEntries: [], screenTime: [] };
+  const [profiles, activityRows, assignments, messages, journalEntries, screenTime] = await Promise.all([
+    supabase.from("profiles").select("id, display_name").in("id", studentIds),
+    supabase.from("student_learning_activity").select("student_id, session_id, subject, activity_date, duration_minutes").in("student_id", studentIds).order("activity_date", { ascending: false }),
+=======
   if (!studentIds.length) return { children: [], messages: [] };
   const [profiles, assignments, messages] = await Promise.all([
     supabase.from("profiles").select("id, display_name").in("id", studentIds).order("display_name"),
+>>>>>>> origin/main
     supabase.from("mentor_student_assignments").select("student_id, mentor_id").in("student_id", studentIds),
     supabase.from("parent_teacher_messages").select("id, student_id, mentor_id, sender_id, sender_role, message, created_at").eq("parent_id", parentId).order("created_at", { ascending: true }),
+    supabase.from("student_journal_entries").select("id, student_id, entry, chart, show_to_support, created_at").in("student_id", studentIds).eq("show_to_support", true).order("created_at", { ascending: false }),
+    loadScreenTime(studentIds).catch(() => []),
   ]);
   const children = throwIfError(profiles).map((student) => ({ ...student, mentors: [] }));
   const teacherAssignments = throwIfError(assignments);
@@ -48,6 +58,9 @@ export async function loadParentPortal(parentId) {
         .filter(Boolean);
     });
   }
+<<<<<<< HEAD
+  return { children, activities: throwIfError(activityRows), messages: throwIfError(messages), journalEntries: journalEntries.error ? [] : journalEntries.data || [], screenTime };
+=======
   return { children, messages: throwIfError(messages) };
 }
 
@@ -71,6 +84,7 @@ export async function loadChildSessions(studentId) {
     good: row.mentor_good,
     attention: row.attention_level,
   }));
+>>>>>>> origin/main
 }
 
 export async function sendParentTeacherMessage({ parentId, studentId, mentorId, message }) {

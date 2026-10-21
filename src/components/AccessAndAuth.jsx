@@ -308,11 +308,17 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
         <p className="modal-copy">{description}</p>
 
         <form className="auth-form" onSubmit={submit}>
+<<<<<<< HEAD
+          {tab === "parent" && parentSignUp && <label className="input-label">{t("fullName")}<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
+=======
           {tab === "parent" && parentSignUp && <label className="input-label">{t("ms_fullName")}<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
+>>>>>>> origin/main
           <label className="input-label">
             {t("email")}
             <input
               type="email"
+              name={tab === "student" || tab === "mentor" ? "username" : "email"}
+              autoComplete={tab === "parent" && parentSignUp ? "email" : "username"}
               className="auth-input"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -326,6 +332,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             <div className="password-input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete={tab === "parent" && parentSignUp ? "new-password" : "current-password"}
                 className="auth-input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -392,6 +400,10 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             </div>
           ) : tab === "parent" ? (
             <div className="auth-button-group">
+<<<<<<< HEAD
+              <button className="auth-login-btn" type="submit">{parentSignUp ? t("createParentAccount") : t("logIn")} <ChevronRight size={18} /></button>
+              <div className="create-account-prompt"><span>{t(parentSignUp ? "alreadyHaveParentAccount" : "newToParentPortal")}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
+=======
               <button className="auth-login-btn" type="submit">{parentSignUp ? t("ms_createParent") : t("logIn")} <ChevronRight size={18} /></button>
               <div className="create-account-prompt"><span>{t(parentSignUp ? "ms_haveParent" : "ms_newParent")}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
               {!parentSignUp && (
@@ -405,6 +417,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
                   </div>
                 </>
               )}
+>>>>>>> origin/main
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">
@@ -421,6 +434,10 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 const AccessibilityPanel = ({
   textScale,
   setTextScale,
+  motionSetting = "full",
+  setMotionSetting = () => {},
+  lowSensory = false,
+  setLowSensory = () => {},
   appearance,
   setAppearance,
   language,
@@ -472,6 +489,28 @@ const AccessibilityPanel = ({
         step=".05"
         value={textScale}
         onChange={(event) => setTextScale(Number(event.target.value))}
+      />
+    </label>
+
+    <label className="appearance-row motion-row">
+      <strong>Animation</strong>
+      <select value={motionSetting} onChange={(event) => setMotionSetting(event.target.value)} aria-label="Animation level">
+        <option value="full">Full</option>
+        <option value="reduced">Reduced</option>
+        <option value="off">Off</option>
+      </select>
+    </label>
+
+    <label className="low-sensory-row">
+      <span>
+        <strong>{t("Low sensory mode")}</strong>
+        <small>{t("lowSensoryDescription")}</small>
+      </span>
+      <input
+        type="checkbox"
+        checked={lowSensory}
+        onChange={(event) => setLowSensory(event.target.checked)}
+        aria-label={t("Low sensory mode")}
       />
     </label>
 

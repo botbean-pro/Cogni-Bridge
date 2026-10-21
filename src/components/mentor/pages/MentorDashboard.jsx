@@ -11,6 +11,8 @@ import {
   Trash2,
   FileText,
   Home,
+  Headphones,
+  BookHeart,
   Heart,
   LogOut,
   Plus,
@@ -18,14 +20,29 @@ import {
   Upload,
   Accessibility,
   Users,
+<<<<<<< HEAD
+  MessageCircle,
+  Send,
+  UserRound,
+=======
   Trophy,
+>>>>>>> origin/main
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
+<<<<<<< HEAD
+import { RelaxationRoom } from "../../RelaxationRoom";
+import { createPrivateSession, deletePrivateSession, fetchMentorLeaderboard, loadMentorLearningActivity, loadMentorPrivateSessions, loadMentorSharedJournal, loadSessionStudents, setSessionStudentAttention, setSessionStudentGood } from "../../../mentorContent";
+import { ReflectionChart } from "../../student/pages/ReflectionJournal";
+import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
+import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
+import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
+=======
 import { SessionStudents } from "../SessionStudents";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, setMyStudent } from "../../../mentorContent";
+>>>>>>> origin/main
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
@@ -35,12 +52,23 @@ import {
 function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
+<<<<<<< HEAD
+    ["relax", Headphones, t("quietSpaceTitle")],
+    ["performance", TrendingUp, t("studentPerformance")],
+    ...(mentorId ? [["journal", BookHeart, t("sharedJournalHeading")]] : []),
+    ["schedule", CalendarDays, t("mentorScheduleNav")],
+    ["notes", FileText, t("mentorNotesNav")],
+    ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
+    ...(mentorId ? [["parentMessages", MessageCircle, t("parentConsultations")]] : []),
+    ...(mentorId ? [["privateSessions", UserRound, "Private sessions"]] : []),
+=======
     ["performance", TrendingUp, t("md_perfNav")],
     ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
     ["settings", Settings, t("settings")],
+>>>>>>> origin/main
   ];
 
   return (
@@ -72,6 +100,24 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
   );
 }
 
+<<<<<<< HEAD
+function SharedJournalPage({ mentorId, t }) {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let live = true;
+    loadMentorSharedJournal(mentorId).then((rows) => { if (live) setEntries(rows); }).catch(() => {}).finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
+  }, [mentorId]);
+  return <section className="mentor-page-content"><div className="mentor-page-heading"><div><p className="mentor-kicker">{t("sharedJournalHeading")}</p><h1>{t("sharedJournalHeading")}</h1></div></div>
+    {loading ? <p>{t("loading")}</p> : entries.length ? <div className="mentor-shared-journal-list">{entries.map((item) => <article className="mentor-shared-journal-card" key={item.id}><p className="mentor-kicker">{item.student_name} · {new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</p><p className="mentor-shared-journal-text">{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>)}</div> : <p className="parent-empty">{t("sharedJournalEmpty")}</p>}
+  </section>;
+}
+
+const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
+
+=======
+>>>>>>> origin/main
 // Loads shared check-ins for the mentor's assigned students; refreshes every 30s
 // so the nav badge stays current. Postgres RLS decides what the mentor can see.
 function useMentorSupport(mentorId, t) {
@@ -192,8 +238,42 @@ function SensorySupportPage({ support, t }) {
   );
 }
 
+<<<<<<< HEAD
+function SessionRoster({ session }) {
+  const [students, setStudents] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [busyStudent, setBusyStudent] = useState("");
+  const refresh = () => loadSessionStudents(session.id).then(setStudents).catch(() => setError("The session roster couldn't be loaded."));
+  useEffect(() => { if (open) refresh(); }, [open, session.id]);
+  const update = async (student, action) => {
+    setBusyStudent(student.id); setError("");
+    try {
+      if (action === "good") await setSessionStudentGood(session.id, student.id, !student.good);
+      else await setSessionStudentAttention(session.id, student.id, action);
+      await refresh();
+    } catch { setError("That feedback couldn't be saved. Please try again."); }
+    finally { setBusyStudent(""); }
+  };
+  return <div className="mentor-session-roster">
+    <button type="button" className="mentor-edit-session" aria-expanded={open} onClick={() => setOpen((value) => !value)}>{open ? "Hide learner check-in" : "Learner check-in"}</button>
+    {open && <div className="mentor-roster-list">
+      {error && <p role="alert">{error}</p>}
+      {!students.length && !error && <small>No registrations yet.</small>}
+      {students.map((student) => <div className="mentor-roster-row" key={student.id}>
+        <strong>{student.name}</strong><span>{student.attended ? "Attended" : "Registered"}</span>
+        <label>Attention <select aria-label={`Attention for ${student.name}`} disabled={busyStudent === student.id} value={student.attention || "steady"} onChange={(event) => update(student, event.target.value)}><option value="steady">Steady</option><option value="some">Some support</option><option value="more">More support</option></select></label>
+        <button type="button" disabled={busyStudent === student.id} aria-pressed={student.good} onClick={() => update(student, "good")}>{student.good ? "★ Good work" : "☆ Mark good work"}</button>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+function OverviewPage({ sessions, notes, setTab, onEditSession, mentorId, t }) {
+=======
 function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
   const [openStudentsId, setOpenStudentsId] = useState(null);
+>>>>>>> origin/main
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const upcomingSessions = sessions.filter((session) => session.date >= today);
@@ -235,6 +315,9 @@ function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
               {t("openGoogleMeet")} <ChevronRight size={15} />
             </a>
             <button type="button" className="mentor-edit-session" onClick={() => onEditSession(session)}>{t("editSession")}</button>
+<<<<<<< HEAD
+            {mentorId && <SessionRoster session={session} />}
+=======
             {mentorId && session.mentorId === mentorId && (
               <>
                 <button
@@ -248,6 +331,7 @@ function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
                 {openStudentsId === session.id && <SessionStudents sessionId={session.id} t={t} />}
               </>
             )}
+>>>>>>> origin/main
           </article>
         ))}
       </div>
@@ -474,6 +558,27 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
   const [localStudents, setLocalStudents] = useState([]);
   const [loading, setLoading] = useState(Boolean(mentorId));
   const [error, setError] = useState("");
+  const [mentorRanks, setMentorRanks] = useState([]);
+  const [screenTimeRows, setScreenTimeRows] = useState([]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const refresh = async () => {
+      if (mentorId) {
+        try {
+          const rows = await loadScreenTime(assignedStudents.map((student) => student.id));
+          if (isCurrent) setScreenTimeRows(rows);
+        } catch { if (isCurrent) setScreenTimeRows([]); }
+      } else {
+        const localRows = readStudents().filter((student) => (student.role || "Student").toLowerCase() === "student")
+          .flatMap((student) => readLocalScreenTime(student.email).map((row) => ({ ...row, student_id: student.email.toLowerCase() })));
+        if (isCurrent) setScreenTimeRows(localRows);
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 30_000);
+    return () => { isCurrent = false; window.clearInterval(interval); };
+  }, [mentorId, assignedStudents]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -507,6 +612,13 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
     return () => { isCurrent = false; };
   }, [mentorId]);
 
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let current = true;
+    fetchMentorLeaderboard().then((rows) => { if (current) setMentorRanks(rows || []); }).catch(() => {});
+    return () => { current = false; };
+  }, [mentorId]);
+
   const students = mentorId
     ? assignedStudents.map((student) => ({ id: student.id, name: student.display_name, email: "" }))
     : localStudents.map((student) => ({ id: student.email.toLowerCase(), name: student.name || student.email, email: student.email.toLowerCase() }));
@@ -530,15 +642,23 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
       <article><Clock3 size={20} /><strong>{formatLearningTime(totalMinutes)}</strong><span>{t("md_learningTime")}</span></article>
       <article><TrendingUp size={20} /><strong>{activeStudents}</strong><span>{t("md_activeStudents")}</span></article>
     </div>
+    {mentorId && mentorRanks.length > 0 && <section className="mentor-rankings"><h2>Mentor community</h2><div>{mentorRanks.map((mentor, index) => <article key={mentor.id || mentor.mentor_id || mentor.display_name || index}><span>#{index + 1}</span><strong>{mentor.display_name || mentor.name || "Mentor"}</strong><small>{mentor.points ?? mentor.sessions ?? 0} {mentor.points != null ? "points" : "sessions"}</small></article>)}</div></section>}
     {error && <p className="error-popup" role="alert">{error}</p>}
     {loading ? <p className="mentor-subtitle">{t("md_loadingProgress")}</p>
       : rows.length === 0 ? <div className="performance-empty"><Users size={24} /><h2>{t("md_noStudentsTitle")}</h2><p>{t("md_noStudentsCopy")}</p></div>
         : <div className="performance-grid">{rows.map((student) => {
           const subjects = [...new Set(student.activities.map((item) => item.subject))];
           return <article className="performance-card" key={student.id}>
+<<<<<<< HEAD
+            <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? `${t("lastActivity")} ${new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString(document.documentElement.lang || "en-IN")}` : t("noSessionsRecorded")}</small></div></div>
+            <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>{t("sessions")}</span></div><div><strong>{student.stats.learningTime}</strong><span>{t("learningTime")}</span></div><div><strong>{student.stats.learningStreak}</strong><span>{t("dayStreak")}</span></div></div>
+            <ScreenTimeSummary rows={screenTimeRows} studentId={student.id} t={t} />
+            <div className="performance-subjects"><strong>{t("subjects")}</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>{t("noSubjectsRecorded")}</small>}</div>
+=======
             <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? t("md_lastActivity", { date: new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString() }) : t("md_noSessionsYet")}</small></div></div>
             <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>{t("sessions")}</span></div><div><strong>{student.stats.learningTime}</strong><span>{t("md_learningTime")}</span></div><div><strong>{student.stats.learningStreak}</strong><span>{t("md_dayStreak")}</span></div></div>
             <div className="performance-subjects"><strong>{t("md_subjectsLabel")}</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>{t("md_noSubjects")}</small>}</div>
+>>>>>>> origin/main
           </article>;
         })}</div>}
   </>;
@@ -576,6 +696,40 @@ function MentorLeaderboardPage({ mentorId, t }) {
   </>;
 }
 
+function PrivateSessionsPage({ mentorId, students }) {
+  const [rows, setRows] = useState([]);
+  const [form, setForm] = useState({ studentId: "", title: "", subject: "Maths", date: "", time: "", endTime: "", meetLink: "" });
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const refresh = () => loadMentorPrivateSessions(mentorId).then(setRows).catch(() => setError("Private sessions couldn't be loaded."));
+  useEffect(() => { refresh(); }, [mentorId]);
+  const submit = async (event) => {
+    event.preventDefault(); setSaving(true); setError("");
+    try { await createPrivateSession(mentorId, form); setForm({ studentId: "", title: "", subject: "Maths", date: "", time: "", endTime: "", meetLink: "" }); await refresh(); }
+    catch { setError("Couldn't schedule this session. Check the details and try again."); }
+    finally { setSaving(false); }
+  };
+  const remove = async (id) => {
+    try { await deletePrivateSession(id); setRows((current) => current.filter((row) => row.id !== id)); }
+    catch { setError("This session couldn't be cancelled."); }
+  };
+  return <>
+    <p className="mentor-kicker">Individual learning</p><h1 className="mentor-title">Private sessions</h1>
+    <p className="mentor-subtitle">Schedule a one-to-one session for a learner.</p>
+    {error && <p className="error-popup" role="alert">{error}</p>}
+    {!students.length && <p className="mentor-subtitle">Assigned learners will appear here after they're connected.</p>}
+    <form className="schedule-form" onSubmit={submit}>
+      <label>Learner<select required value={form.studentId} onChange={(event) => setForm({ ...form, studentId: event.target.value })}><option value="">Choose a learner</option>{students.map((student) => <option key={student.id} value={student.id}>{student.display_name}</option>)}</select></label>
+      <label>Session title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
+      <label>Subject<select value={form.subject} onChange={(event) => setForm({ ...form, subject: event.target.value })}>{subjects.map((subject) => <option key={subject}>{subject}</option>)}</select></label>
+      <div className="form-columns"><label>Date<input type="date" required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label><label>Start<input type="time" required value={form.time} onChange={(event) => setForm({ ...form, time: event.target.value })} /></label><label>End<input type="time" required value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></label></div>
+      <label>Meeting link<input type="url" required value={form.meetLink} onChange={(event) => setForm({ ...form, meetLink: event.target.value })} /></label>
+      <button className="mentor-primary" type="submit" disabled={saving || !students.length}><Plus size={18} /> Schedule one-to-one</button>
+    </form>
+    <div className="private-session-list">{rows.map((row) => <article key={row.id}><div><strong>{row.title}</strong><span>{students.find((student) => student.id === row.student_id)?.display_name || "Learner"} · {row.subject} · {row.session_date} · {row.start_time}</span></div><a href={row.meet_link} target="_blank" rel="noreferrer">Open meeting</a><button type="button" onClick={() => remove(row.id)}>Cancel</button></article>)}</div>
+  </>;
+}
+
 export function MentorDashboard({
   sessions,
   mentorId,
@@ -608,13 +762,24 @@ export function MentorDashboard({
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
+<<<<<<< HEAD
+          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} setTab={setTab} onEditSession={onEditSession} mentorId={mentorId} t={t} />}
+          {tab === "relax" && <RelaxationRoom onBack={() => setTab("overview")} t={t} />}
+          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
+          {tab === "journal" && mentorId && <SharedJournalPage mentorId={mentorId} t={t} />}
+          {tab === "parentMessages" && mentorId && <ParentConsultationsPage mentorId={mentorId} students={support.students} t={t} />}
+          {tab === "schedule" && <SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} t={t} />}
+          {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} t={t} />}
+=======
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
           {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
           {tab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
+>>>>>>> origin/main
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
+          {tab === "privateSessions" && mentorId && <PrivateSessionsPage mentorId={mentorId} students={support.students} />}
         </section>
       </div>
     </main>

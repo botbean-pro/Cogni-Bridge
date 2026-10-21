@@ -14,6 +14,7 @@ import {
 import { MoodTrendChart } from "../shared/MoodTrendChart";
 import { formatLocalizedDate } from "../../../constants";
 import "./SensoryTrackerPage.css";
+import { SensorySessionSupport } from "./SensorySessionSupport";
 
 // One icon per moodLabels entry (Very bad -> Great), so the picture always matches the word.
 const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
@@ -84,9 +85,13 @@ export function CalmCorner({ onClose, startBreathing = false, t }) {
   </section>;
 }
 
+<<<<<<< HEAD
+export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) => value, lowSensory = false, onToggleLowSensory = () => {} }) {
+=======
 const MAX_FULL_CHECKINS_PER_DAY = 3;
 
 export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
+>>>>>>> origin/main
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
   const [parents, setParents] = useState([]);
@@ -97,7 +102,6 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
   const [status, setStatus] = useState("");
   const [formStatus, setFormStatus] = useState("");
   const [saving, setSaving] = useState(false);
-  const [lowSensory, setLowSensory] = useState(false);
   const [showCalmCorner, setShowCalmCorner] = useState(false);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
   const todayFullEntries = sortedEntries.filter((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
@@ -232,6 +236,13 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
 
   return (
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
+<<<<<<< HEAD
+      <header className="sensory-heading"><div><p className="eyebrow">{t("A private space for you")}</p><h1>{t("Sensory Tracker")}</h1><p>{t("Check in with yourself. Share only what you choose.")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {lowSensory ? t("Low sensory on") : t("Low sensory mode")}</button><span><Heart size={18} /> {t("No judgement, just your own notes")}</span></div></header>
+      <SensorySessionSupport studentId={studentId} t={t} />
+      <section className="break-banner"><div><span className="sensory-step">{t("IT'S OKAY TO PAUSE")}</span><h2>{t("Need a little break?")}</h2><p>{t("Take a moment for yourself. There is no rush to continue.")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("I need a break")}</button></section>
+      {showCalmCorner && <CalmCorner t={t} onClose={() => setShowCalmCorner(false)} />}
+      <div className="sensory-privacy"><LockKeyhole size={17} /> {t(demoMode ? "demoPrivateMessage" : "Your check-ins are private by default. You'll see a clear label when you choose to share one.")}</div>
+=======
       <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
       <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
       {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
@@ -248,6 +259,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
       {!demoMode && parents.length > 0 && (
         <div className="sensory-privacy"><Users size={17} /> {t("sn_parentsSee", { names: parents.map((parent) => parent.display_name).join(", ") })}</div>
       )}
+>>>>>>> origin/main
       {status && <p className="sensory-status" role="status">{status}</p>}
 
       <section className="sensory-card sensory-checkin">

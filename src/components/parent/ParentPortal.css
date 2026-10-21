@@ -144,3 +144,7 @@
   .parent-connect-card form > div { flex-direction:column; }
   .parent-connect-card button { min-height:42px; }
 }
+.parent-shared-journal-entry { margin-top:12px;padding:14px;border:1px solid #d9e8e2;border-radius:14px;background:#f9fcfa; }
+.parent-shared-journal-entry>time { color:#71847e;font-size:12px; }
+.parent-shared-journal-entry>p { color:#344c45;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere; }
+.parent-journal-shares { margin-top:20px; }

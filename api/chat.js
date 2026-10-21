@@ -60,6 +60,15 @@ const translationInstructions =
   "Keep JSON keys, formulas, code, names, and numbers unchanged. Preserve the meaning and return only valid JSON " +
   "with this exact shape: {\"translatedQuestion\": string, \"answer\": string, \"relatedQuestions\": [string, string, string, string]}.";
 
+<<<<<<< HEAD
+const journalInstructions =
+  "Create a gentle reflection chart from a student's journal entry. This is not therapy, diagnosis, or a reliable measurement of a person's feelings. " +
+  "Return only valid JSON with this exact shape: {\"segments\":[{\"label\":\"joy|calm|hope|worry|frustration|tiredness|other\",\"value\":number}],\"reflection\":string}. " +
+  "Include 2 to 5 distinct labels, use integer percentages from 0 to 100 that total exactly 100, and only include themes supported by the words in the entry. " +
+  "If the entry contains an optional self-reported check-in, give the student's selected mood and emotions priority and include those themes in the chart; do not contradict the student's choices. " +
+  "If the entry is unclear, use other and calm rather than inventing an interpretation. Keep reflection kind, brief, non-judgmental, age-appropriate, and in the requested language. " +
+  "Never infer personality, diagnosis, intelligence, intent, or risk level. Say the chart is only a lightweight AI reflection of this one entry.";
+=======
 const appPages = ["study", "sessions", "sensory", "leaderboard", "premium", "careers", "messages", "settings"];
 const settingValues = { textSize: ["larger", "smaller", "reset"], appearance: ["light", "dark"], readAloud: ["on", "off"] };
 
@@ -112,9 +121,10 @@ function sanitizeActions(actions, context) {
     .slice(0, 3)
     .map(({ type, page, sessionId, name, value }) => ({ type, page, sessionId, name, value }));
 }
+>>>>>>> origin/main
 
 const supportedLanguages = new Set([
-  "English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Kannada", "Malayalam", "Punjabi", "French", "German",
+  "English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Kannada", "Malayalam", "Punjabi", "French", "German", "Spanish",
 ]);
 
 function isValidMessages(messages) {
@@ -139,6 +149,19 @@ async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE
     throw new Error("Cogni-Flow is not configured. Add OPENROUTER_API_KEY and OPENROUTER_MODEL to the server environment.");
   }
 
+<<<<<<< HEAD
+  const languageInstruction = task === "journal"
+    ? `Write the reflection in ${language}.`
+    : `Write the entire response, including all related questions, in ${language}. Keep names, formulas, and code unchanged when needed.`;
+  const taskInstructions = task === "journal"
+    ? journalInstructions
+    : task === "mcq"
+      ? quizInstructions
+      : task === "translate"
+        ? translationInstructions
+        : chatInstructions;
+  const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions}`;
+=======
   const languageInstruction = `Write the entire response, including all related questions, in ${language}. Keep names, formulas, and code unchanged when needed.`;
   const taskInstructions = task === "mcq"
     ? quizInstructions
@@ -148,6 +171,7 @@ async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE
         ? audioInstructions
         : chatInstructions;
   const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions} ${extraInstructions}`.trim();
+>>>>>>> origin/main
 
   return fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -208,6 +232,10 @@ export default async function handler(request, response) {
     return reply(response, 405, { error: "Only POST requests are supported." });
   }
 
+<<<<<<< HEAD
+  const { task = "chat", messages, language = "English" } = request.body || {};
+  if (!["chat", "mcq", "journal"].includes(task) || !isValidMessages(messages)) {
+=======
   const { task = "chat", messages, language = "English", context } = request.body || {};
   if (task === "usage") {
     if (!supabaseUrl || !supabaseAnonKey) {
@@ -221,6 +249,7 @@ export default async function handler(request, response) {
   }
 
   if (!["chat", "mcq", "audio"].includes(task) || !isValidMessages(messages)) {
+>>>>>>> origin/main
     return reply(response, 400, { error: "A valid task and conversation are required." });
   }
 
@@ -273,6 +302,30 @@ export default async function handler(request, response) {
 
     const content = data.choices?.[0]?.message?.content;
     if (!content) return reply(response, 200, { content: "The AI provider returned an empty response." });
+
+    if (task === "journal") {
+      let reflection;
+      try {
+        reflection = JSON.parse(content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
+      } catch {
+        return reply(response, 502, { error: "The AI provider returned an invalid reflection chart." });
+      }
+      const allowedLabels = new Set(["joy", "calm", "hope", "worry", "frustration", "tiredness", "other"]);
+      const segments = Array.isArray(reflection.segments) ? reflection.segments : [];
+      const rawTotal = segments.reduce((sum, segment) => sum + (Number.isInteger(segment?.value) ? segment.value : 0), 0);
+      const validSegments = segments.length >= 2 && segments.length <= 5
+        && segments.every((segment) => allowedLabels.has(segment?.label) && Number.isInteger(segment?.value) && segment.value >= 0 && segment.value <= 100)
+        && new Set(segments.map((segment) => segment.label)).size === segments.length
+        && rawTotal > 0;
+      if (!validSegments || typeof reflection.reflection !== "string") {
+        return reply(response, 502, { error: "The AI provider returned an invalid reflection chart." });
+      }
+      const normalized = segments.map((segment) => ({ ...segment, raw: segment.value * 100 / rawTotal }));
+      const adjusted = normalized.map((segment) => ({ label: segment.label, value: Math.floor(segment.raw), remainder: segment.raw % 1 }));
+      let remaining = 100 - adjusted.reduce((sum, segment) => sum + segment.value, 0);
+      [...adjusted].sort((a, b) => b.remainder - a.remainder).slice(0, remaining).forEach((segment) => { segment.value += 1; });
+      return reply(response, 200, { reflection: { segments: adjusted.map(({ label, value }) => ({ label, value })), reflection: reflection.reflection.slice(0, 500) } });
+    }
 
     if (task === "chat") {
       const latestUserMessage = messages.filter((message) => message.role === "user").at(-1);
