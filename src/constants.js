@@ -14,11 +14,11 @@ export const navigation = [[Home, "Home", "home"], [CalendarDays, "Sessions", "s
 export const demoStudents = [
   { name: "Aarav", email: "aarav@cognibridge.com", password: "password123", role: "Student" },
   { name: "Aastha", email: "aastha@cognibridge.com", password: "password123", role: "Student" },
-  { name: "Debolina", email: "debolina@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Meera", email: "meera@cognibridge.com", password: "password123", role: "Student" },
   { name: "Harsh", email: "harsh@cognibridge.com", password: "password123", role: "Student" },
   { name: "Saanvi", email: "saanvi@cognibridge.com", password: "password123", role: "Student" },
   { name: "Samar", email: "samar@cognibridge.com", password: "password123", role: "Student" },
-  { name: "Shruti", email: "shruti@cognibridge.com", password: "password123", role: "Student" },
+  { name: "Ishita", email: "ishita@cognibridge.com", password: "password123", role: "Student" },
   { name: "Vibhor", email: "vibhor@cognibridge.com", password: "password123", role: "Student" },
 ];
 export const subjects = ["Maths", "Science", "English", "SST", "Hindi", "Languages", "Computer Science", "Artificial Intelligence", "Art"];

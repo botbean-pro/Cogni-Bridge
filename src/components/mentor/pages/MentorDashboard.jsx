@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownToLine,
   Award,
@@ -26,7 +26,7 @@ import {
 import { formatLocalizedDate, formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
 import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
-import { LogoImage } from "../../Brand";
+import { LogoImage, MouseTrail } from "../../Brand";
 import { RelaxationRoom } from "../../RelaxationRoom";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
@@ -178,8 +178,12 @@ function SensorySupportPage({ support, t }) {
   const { checkins, notifications, students, error, markAllViewed, respond } = support;
   const notificationFor = (entry) => notifications.find((item) => item.checkin_id === entry.id);
   const needsSupport = (entry) => entry.mentor_help !== "none" && !notificationFor(entry)?.addressed_at;
-  const sortedEntries = [...checkins]
-    .sort((a, b) => Number(needsSupport(b)) - Number(needsSupport(a)) || b.created_at.localeCompare(a.created_at));
+  // Order is fixed when check-ins load, so a card stays in place (showing "Addressed")
+  // after the mentor clicks it instead of jumping away under the cursor.
+  const order = useMemo(() => [...checkins]
+    .sort((a, b) => Number(needsSupport(b)) - Number(needsSupport(a)) || b.created_at.localeCompare(a.created_at))
+    .map((entry) => entry.id), [checkins]);
+  const sortedEntries = order.map((id) => checkins.find((entry) => entry.id === id)).filter(Boolean);
 
   useEffect(() => {
     markAllViewed();
@@ -785,6 +789,7 @@ export function MentorDashboard({
   const parentMessages = useParentMessages(mentorId, tab === "messages");
   return (
     <main className="mentor-page">
+      <MouseTrail />
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
         <section className="mentor-content route-transition" key={tab}>
