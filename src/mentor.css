@@ -340,4 +340,4 @@
 .mentor-login-language .language-picker-compact { padding: 0; border: 0; }
 .mentor-login-language select { color: var(--text); }
 @media (max-width: 760px) { .mentor-login-language { top: 82px; right: 18px; } }
-.mentor-page-content{min-height:100%;padding:clamp(20px,3vw,42px)}.mentor-page-heading{margin-bottom:22px}.mentor-page-heading h1{margin:0;font-size:clamp(25px,3vw,36px)}.mentor-shared-journal-list{display:grid;gap:18px}.mentor-shared-journal-card{padding:22px;border:1px solid #dce8e3;border-radius:18px;background:#fff;box-shadow:0 10px 26px #173e300d}.mentor-shared-journal-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;color:#344c45}
+.mentor-page-content{min-height:100%;padding:clamp(20px,3vw,42px)}.mentor-page-heading{margin-bottom:22px}.mentor-page-heading h1{margin:0;font-size:clamp(25px,3vw,36px)}

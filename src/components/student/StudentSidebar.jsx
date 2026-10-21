@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { navigation, classNames } from "../../constants";
 import { LogoImage } from "../Brand";
-import { BookHeart, BookOpen, Compass, Crown, Headphones, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
+import { BookOpen, Compass, Crown, Headphones, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
 
 const navigationLabels = {
   home: "home",
@@ -13,7 +13,6 @@ const navigationLabels = {
   careers: "careerOptions",
   premium: "premiumFlow",
   relax: "quietSpaceTitle",
-  journal: "journalTitle",
 };
 
 export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, t }) => {
@@ -25,7 +24,6 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
       [Crown, "premium"],
       [Compass, "careers"],
       [Sparkles, "mindful"], [Headphones, "relax"],
-      [BookHeart, "journal"],
       ...(sensoryTrackerEnabled ? [[Heart, "sensory"]] : []),
       ...navigation.filter(([, , tab]) => tab === "leaderboard").map(([Icon, , tab]) => [Icon, tab]),
     ]

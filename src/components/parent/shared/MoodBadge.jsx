@@ -1,7 +1,7 @@
 import React from "react";
 import { Angry, Frown, Laugh, Meh, Smile } from "lucide-react";
 
-// One icon per moodLabels entry (Very bad -> Great), matching the student's mood picker.
+// One icon per moodLabels entry (Not at my peak -> Great), matching the student's mood picker.
 const icons = [Angry, Frown, Meh, Smile, Laugh];
 
 export function MoodBadge({ mood, size = "md" }) {

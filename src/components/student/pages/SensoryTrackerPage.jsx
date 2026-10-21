@@ -16,7 +16,7 @@ import { formatLocalizedDate } from "../../../constants";
 import "./SensoryTrackerPage.css";
 import { SensorySessionSupport } from "./SensorySessionSupport";
 
-// One icon per moodLabels entry (Very bad -> Great), so the picture always matches the word.
+// One icon per moodLabels entry (Not at my peak -> Great), so the picture always matches the word.
 const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
 const moodColors = ["#d64545", "#e8833a", "#c9a227", "#5aa469", "#0c9a8a"];
 

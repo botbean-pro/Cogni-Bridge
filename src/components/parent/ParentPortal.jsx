@@ -10,7 +10,6 @@ import { ParentOverviewPage } from "./pages/ParentOverviewPage";
 import { ParentSessionsPage } from "./pages/ParentSessionsPage";
 import { ParentTeachersPage } from "./pages/ParentTeachersPage";
 import { RelaxationRoom } from "../RelaxationRoom";
-import { ReflectionChart } from "../student/pages/ReflectionJournal";
 import { ScreenTimeSummary } from "../shared/ScreenTimeSummary";
 import { loadScreenTime } from "../../screenTime";
 import "./ParentPortal.css";
@@ -186,11 +185,9 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   } else if (tab === "sessions") {
     body = <ParentSessionsPage child={child} sessions={childData.sessions} t={t} />;
   } else {
-    const journalEntries = (portal.journalEntries || []).filter((item) => item.student_id === child.id);
     body = <>
       <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} showConnect={!connectHidden} onDismissConnect={hideConnectCard} t={t} />
       <ScreenTimeSummary rows={portal.screenTime || []} studentId={child.id} t={t} />
-      <section className="parent-card parent-journal-shares"><h4>{t("sharedJournalHeading")}</h4>{journalEntries.length ? journalEntries.map((item) => <article className="parent-shared-journal-entry" key={item.id}><time>{new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</time><p>{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>) : <p className="parent-no-teacher">{t("sharedJournalEmpty")}</p>}</section>
     </>;
   }
 

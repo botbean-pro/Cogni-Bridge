@@ -31,12 +31,11 @@ export async function loadParentPortal(parentId) {
   const links = throwIfError(await supabase.from("parent_student_links")
     .select("student_id, created_at").eq("parent_id", parentId));
   const studentIds = links.map((link) => link.student_id);
-  if (!studentIds.length) return { children: [], messages: [], journalEntries: [], screenTime: [] };
-  const [profiles, assignments, messages, journalEntries, screenTime] = await Promise.all([
+  if (!studentIds.length) return { children: [], messages: [], screenTime: [] };
+  const [profiles, assignments, messages, screenTime] = await Promise.all([
     supabase.from("profiles").select("id, display_name").in("id", studentIds).order("display_name"),
     supabase.from("mentor_student_assignments").select("student_id, mentor_id").in("student_id", studentIds),
     supabase.from("parent_teacher_messages").select("id, student_id, mentor_id, sender_id, sender_role, message, created_at").eq("parent_id", parentId).order("created_at", { ascending: true }),
-    supabase.from("student_journal_entries").select("id, student_id, entry, chart, show_to_support, created_at").in("student_id", studentIds).eq("show_to_support", true).order("created_at", { ascending: false }),
     loadScreenTime(studentIds).catch(() => []),
   ]);
   const children = throwIfError(profiles).map((student) => ({ ...student, mentors: [] }));
@@ -51,7 +50,7 @@ export async function loadParentPortal(parentId) {
         .filter(Boolean);
     });
   }
-  return { children, messages: throwIfError(messages), journalEntries: journalEntries.error ? [] : journalEntries.data || [], screenTime };
+  return { children, messages: throwIfError(messages), screenTime };
 }
 
 // Ratings, emotions and causes only; the child's written notes are never returned.

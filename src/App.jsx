@@ -27,7 +27,6 @@ import { useHoverReadAloud } from "./components/student/flow/useHoverReadAloud";
 import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
 import { MindfulCorner } from "./components/student/pages/MindfulCorner";
 import { RelaxationRoom } from "./components/RelaxationRoom";
-import { ReflectionJournal } from "./components/student/pages/ReflectionJournal";
 import { readMindfulBoard } from "./mindfulPoints";
 import { useImmersiveEffects } from "./immersiveEffects";
 import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
@@ -978,7 +977,6 @@ const App = () => {
           leaderboard: <LeaderboardPage signedIn={signedIn} studentName={studentName} mindfulBoard={readMindfulBoard(studentEmail)} t={t} />,
           mindful: <MindfulCorner studentId={studentEmail} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} />,
           relax: <RelaxationRoom onBack={() => goToTab("home")} t={t} />,
-          journal: <ReflectionJournal studentId={authRole === "student" ? authUserId : null} studentKey={studentEmail} signedIn={signedIn} language={studentLanguage} t={t} />,
           sessions: (
             <SessionsPage
               sessions={studentSessions}

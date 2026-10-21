@@ -13,7 +13,6 @@ export const studentTabPaths = {
   calm: "/calm-corner",
   mindful: "/mindful-corner",
   relax: "/quiet-space",
-  journal: "/reflection-journal",
   careers: "/careers",
   premium: "/premium-flow",
   settings: "/settings",

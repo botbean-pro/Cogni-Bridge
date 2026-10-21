@@ -6,7 +6,7 @@ import { supabaseConfigured } from "../../supabaseClient";
 import { MentorDashboard } from "./pages/MentorDashboard";
 import { useRouteTab } from "../../routes";
 
-const mentorTabs = ["overview", "relax", "performance", "journal", "leaderboard", "schedule", "notes", "sensory", "messages", "settings"];
+const mentorTabs = ["overview", "relax", "performance", "leaderboard", "schedule", "notes", "sensory", "messages", "settings"];
 import { MentorLoginPage } from "./pages/MentorLoginPage";
 import { LanguagePicker } from "../AccessAndAuth";
 

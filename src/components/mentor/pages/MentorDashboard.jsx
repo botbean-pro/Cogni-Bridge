@@ -12,7 +12,6 @@ import {
   FileText,
   Home,
   Headphones,
-  BookHeart,
   Heart,
   LogOut,
   MessageCircle,
@@ -29,12 +28,11 @@ import { loadMentorParentMessages, sendMentorParentReply } from "../../../parent
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
 import { RelaxationRoom } from "../../RelaxationRoom";
-import { ReflectionChart } from "../../student/pages/ReflectionJournal";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
-import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, loadMentorSharedJournal, setMyStudent } from "../../../mentorContent";
+import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
@@ -46,7 +44,6 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
     ["overview", Home, t("onlyUpcomingSessions")],
     ["relax", Headphones, t("quietSpaceTitle")],
     ["performance", TrendingUp, t("md_perfNav")],
-    ...(mentorId ? [["journal", BookHeart, t("sharedJournalHeading")]] : []),
     ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
@@ -97,19 +94,6 @@ function useMentorName(mentorId) {
     };
   }, [mentorId]);
   return name;
-}
-
-function SharedJournalPage({ mentorId, t }) {
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let live = true;
-    loadMentorSharedJournal(mentorId).then((rows) => { if (live) setEntries(rows); }).catch(() => {}).finally(() => { if (live) setLoading(false); });
-    return () => { live = false; };
-  }, [mentorId]);
-  return <section className="mentor-page-content"><div className="mentor-page-heading"><div><p className="mentor-kicker">{t("sharedJournalHeading")}</p><h1>{t("sharedJournalHeading")}</h1></div></div>
-    {loading ? <p>{t("loading")}</p> : entries.length ? <div className="mentor-shared-journal-list">{entries.map((item) => <article className="mentor-shared-journal-card" key={item.id}><p className="mentor-kicker">{item.student_name} · {new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</p><p className="mentor-shared-journal-text">{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>)}</div> : <p className="parent-empty">{t("sharedJournalEmpty")}</p>}
-  </section>;
 }
 
 // Loads shared check-ins for the mentor's assigned students; refreshes every 30s
@@ -807,7 +791,6 @@ export function MentorDashboard({
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "relax" && <RelaxationRoom onBack={() => setTab("overview")} t={t} />}
-          {tab === "journal" && mentorId && <SharedJournalPage mentorId={mentorId} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
           {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
