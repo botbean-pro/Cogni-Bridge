@@ -102,7 +102,7 @@
   min-height: 55px;
   padding: 0 23px;
   color: #fff;
-  font-size: 15px;
+  font-size: calc((15px) * var(--text-scale, 1));
   font-weight: 800;
 }
 

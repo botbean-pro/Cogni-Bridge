@@ -1,0 +1,19 @@
+.sensory-chart-wrap { width:100%; }
+.sensory-chart-legend { display:flex; flex-wrap:wrap; gap:6px 17px; margin-bottom:10px; color:var(--muted); font-size: calc((12px) * var(--text-scale, 1)); }
+.sensory-chart-legend span::before { display:inline-block; width:15px; height:3px; margin:0 6px 3px 0; border-radius:2px; background:currentColor; content:""; }
+.mood-line { color:#368f89; fill:none; stroke:#368f89; }
+.energy-line { color:#d79a4a; fill:none; stroke:#d79a4a; }
+.comfort-line { color:#7785bb; fill:none; stroke:#7785bb; }
+.sensory-chart-plot { position:relative; display:grid; grid-template-columns:20px minmax(0,1fr); }
+.sensory-chart-y { position:relative; }
+.sensory-chart-y span { position:absolute; right:6px; color:var(--muted); font-size: calc((11px) * var(--text-scale, 1)); font-weight:700; line-height:1; transform:translateY(-50%); }
+.sensory-chart { display:block; width:100%; overflow:visible; }
+.sensory-chart line { stroke:var(--line); stroke-width:1; }
+.sensory-chart polyline { fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.sensory-chart circle { fill:var(--surface); stroke-width:3; }
+.sensory-chart-dates { position:relative; height:18px; margin:6px 0 0 20px; color:var(--muted); font-size: calc((11px) * var(--text-scale, 1)); }
+.sensory-chart-dates span { position:absolute; top:0; white-space:nowrap; transform:translateX(-50%); }
+.sensory-chart-empty { margin:0; color:var(--muted); font-size: calc((14px) * var(--text-scale, 1)); }
+@media (max-width:420px) {
+  .sensory-chart-dates span:nth-child(even) { display:none; }
+}

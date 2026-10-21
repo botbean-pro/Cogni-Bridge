@@ -5,6 +5,7 @@ import { CognibridgeButton } from "../../CognibridgeButton";
 import { AboutPage } from "./AboutPage";
 import { StudyPage } from "./SessionsPage";
 
+<<<<<<< HEAD
 const learningPaths = {
   student: {
     title: "pathStudentTitle",
@@ -75,6 +76,23 @@ function LearningPathPreview({ t, onExploreSessions }) {
         <span className="learning-path-spark learning-path-spark-two"><Sparkles size={13} /></span>
       </div>
     </section>
+=======
+const heroRingKeys = ["heroRingMindsDiffer", "heroRingOwnPace", "heroRingMentorsListen"];
+
+function HeroTextRing({ t }) {
+  const message = heroRingKeys.map((key) => t(key)).join(" • ");
+  // Repeat short translations so the ring stays evenly filled in every language.
+  const ringText = `${message} • `.repeat(message.length <= 80 ? 2 : 1);
+  return (
+    <svg className="hero-text-ring" viewBox="0 0 500 500" role="img" aria-label={message}>
+      <defs>
+        <path id="hero-text-ring-path" d="M 250,250 m -228,0 a 228,228 0 1,1 456,0 a 228,228 0 1,1 -456,0" />
+      </defs>
+      <text aria-hidden="true" textLength="1420" lengthAdjust="spacing">
+        <textPath href="#hero-text-ring-path">{ringText}</textPath>
+      </text>
+    </svg>
+>>>>>>> origin/main
   );
 }
 
@@ -124,6 +142,7 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
         </div>
         <p className="hero-footnote"><span aria-hidden="true" />{t("friendlyLearningPlace")}</p>
       </div>
+<<<<<<< HEAD
       <div className="home-hero-art-wrap" onPointerEnter={tiltArt} onPointerMove={tiltArt} onPointerLeave={resetArt}>
         <div className="home-hero-art" ref={artRef} aria-hidden="true">
           <span className="hero-orbit hero-orbit-one" />
@@ -148,6 +167,20 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
           <span className="hero-float hero-float-coral"><Sparkles size={19} fill="currentColor" /></span>
           <span className="hero-float hero-float-yellow"><Sparkles size={19} fill="currentColor" /></span>
           <span className="hero-float hero-float-mint"><Sparkles size={19} fill="currentColor" /></span>
+=======
+      <div className="home-hero-art-wrap">
+        <div className="home-hero-art">
+          <HeroTextRing t={t} />
+          <span className="hero-orbit hero-orbit-one" aria-hidden="true" />
+          <span className="hero-orbit hero-orbit-two" aria-hidden="true" />
+          <span className="hero-orbit hero-orbit-three" aria-hidden="true" />
+          <div className="hero-orb hero-orb-book hero-orb-card" aria-hidden="true">
+            <Card />
+          </div>
+          <span aria-hidden="true" className="hero-float hero-float-coral"><Sparkles size={20} fill="currentColor" /></span>
+          <span aria-hidden="true" className="hero-float hero-float-yellow"><Sparkles size={20} fill="currentColor" /></span>
+          <span aria-hidden="true" className="hero-float hero-float-mint"><Sparkles size={20} fill="currentColor" /></span>
+>>>>>>> origin/main
         </div>
         <span className="hero-art-label">{t("curiosityConnects")}</span>
       </div>

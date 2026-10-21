@@ -1,14 +1,15 @@
 ﻿import React from "react";
 import { useState } from "react";
-import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, FileText } from "lucide-react";
-import { formatSession, getSessionSubjectLabel } from "../../../constants";
+import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Eye, FileText } from "lucide-react";
+import { formatSession, getSessionSubjectLabel, getSessionTitle, subjects } from "../../../constants";
+import { downloadNote, getNotePreviewUrl } from "../../../mentorContent";
 import { isSessionComplete } from "../../../studentActivity";
 import { StudentStats } from "../shared/StudentStats";
 import "./SessionsPage.css";
 
 function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const canMarkAttended = signedIn && isSessionComplete(session) && !attended;
-  const title = session.titleKey ? t(session.titleKey) : session.title;
+  const title = getSessionTitle(session, t);
   const description = session.descriptionKey ? t(session.descriptionKey) : session.description;
   const learnItems = session.learnKeys ? session.learnKeys.map((key) => t(key)) : session.learn;
 
@@ -49,23 +50,76 @@ function SessionDetail({ session, signedIn, registered, attended, onBack, onSign
   );
 }
 
-function SessionList({ sessions, onSelect, t }) {
+function SessionList({ sessions, onSelect, t, activeSubject }) {
+  const sessionSubjects = [...new Set(sessions.map((session) => session.subject).filter(Boolean))];
+  const orderedSubjects = [...subjects.filter((subject) => sessionSubjects.includes(subject)), ...sessionSubjects.filter((subject) => !subjects.includes(subject))];
+  const groups = activeSubject === "all"
+    ? orderedSubjects.map((subject) => ({ subject, sessions: sessions.filter((session) => session.subject === subject) }))
+    : [{ subject: activeSubject, sessions: sessions.filter((session) => session.subject === activeSubject) }];
+
   return (
-    <div className="my-session-list">
-      {sessions.map((session) => (
-        <button key={session.id} className="my-session-row" onClick={() => onSelect(session)}>
-          <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
-          <span><strong>{session.titleKey ? t(session.titleKey) : session.title}</strong><small>{formatSession(session)}</small></span>
-          <ChevronRight size={18} />
-        </button>
-      ))}
+    <div className="session-subject-groups">
+      {!groups.length && <p className="study-empty">{t("noSessions")}</p>}
+      {groups.map(({ subject, sessions: subjectSessions }) => <section className="session-subject-group" key={subject} aria-labelledby={`session-subject-${subject}`}>
+        {activeSubject === "all" && <h3 id={`session-subject-${subject}`}>{getSessionSubjectLabel(subject, t)}</h3>}
+        {subjectSessions.length ? <div className="my-session-list">
+          {subjectSessions.map((session) => (
+            <button key={session.id} className="my-session-row" onClick={() => onSelect(session)}>
+              <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
+              <span><strong>{getSessionTitle(session, t)}</strong><small>{formatSession(session)}</small></span>
+              <ChevronRight size={18} />
+            </button>
+          ))}
+        </div> : <p className="study-empty">{t("noSessions")}</p>}
+      </section>)}
     </div>
   );
 }
 
+<<<<<<< HEAD
 export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, registeredSessionIds, attendedSessionIds, privateSessions = [], onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
+=======
+export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, preferredSubjects = [], registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
+>>>>>>> origin/main
   const [section, setSection] = useState("sessions");
+  const [activeSubject, setActiveSubject] = useState("all");
+  const [downloadError, setDownloadError] = useState("");
+  const [previewNoteId, setPreviewNoteId] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [loadingPreviewId, setLoadingPreviewId] = useState(null);
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
+  const availableSessions = sessions.filter((session) => session.subject !== "Physical Education");
+  const availablePreferredSubjects = preferredSubjects.filter((subject) => subjects.includes(subject));
+  const subjectTabs = availablePreferredSubjects.length
+    ? [...availablePreferredSubjects, ...new Set(availableSessions.map((session) => session.subject).filter((subject) => subject && !availablePreferredSubjects.includes(subject)))]
+    : [...subjects, ...new Set(availableSessions.map((session) => session.subject).filter((subject) => subject && !subjects.includes(subject)))];
+
+  const download = async (note) => {
+    setDownloadError("");
+    try {
+      await downloadNote(note);
+    } catch {
+      setDownloadError(t("noteDownloadError"));
+    }
+  };
+
+  const togglePreview = async (note) => {
+    setDownloadError("");
+    if (previewNoteId === note.id) {
+      setPreviewNoteId(null);
+      setPreviewUrl("");
+      return;
+    }
+    setLoadingPreviewId(note.id);
+    try {
+      setPreviewUrl(await getNotePreviewUrl(note));
+      setPreviewNoteId(note.id);
+    } catch {
+      setDownloadError(t("notePreviewError"));
+    } finally {
+      setLoadingPreviewId(null);
+    }
+  };
 
   return (
     <section className="content sessions-page">
@@ -76,13 +130,22 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
         <button type="button" role="tab" aria-selected={section === "sessions"} className={section === "sessions" ? "active" : ""} onClick={() => setSection("sessions")}>{t("sessions")}</button>
         <button type="button" role="tab" aria-selected={section === "notes"} className={section === "notes" ? "active" : ""} onClick={() => { setSection("notes"); onBack(); }}>{t("notesTab")}{notes.length > 0 && <span>{notes.length}</span>}</button>
       </div>
+      {section === "sessions" && !selectedSession && <div className="sessions-subject-tabs" role="tablist" aria-label={t("filterBySubject")}>
+        <button type="button" role="tab" aria-selected={activeSubject === "all"} className={activeSubject === "all" ? "active" : ""} onClick={() => setActiveSubject("all")}>{t("allSubjects")}</button>
+        {subjectTabs.map((subject) => <button key={subject} type="button" role="tab" aria-selected={activeSubject === subject} className={activeSubject === subject ? "active" : ""} onClick={() => setActiveSubject(subject)}>{getSessionSubjectLabel(subject, t)}</button>)}
+      </div>}
       {section === "notes" ? (
         <section className="student-notes" aria-label={t("notesTab")}>
+          {downloadError && <p className="error-popup" role="alert">{downloadError}</p>}
           {notes.length ? notes.map((note) => (
             <article className="student-note-card" key={note.id}>
               <FileText size={21} />
               <div><span className="subject-pill">{getSessionSubjectLabel(note.subject, t)}</span><h3>{note.title}</h3><p>{note.fileName}</p></div>
-              <a href={note.dataUrl} download={note.fileName} aria-label={`${t("downloadNote")}: ${note.title}`}><ArrowDownToLine size={18} /> {t("downloadNote")}</a>
+              <button type="button" onClick={() => togglePreview(note)} aria-expanded={previewNoteId === note.id} aria-label={`${t(previewNoteId === note.id ? "closeNotePreview" : "viewNote")}: ${note.title}`}><Eye size={18} /> {t(loadingPreviewId === note.id ? "loadingNotePreview" : previewNoteId === note.id ? "closeNotePreview" : "viewNote")}</button>
+              <button type="button" onClick={() => download(note)} aria-label={`${t("downloadNote")}: ${note.title}`}><ArrowDownToLine size={18} /> {t("downloadNote")}</button>
+              {previewNoteId === note.id && previewUrl && <div className="student-note-preview">
+                {/\.(png|jpe?g)$/i.test(note.fileName || "") ? <img src={previewUrl} alt={note.title} /> : <iframe src={previewUrl} title={note.title} />}
+              </div>}
             </article>
           )) : <p className="student-notes-empty">{t("noNotesAvailable")}</p>}
         </section>
@@ -99,19 +162,24 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
           t={t}
         />
       ) : (
+<<<<<<< HEAD
         <>
           {privateSessions.length > 0 && <section className="private-student-sessions"><h3>Your one-to-one sessions</h3>{privateSessions.map((session) => <article key={session.id}><div><span className="subject-pill">{session.subject}</span><strong>{session.title}</strong><small>{session.mentor_name} · {session.session_date} · {session.start_time}–{session.end_time}</small></div><a href={session.meet_link} target="_blank" rel="noopener noreferrer">Join meeting <ChevronRight size={15} /></a></article>)}</section>}
           <SessionList sessions={sessions} onSelect={onSelect} t={t} />
         </>
+=======
+        <SessionList sessions={availableSessions} onSelect={onSelect} t={t} activeSubject={activeSubject} />
+>>>>>>> origin/main
       )}
     </section>
   );
 }
 
-export function StudyPage({ sessions, studentEmail, studentName, activityVersion, onOpenSession, eyebrow, heading, t }) {
+export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, studentName, handwritingType, activityVersion, onOpenSession, onEditHandwriting, eyebrow, heading, t }) {
   const today = new Date().toISOString().slice(0, 10);
-  const upcomingFractions = sessions
-    .filter((session) => session.id === "fractions-workshop" && session.date >= today)
+  const registeredIds = new Set(registeredSessionIds.map(String));
+  const upcomingRegisteredSessions = sessions
+    .filter((session) => registeredIds.has(String(session.id)) && session.date >= today)
     .sort((first, second) => `${first.date}T${first.time}`.localeCompare(`${second.date}T${second.time}`));
 
   return (
@@ -121,17 +189,17 @@ export function StudyPage({ sessions, studentEmail, studentName, activityVersion
       </div>
       <section className="study-upcoming">
         <div className="study-section-heading"><h3>{t("upcomingSessions")}</h3></div>
-        {upcomingFractions.length ? (
+        {upcomingRegisteredSessions.length ? (
           <div className="my-session-list">
-            {upcomingFractions.map((session) => (
+            {upcomingRegisteredSessions.map((session) => (
               <button key={session.id} className="my-session-row" onClick={() => onOpenSession(session)}>
                 <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
-                <span><strong>{session.titleKey ? t(session.titleKey) : session.title}</strong><small>{formatSession(session)}</small></span>
+                <span><strong>{getSessionTitle(session, t)}</strong><small>{formatSession(session)}</small></span>
                 <ChevronRight size={18} />
               </button>
             ))}
           </div>
-        ) : <p className="study-empty">{t("noSessions")}</p>}
+        ) : <p className="study-empty">{t("noRegisteredSessions")}</p>}
       </section>
       <section className="study-profile-card">
         <div className="study-profile-glow" aria-hidden="true" />
@@ -140,15 +208,15 @@ export function StudyPage({ sessions, studentEmail, studentName, activityVersion
           <h3>{t("handwritingType")}</h3>
           <p>{t("handwritingTypeStudyCopy")}</p>
         </div>
-        <strong>{(() => {
+        <button type="button" onClick={onEditHandwriting} aria-label={t("updateHandwriting")}>{(() => {
           try {
             const profile = JSON.parse(localStorage.getItem("cognibridge_students") || "[]")
               .find((student) => student.email?.toLowerCase() === studentEmail?.toLowerCase());
-            return profile?.handwritingType || t("notAnalyzed");
+            return handwritingType || profile?.handwritingType || t("notAnalyzed");
           } catch {
             return t("notAnalyzed");
           }
-        })()}</strong>
+        })()}</button>
       </section>
       <StudentStats
         studentEmail={studentEmail}

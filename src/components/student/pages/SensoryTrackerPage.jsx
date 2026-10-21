@@ -1,116 +1,119 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Check, ChevronDown, ChevronUp, Heart, LockKeyhole, Share2, Trash2, Wind, VolumeX, Pause, Play, Sparkles } from "lucide-react";
+import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Users, VolumeX, Wind, X } from "lucide-react";
 import {
   causeOptions,
-  deleteStudentCheckin,
   emotionOptions,
   helpfulOptions,
   loadAssignedMentors,
+  loadLinkedParents,
   loadStudentCheckins,
   loadStudentResponses,
   mentorHelpOptions,
-  moodLabels,
   saveStudentCheckin,
 } from "../../../studentSensory";
+import { MoodTrendChart } from "../shared/MoodTrendChart";
+import { formatLocalizedDate } from "../../../constants";
 import "./SensoryTrackerPage.css";
 import { SensorySessionSupport } from "./SensorySessionSupport";
 
-const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
-const labelsFor = (options, keys = []) => keys.map((key) => labelFor(options, key));
+// One icon per moodLabels entry (Very bad -> Great), so the picture always matches the word.
+const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
+const moodColors = ["#d64545", "#e8833a", "#c9a227", "#5aa469", "#0c9a8a"];
 
-const todayString = () => new Date().toLocaleDateString("en-CA");
-const entryDay = (entry) => new Date(entry.created_at).toLocaleDateString("en-CA");
+const labelsFor = (t, group, keys = []) => keys.map((key) => t(`${group}_${key}`));
+
+const localDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const todayString = () => localDateKey(new Date());
+const entryDay = (entry) => localDateKey(new Date(entry.created_at));
+const shortNote = (entry) => {
+  const note = entry.day_note?.trim();
+  if (!note) return "";
+  return note.length > 100 ? `${note.slice(0, 100)}…` : note;
+};
 const blankEntry = () => ({
-  mood: 0, moodCustom: "", emotions: [], energy: 3, comfort: 3, daySummary: "", causes: [],
-  overwhelm: "", helpful: [], helpRequest: "none", selectedMentorId: "", mentorMessage: "",
+  mood: 0, moodCustom: "", emotions: [], emotionCustom: "", energy: 3, comfort: 3, daySummary: "", causes: [], causeCustom: "",
+  overwhelm: "", helpful: [], helpfulCustom: "", helpRequest: "none", selectedMentorId: "", mentorMessage: "",
   shared: false, quickReason: "",
 });
 
-function TrendChart({ entries, t }) {
-  const data = entries.slice(0, 7).reverse();
-  if (data.length < 2) return <p className="sensory-muted">{t("Add a few check-ins to see your mood, energy, and comfort trend.")}</p>;
-  // Quick check-ins have no energy/comfort rating, so those points are skipped.
-  const pointsFor = (field) => data
-    .map((entry, index) => entry[field] == null ? null : `${30 + index * (540 / (data.length - 1))},${155 - ((entry[field] - 1) / 4) * 125}`)
-    .filter(Boolean)
-    .join(" ");
-  return (
-    <div className="sensory-chart-wrap">
-      <div className="sensory-chart-legend"><span className="mood-line">{t("Mood")}</span><span className="energy-line">{t("Energy")}</span><span className="comfort-line">{t("Comfort")}</span></div>
-      <svg className="sensory-chart" viewBox="0 0 600 180" role="img" aria-label={t("Your mood, energy, and comfort over your recent check-ins")}>
-        {[0, 1, 2, 3, 4].map((line) => <line key={line} x1="30" x2="570" y1={30 + line * 31} y2={30 + line * 31} />)}
-        <polyline className="mood-line" points={pointsFor("mood")} />
-        <polyline className="energy-line" points={pointsFor("energy")} />
-        <polyline className="comfort-line" points={pointsFor("comfort")} />
-      </svg>
-      <div className="sensory-chart-dates"><span>{new Date(data[0].created_at).toLocaleDateString(document.documentElement.lang || undefined)}</span><span>{new Date(data[data.length - 1].created_at).toLocaleDateString(document.documentElement.lang || undefined)}</span></div>
-    </div>
-  );
-}
-
-function EntryDetail({ entry, reply, onDelete, t }) {
+function EntryDetail({ entry, reply, t }) {
   return (
     <div className="sensory-entry-detail">
-      <p>{entry.day_note || t("No day summary added.")}</p>
-      {entry.mood_note && <p><strong>{t("Your words:")}</strong> {entry.mood_note}</p>}
-      {entry.causes?.length > 0 && <p><strong>{t("Possible causes:")}</strong> {labelsFor(causeOptions, entry.causes).map(t).join(", ")}</p>}
-      {entry.overwhelm_note && <p><strong>{t("What felt overwhelming:")}</strong> {entry.overwhelm_note}</p>}
-      {entry.helpful_actions?.length > 0 && <p><strong>{t("What helped:")}</strong> {labelsFor(helpfulOptions, entry.helpful_actions).map(t).join(", ")}</p>}
-      {entry.mentor_help !== "none" && <p><strong>{t("Mentor support:")}</strong> {t(labelFor(mentorHelpOptions, entry.mentor_help))}</p>}
-      {entry.mentor_message && <p><strong>{t("Message for your mentor:")}</strong> {entry.mentor_message}</p>}
-      {reply && <p><strong>{t("Mentor reply:")}</strong> {reply}</p>}
-      <button type="button" className="sensory-delete" onClick={() => onDelete(entry)}><Trash2 size={15} /> {t("Delete this check-in")}</button>
+      <p><strong>{t("sn_dFeeling")}</strong> {t(`mood_${entry.mood}`)}{entry.mood_note ? ` — ${entry.mood_note}` : ""}</p>
+      {entry.emotions?.length > 0 && <p><strong>{t("sn_dEmotions")}</strong> {labelsFor(t, "emotion", entry.emotions).join(", ")}{entry.emotion_note ? ` — ${entry.emotion_note}` : ""}</p>}
+      {entry.energy != null && <p><strong>{t("sn_dEnergy")}</strong> {entry.energy}/5 · <strong>{t("sn_dComfort")}</strong> {entry.comfort}/5</p>}
+      <p><strong>{entry.checkin_type === "quick" ? t("sn_dYourNote") : t("sn_dDayWent")}</strong> {entry.day_note || t("sn_dNoNote")}</p>
+      {entry.causes?.length > 0 && <p><strong>{t("sn_dCauses")}</strong> {labelsFor(t, "cause", entry.causes).join(", ")}</p>}
+      {entry.cause_note && <p><strong>{t("sn_dOtherCause")}</strong> {entry.cause_note}</p>}
+      {entry.overwhelm_note && <p><strong>{t("sn_dOverwhelming")}</strong> {entry.overwhelm_note}</p>}
+      {entry.helpful_actions?.length > 0 && <p><strong>{t("sn_dHelped")}</strong> {labelsFor(t, "helpful", entry.helpful_actions).join(", ")}</p>}
+      {entry.helpful_note && <p><strong>{t("sn_dOtherHelp")}</strong> {entry.helpful_note}</p>}
+      {entry.mentor_help !== "none" && <p><strong>{t("sn_dMentorSupport")}</strong> {t(`mentorHelp_${entry.mentor_help}`)}</p>}
+      {entry.mentor_message && <p><strong>{t("sn_dMentorMsg")}</strong> {entry.mentor_message}</p>}
+      {reply && <p><strong>{t("sn_dMentorReply")}</strong> {reply}</p>}
     </div>
   );
 }
 
 const calmVideos = [
-  { title: "Mindful breathing", source: "HeadStart.gov", url: "https://headstart.gov/video/mindful-breathing", note: "A gentle guided breathing practice" },
-  { title: "Body scan meditation", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=TCoUnEPeuQk", note: "Notice how each part of your body feels" },
-  { title: "What is mindfulness?", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=8rp5bpFIUpg", note: "A simple introduction to mindful moments" },
+  { id: "v2", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=TCoUnEPeuQk" },
+  { id: "v3", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=8rp5bpFIUpg" },
 ];
 
-export function CalmCorner({ onClose, startBreathing = false, t = (value) => value }) {
+export function CalmCorner({ onClose, startBreathing = false, t }) {
   const [breathing, setBreathing] = useState(startBreathing);
-  const [phase, setPhase] = useState(startBreathing ? "Breathe in" : "Breathe out");
+  const [phase, setPhase] = useState(startBreathing ? "in" : "out");
   useEffect(() => {
     if (!breathing) return undefined;
-    const timer = window.setInterval(() => setPhase((current) => current === "Breathe in" ? "Breathe out" : "Breathe in"), 4000);
+    const timer = window.setInterval(() => setPhase((current) => current === "in" ? "out" : "in"), 4000);
     return () => window.clearInterval(timer);
   }, [breathing]);
+  const phaseLabel = t(phase === "in" ? "sn_breatheIn" : "sn_breatheOut");
   return <section className="sensory-card calm-corner" id="calm-corner" aria-labelledby="calm-corner-title">
-    <div className="sensory-card-title"><div><span className="sensory-step">{t("YOUR CALM CORNER")}</span><h2 id="calm-corner-title">{t("A little space to reset")}</h2></div><Sparkles size={21} /></div>
-    <p className="calm-intro">{t("Choose what feels comfortable. You can stop or leave whenever you like.")}</p>
+    <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_calmEyebrow")}</span><h2 id="calm-corner-title">{t("sn_calmTitle")}</h2></div></div>
+    <p className="calm-intro">{t("sn_calmIntro")}</p>
     <div className="calm-tools">
-      <div className="calm-breath-card"><div className="breathing-copy"><h3>{t("Breathing exercise")}</h3><p aria-live="polite">{breathing ? `${t(phase)} ${t("slowly")}` : t("Follow the circle. Breathe in, then breathe out.")}</p></div>
-        <div className={`breathing-stage${breathing ? " is-active" : ""}${breathing && phase === "Breathe out" ? " is-exhaling" : ""}`} aria-label={breathing ? t(phase) : t("Breathing circle")}>
-          <div className="breathing-ring" aria-hidden="true"><span className={`breathing-cue${breathing ? ` is-active ${phase === "Breathe out" ? "is-exhaling" : ""}` : ""}`}>{breathing ? t(phase === "Breathe in" ? "in" : "out") : t("breathe")}</span></div>
+      <div className="calm-breath-card"><div className="breathing-copy"><h3>{t("sn_breathingEx")}</h3><p aria-live="polite">{breathing ? t(phase === "in" ? "sn_breatheInSlow" : "sn_breatheOutSlow") : t("sn_followCircle")}</p></div>
+        <div className={`breathing-stage${breathing ? " is-active" : ""}${breathing && phase === "out" ? " is-exhaling" : ""}`} aria-label={breathing ? phaseLabel : t("sn_circleLabel")}>
+          <div className="breathing-ring" aria-hidden="true"><span className={`breathing-cue${breathing ? ` is-active ${phase === "out" ? "is-exhaling" : ""}` : ""}`}>{breathing ? t(phase === "in" ? "sn_cueIn" : "sn_cueOut") : t("sn_cueBreathe")}</span></div>
         </div>
-        <button type="button" className="calm-action" onClick={() => { setBreathing((current) => !current); setPhase("Breathe in"); }} aria-pressed={breathing}>{breathing ? <><Pause size={16} /> {t("Pause")}</> : <><Play size={16} /> {t("Begin")}</>}</button>
+        <button type="button" className="calm-action" onClick={() => { setBreathing((current) => !current); setPhase("in"); }} aria-pressed={breathing}>{breathing ? <><Pause size={16} /> {t("sn_pause")}</> : <><Play size={16} /> {t("sn_begin")}</>}</button>
       </div>
-      <div className="calm-videos"><h3>{t("Quiet videos & mindfulness")}</h3>{calmVideos.map((item) => <a key={t(item.title)} href={item.url} target="_blank" rel="noreferrer"><span><strong>{t(item.title)}</strong><small>{t(item.note)} · {item.source}</small></span><span aria-hidden="true">↗</span></a>)}</div>
+      <div className="calm-videos"><h3>{t("sn_quietVideos")}</h3>{calmVideos.map((item) => <a key={item.id} href={item.url} target="_blank" rel="noreferrer"><span><strong>{t(`sn_${item.id}t`)}</strong><small>{t(`sn_${item.id}n`)} · {item.source}</small></span><span aria-hidden="true">↗</span></a>)}</div>
     </div>
-    <button type="button" className="calm-close" onClick={onClose}>{t("Back to my check-in")}</button>
+    <button type="button" className="calm-close" onClick={onClose}>{t("sn_backCheckin")}</button>
   </section>;
 }
 
+<<<<<<< HEAD
 export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) => value, lowSensory = false, onToggleLowSensory = () => {} }) {
+=======
+const MAX_FULL_CHECKINS_PER_DAY = 3;
+
+export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
+>>>>>>> origin/main
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
+  const [parents, setParents] = useState([]);
   const [responses, setResponses] = useState([]);
   const [form, setForm] = useState(blankEntry);
   const [view, setView] = useState("quick");
   const [expandedId, setExpandedId] = useState(null);
   const [status, setStatus] = useState("");
+  const [formStatus, setFormStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const [showCalmCorner, setShowCalmCorner] = useState(false);
-  const [showCheckinForm, setShowCheckinForm] = useState(true);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
-  const todayEntries = sortedEntries.filter((entry) => entryDay(entry) === todayString());
-  const todayEntry = todayEntries[0];
-  const todayFullCount = todayEntries.filter((entry) => entry.checkin_type === "full").length;
-  const canStartFullCheckin = todayFullCount < 3;
-  const shouldShowCheckinForm = canStartFullCheckin && (todayEntries.length === 0 || showCheckinForm);
+  const todayFullEntries = sortedEntries.filter((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
+  const todayFullEntry = todayFullEntries[0];
+  const fullLimitReached = todayFullEntries.length >= MAX_FULL_CHECKINS_PER_DAY;
+
+  useEffect(() => {
+    if (!showCalmCorner) return undefined;
+    const closeOnEscape = (event) => { if (event.key === "Escape") setShowCalmCorner(false); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [showCalmCorner]);
 
   const refresh = async () => {
     const [history, assignedMentors, mentorResponses] = await Promise.all([
@@ -125,6 +128,20 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
 
   useEffect(() => {
     let isCurrent = true;
+    setEntries([]);
+    setMentors([]);
+    setParents([]);
+    setResponses([]);
+    setExpandedId(null);
+    setForm(blankEntry());
+    setView("quick");
+    setStatus("");
+    // Only changes the privacy wording, so a failure here shouldn't block the tracker.
+    loadLinkedParents(studentId)
+      .then((linkedParents) => {
+        if (isCurrent) setParents(linkedParents);
+      })
+      .catch(() => {});
     Promise.all([
       loadStudentCheckins(studentId),
       loadAssignedMentors(studentId),
@@ -134,9 +151,8 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
       setEntries(history);
       setMentors(assignedMentors);
       setResponses(mentorResponses);
-      if (history.some((entry) => entryDay(entry) === todayString())) setShowCheckinForm(false);
     }).catch(() => {
-      if (isCurrent) setStatus(t("Your check-ins couldn't be loaded. Please try again."));
+      if (isCurrent) setStatus(t("sn_stLoadFail"));
     });
     return () => { isCurrent = false; };
   }, [studentId]);
@@ -149,15 +165,19 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
 
   const submit = async (event, quick = false) => {
     event.preventDefault();
-    if (!form.mood) return;
-    const shared = !demoMode && !quick && form.shared;
+    if (!form.mood) {
+      setFormStatus(t("sn_pickMood"));
+      return;
+    }
+    setFormStatus("");
+    const shared = !quick && !demoMode && form.shared;
     const specificMentor = shared && form.helpRequest === "specific_mentor";
     if (shared && mentors.length === 0) {
-      setStatus(t("No mentor is assigned to your account yet, so this check-in can't be shared."));
+      setFormStatus(t("sn_stNoMentorShare"));
       return;
     }
     if (specificMentor && !form.selectedMentorId) {
-      setStatus(t("Choose a mentor, or pick a different support option."));
+      setFormStatus(t("sn_stChooseMentor"));
       return;
     }
     const checkin = quick
@@ -175,12 +195,15 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
         mood: form.mood,
         mood_note: form.moodCustom.trim(),
         emotions: form.emotions,
+        emotion_note: form.emotions.includes("other") ? form.emotionCustom.trim() : "",
         energy: Number(form.energy),
         comfort: Number(form.comfort),
         day_note: form.daySummary.trim(),
         causes: form.causes,
+        cause_note: form.causes.includes("other") ? form.causeCustom.trim() : "",
         overwhelm_note: form.overwhelm.trim(),
         helpful_actions: form.helpful,
+        helpful_note: form.helpful.includes("other") ? form.helpfulCustom.trim() : "",
         mentor_help: demoMode ? "none" : form.helpRequest,
         selected_mentor_id: specificMentor ? form.selectedMentorId : null,
         mentor_message: demoMode || form.helpRequest === "none" ? "" : form.mentorMessage.trim(),
@@ -191,87 +214,99 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
       await saveStudentCheckin(studentId, checkin);
       await refresh();
       setForm(blankEntry());
-      setShowCheckinForm(false);
-      setStatus(t(shared ? "Saved and shared with your mentor." : "Saved privately. Only you can see this check-in."));
-    } catch {
-      setStatus(t("This check-in couldn't be saved. Please try again."));
+      setView("quick");
+      setFormStatus(t(demoMode
+        ? "sn_stSavedDemo"
+        : shared ? "sn_stSavedShared"
+          : parents.length ? "sn_stSavedParent"
+            : "sn_stSavedPrivate"));
+    } catch (saveError) {
+      console.error("Check-in save failed:", saveError);
+      setFormStatus(t("sn_stSaveFail"));
     } finally {
       setSaving(false);
     }
   };
 
-  const removeEntry = async (entry) => {
-    try {
-      await deleteStudentCheckin(studentId, entry.id);
-      setEntries((current) => current.filter((item) => item.id !== entry.id));
-      setExpandedId(null);
-      setStatus(t("Check-in deleted."));
-    } catch {
-      setStatus(t("This check-in couldn't be deleted. Please try again."));
-    }
-  };
-
-  const suggestions = form.mood === 1 || form.mood === 2
-    ? ["Talk to someone you trust", "Try a short breathing break", "Move somewhere quieter"]
-    : form.causes.includes("homework")
-      ? ["Break homework into smaller tasks", "Take a short break", "Talk to your mentor"]
-      : ["Take a short break", "Try a breathing exercise", "Talk to someone you trust"];
-
   const tiredCount = sortedEntries.slice(0, 7).filter((entry) => entry.emotions?.includes("tired")).length;
   const stressedCount = sortedEntries.slice(0, 7).filter((entry) => entry.emotions?.includes("stressed") && entry.causes?.includes("school")).length;
+  const moodRatings = sortedEntries.slice(0, 8).map((entry) => entry.mood);
+  const recentMoodAverage = moodRatings.length >= 8 ? moodRatings.slice(0, 4).reduce((sum, rating) => sum + rating, 0) / 4 : null;
+  const earlierMoodAverage = moodRatings.length >= 8 ? moodRatings.slice(4, 8).reduce((sum, rating) => sum + rating, 0) / 4 : null;
 
   return (
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
+<<<<<<< HEAD
       <header className="sensory-heading"><div><p className="eyebrow">{t("A private space for you")}</p><h1>{t("Sensory Tracker")}</h1><p>{t("Check in with yourself. Share only what you choose.")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {lowSensory ? t("Low sensory on") : t("Low sensory mode")}</button><span><Heart size={18} /> {t("No judgement, just your own notes")}</span></div></header>
       <SensorySessionSupport studentId={studentId} t={t} />
       <section className="break-banner"><div><span className="sensory-step">{t("IT'S OKAY TO PAUSE")}</span><h2>{t("Need a little break?")}</h2><p>{t("Take a moment for yourself. There is no rush to continue.")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("I need a break")}</button></section>
       {showCalmCorner && <CalmCorner t={t} onClose={() => setShowCalmCorner(false)} />}
       <div className="sensory-privacy"><LockKeyhole size={17} /> {t(demoMode ? "demoPrivateMessage" : "Your check-ins are private by default. You'll see a clear label when you choose to share one.")}</div>
+=======
+      <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
+      <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
+      {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
+        <div className="student-calm-dialog">
+          <button className="student-calm-dismiss" type="button" onClick={() => setShowCalmCorner(false)} aria-label={t("close")}><X size={20} /></button>
+          <CalmCorner onClose={() => setShowCalmCorner(false)} t={t} />
+        </div>
+      </div>}
+      {demoMode ? (
+        <div className="sensory-demo-banner" role="note"><LockKeyhole size={17} /> {t("sn_demoBanner")}</div>
+      ) : (
+        <div className="sensory-privacy"><LockKeyhole size={17} /> {t("sn_privacy")}</div>
+      )}
+      {!demoMode && parents.length > 0 && (
+        <div className="sensory-privacy"><Users size={17} /> {t("sn_parentsSee", { names: parents.map((parent) => parent.display_name).join(", ") })}</div>
+      )}
+>>>>>>> origin/main
       {status && <p className="sensory-status" role="status">{status}</p>}
 
-      {shouldShowCheckinForm ? (
-        <section className="sensory-card sensory-checkin">
-          <div className="sensory-card-title"><div><span className="sensory-step">{t("TODAY'S CHECK-IN")}</span><h2>{view === "quick" ? t("How are you feeling right now?") : t("How are you feeling today?")}</h2></div><Activity size={22} /></div>
-          <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">{t("Quick check-in")}</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button">{t("Full check-in")}</button></div>
+      <section className="sensory-card sensory-checkin">
+          <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_todayEyebrow")}</span><h2>{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</h2></div><Activity size={22} /></div>
+          {todayFullEntry && <p className="sensory-status" role="status">{t(todayFullEntry.shared_with_mentor ? "sn_fullDoneShared" : "sn_fullDonePrivate")}</p>}
+          <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">{t("sn_quick")}</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button" disabled={fullLimitReached} title={fullLimitReached ? t("sn_fullLimit") : undefined}>{t("sn_full")}</button></div>
           <form onSubmit={(event) => submit(event, view === "quick")}>
-            <div className="sensory-field"><div className="sensory-label">{t("How are you feeling today?")}</div><div className="sensory-mood-options">{moodLabels.map((mood, index) => <button type="button" key={mood} className={form.mood === index + 1 ? "selected" : ""} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true">{["☹", "🙁", "◉", "🙂", "☺"][index]}</span>{t(mood)}</button>)}</div></div>
+            <fieldset className="sensory-field"><legend>{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</legend><div className="sensory-mood-options">{[1, 2, 3, 4, 5].map((_, index) => <button type="button" key={index} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true" style={{ color: moodColors[index] }}>{React.createElement(moodIcons[index], { size: 28, strokeWidth: 1.9 })}</span>{t(`mood_${index + 1}`)}</button>)}</div></fieldset>
             {view === "quick" ? (
-              <label className="sensory-field">{t("Want to tell us why?")}<textarea value={form.quickReason} maxLength={4000} onChange={(event) => updateForm("quickReason", event.target.value)} placeholder={t("Anything you'd like to remember...")} rows="3" /></label>
+              <label className="sensory-field">{t("sn_whyTell")}<textarea value={form.quickReason} maxLength={4000} onChange={(event) => updateForm("quickReason", event.target.value)} placeholder={t("sn_whyPlaceholder")} rows="3" /></label>
             ) : (
               <>
-                <fieldset className="sensory-field"><legend>{t("What emotions are you feeling?")}</legend><div className="sensory-chips">{emotionOptions.map(([key, label]) => <button type="button" key={key} className={form.emotions.includes(key) ? "selected" : ""} onClick={() => toggleArray("emotions", key)}>{t(label)}</button>)}</div></fieldset>
-                <label className="sensory-field">{t("Anything else you'd like to call this feeling?")}<input value={form.moodCustom} maxLength={250} onChange={(event) => updateForm("moodCustom", event.target.value)} placeholder={t("Optional")} /></label>
-                <div className="sensory-field"><label htmlFor="energy-range">{t("How is your energy today?")} <strong>{t(["Very low", "Low", "Okay", "High", "Very high"][form.energy - 1])}</strong></label><input id="energy-range" type="range" min="1" max="5" value={form.energy} onChange={(event) => updateForm("energy", event.target.value)} /></div>
-                <div className="sensory-field"><label htmlFor="comfort-range">{t("How comfortable do you feel today?")} <strong>{t(["Very uncomfortable", "Uncomfortable", "Okay", "Comfortable", "Very comfortable"][form.comfort - 1])}</strong></label><input id="comfort-range" type="range" min="1" max="5" value={form.comfort} onChange={(event) => updateForm("comfort", event.target.value)} /></div>
-                <label className="sensory-field">{t("How was your day?")}<textarea value={form.daySummary} maxLength={4000} onChange={(event) => updateForm("daySummary", event.target.value)} placeholder={t("Tell us anything about your day.")} rows="4" /></label>
-                <fieldset className="sensory-field"><legend>{t("What might have contributed to how you feel?")}</legend><div className="sensory-chips">{causeOptions.map(([key, label]) => <button type="button" key={key} className={form.causes.includes(key) ? "selected" : ""} onClick={() => toggleArray("causes", key)}>{t(label)}</button>)}</div></fieldset>
-                <label className="sensory-field">{t("Did anything overwhelm you today?")}<textarea value={form.overwhelm} maxLength={2000} onChange={(event) => updateForm("overwhelm", event.target.value)} placeholder={t("Optional")} rows="3" /></label>
-                <fieldset className="sensory-field"><legend>{t("What helped you feel better?")}</legend><div className="sensory-chips">{helpfulOptions.map(([key, label]) => <button type="button" key={key} className={form.helpful.includes(key) ? "selected" : ""} onClick={() => toggleArray("helpful", key)}>{t(label)}</button>)}</div></fieldset>
-                {!demoMode && <>
-                  <label className="sensory-field">{t("Do you need help from a mentor?")}<select value={form.helpRequest} onChange={(event) => updateForm("helpRequest", event.target.value)}>{mentorHelpOptions.map(([key, label]) => <option key={key} value={key}>{t(label)}</option>)}</select></label>
-                  {form.helpRequest === "specific_mentor" && <label className="sensory-field">{t("Choose a mentor")}<select value={form.selectedMentorId} onChange={(event) => updateForm("selectedMentorId", event.target.value)}><option value="">{t("Select a mentor")}</option>{mentors.map((mentor) => <option key={mentor.id} value={mentor.id}>{mentor.display_name}</option>)}</select>{mentors.length === 0 && <small>{t("No mentors are assigned to your account yet.")}</small>}</label>}
-                  {form.helpRequest !== "none" && <label className="sensory-field">{t("Is there anything you'd like your mentor to know?")}<textarea value={form.mentorMessage} maxLength={2000} onChange={(event) => updateForm("mentorMessage", event.target.value)} rows="3" /></label>}
-                  <label className="sensory-share"><input type="checkbox" checked={form.shared} onChange={(event) => updateForm("shared", event.target.checked)} /><span><Share2 size={17} /><strong>{t("Share this check-in with my mentor")}</strong><small>{form.shared ? t("Your assigned mentor can see the details in their dashboard.") : t("This stays private unless you turn this on.")}</small></span></label>
-                  {form.shared && <p className="sensory-share-note">{t("Shared entries are visible only to mentors assigned to you.")}</p>}
-                </>}
+                <fieldset className="sensory-field"><legend>{t("sn_whatEmotions")}</legend><div className="sensory-chips">{emotionOptions.map(([key]) => <button type="button" key={key} className={form.emotions.includes(key) ? "selected" : ""} aria-pressed={form.emotions.includes(key)} onClick={() => toggleArray("emotions", key)}>{t(`emotion_${key}`)}</button>)}</div>{form.emotions.includes("other") && <label className="sensory-other-field">{t("sn_otherEmotion")} <input value={form.emotionCustom} maxLength={250} onChange={(event) => updateForm("emotionCustom", event.target.value)} /></label>}</fieldset>
+                <label className="sensory-field">{t("sn_callFeeling")}<input value={form.moodCustom} maxLength={250} onChange={(event) => updateForm("moodCustom", event.target.value)} placeholder={t("sn_optional")} /></label>
+                <div className="sensory-field"><label htmlFor="energy-range">{t("sn_energyQ")} <strong>{t(`energyLvl_${form.energy}`)}</strong></label><input id="energy-range" type="range" min="1" max="5" value={form.energy} aria-valuetext={t(`energyLvl_${form.energy}`)} onChange={(event) => updateForm("energy", event.target.value)} /></div>
+                <div className="sensory-field"><label htmlFor="comfort-range">{t("sn_comfortQ")} <strong>{t(`comfortLvl_${form.comfort}`)}</strong></label><input id="comfort-range" type="range" min="1" max="5" value={form.comfort} aria-valuetext={t(`comfortLvl_${form.comfort}`)} onChange={(event) => updateForm("comfort", event.target.value)} /></div>
+                <label className="sensory-field">{t("sn_howDay")}<textarea value={form.daySummary} maxLength={4000} onChange={(event) => updateForm("daySummary", event.target.value)} placeholder={t("sn_dayPlaceholder")} rows="4" /></label>
+                <fieldset className="sensory-field"><legend>{t("sn_contributed")}</legend><div className="sensory-chips">{causeOptions.map(([key]) => <button type="button" key={key} className={form.causes.includes(key) ? "selected" : ""} aria-pressed={form.causes.includes(key)} onClick={() => toggleArray("causes", key)}>{t(`cause_${key}`)}</button>)}</div>{form.causes.includes("other") && <label className="sensory-other-field">{t("sn_elseContributed")} <input value={form.causeCustom} maxLength={250} onChange={(event) => updateForm("causeCustom", event.target.value)} /></label>}</fieldset>
+                <label className="sensory-field">{t("sn_overwhelmQ")}<textarea value={form.overwhelm} maxLength={2000} onChange={(event) => updateForm("overwhelm", event.target.value)} placeholder={t("sn_optional")} rows="3" /></label>
+                <fieldset className="sensory-field"><legend>{t("sn_helpedQ")}</legend><div className="sensory-chips">{helpfulOptions.map(([key]) => <button type="button" key={key} className={form.helpful.includes(key) ? "selected" : ""} aria-pressed={form.helpful.includes(key)} onClick={() => toggleArray("helpful", key)}>{t(`helpful_${key}`)}</button>)}</div>{form.helpful.includes("other") && <label className="sensory-other-field">{t("sn_elseHelped")} <input value={form.helpfulCustom} maxLength={250} onChange={(event) => updateForm("helpfulCustom", event.target.value)} /></label>}</fieldset>
+                {demoMode ? (
+                  <p className="sensory-share-note">{t("sn_demoShareNote")}</p>
+                ) : (
+                  <>
+                    <label className="sensory-field">{t("sn_needMentorQ")}<select value={form.helpRequest} onChange={(event) => updateForm("helpRequest", event.target.value)}>{mentorHelpOptions.map(([key]) => <option key={key} value={key}>{t(`mentorHelp_${key}`)}</option>)}</select></label>
+                    {form.helpRequest !== "none" && !form.shared && <p className="sensory-share-note">{t("sn_requestPrivate")}</p>}
+                    {form.helpRequest === "specific_mentor" && <label className="sensory-field">{t("sn_chooseMentor")}<select value={form.selectedMentorId} onChange={(event) => updateForm("selectedMentorId", event.target.value)}><option value="">{t("sn_selectMentor")}</option>{mentors.map((mentor) => <option key={mentor.id} value={mentor.id}>{mentor.display_name}</option>)}</select>{mentors.length === 0 && <small>{t("sn_noMentors")}</small>}</label>}
+                    {form.helpRequest !== "none" && <label className="sensory-field">{t("sn_mentorKnow")}<textarea value={form.mentorMessage} maxLength={2000} onChange={(event) => updateForm("mentorMessage", event.target.value)} rows="3" /></label>}
+                    <label className="sensory-share"><input type="checkbox" checked={form.shared} onChange={(event) => updateForm("shared", event.target.checked)} /><span><Share2 size={17} /><strong>{t("sn_shareCheckin")}</strong><small>{t(form.shared ? "sn_shareOn" : "sn_shareOff")}</small></span></label>
+                    {form.shared && <p className="sensory-share-note">{t("sn_sharedVisible")}</p>}
+                  </>
+                )}
               </>
             )}
-            {view === "quick" && <p className="sensory-private-note"><LockKeyhole size={15} /> {t("Quick check-ins are private.")}</p>}
-            <button className="sensory-submit" type="submit" disabled={!form.mood || saving}>{saving ? t("Saving") : view === "quick" ? t("Save quick check-in") : t("Save today's check-in")}</button>
+            {view === "quick" && <p className="sensory-private-note"><LockKeyhole size={15} /> {t(parents.length ? "sn_quickPrivateParent" : "sn_quickPrivate")}</p>}
+            <button className="sensory-submit" type="submit" aria-disabled={!form.mood || saving} onClick={(event) => { if (saving) event.preventDefault(); }}>{saving ? t("sn_saving") : t(view === "quick" ? "sn_saveQuick" : "sn_saveToday")}</button>
+            {formStatus && <p className="sensory-status" role="status" ref={(node) => node?.scrollIntoView({ block: "nearest", behavior: "smooth" })}>{formStatus}</p>}
+            {!form.mood && !formStatus && <p className="sensory-share-note">{t("sn_pickMood")}</p>}
           </form>
-        </section>
-      ) : (
-        <section className="sensory-card sensory-done"><Check size={21} /><div><h2>{todayFullCount >= 3 ? t("Full check-in limit reached") : t("You've checked in today.")}</h2><p>{todayFullCount >= 3 ? t("You have completed three full check-ins today. You can start again tomorrow.") : t("Your entry is {sharing}. You can still review or delete it in your history.", { sharing: t(todayEntry?.shared_with_mentor ? "shared with your mentor" : "private") })}</p>{canStartFullCheckin && <button type="button" className="sensory-upgrade" onClick={() => { setForm(blankEntry()); setView("full"); setShowCheckinForm(true); }}>{todayFullCount ? t("Start another full check-in ({remaining} left today)", { remaining: 3 - todayFullCount }) : t("Add a full check-in")}</button>}</div></section>
-      )}
-
-      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("GENTLE IDEAS")}</span><h2>{t("A few things you could try")}</h2></div><Heart size={22} /></div><div className="sensory-suggestions">{suggestions.map((item) => <span key={item}>{t(item)}</span>)}</div><small>{t("Optional ideas only. You know what works best for you.")}</small></section>
-
-      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("YOUR RECENT CHECK-INS")}</span><h2>{t("Patterns over time")}</h2></div></div><TrendChart entries={sortedEntries} t={t} />
-        {sortedEntries.length >= 4 && <div className="sensory-insights">{tiredCount >= 3 && <p>{t("Your entries suggest you reported feeling tired on several recent days.")}</p>}{stressedCount >= 3 && <p>{t("You reported feeling stressed on several school days recently.")}</p>}{tiredCount < 3 && stressedCount < 3 && <p>{t("You're building a picture of what your days feel like. Keep checking in if it feels helpful.")}</p>}</div>}
       </section>
 
-      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("YOUR HISTORY")}</span><h2>{t("Previous check-ins")}</h2></div></div>
-        {!sortedEntries.length ? <p className="sensory-muted">{t("Your check-ins will appear here. Only you can see private entries.")}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{new Date(entry.created_at).toLocaleDateString(document.documentElement.lang || undefined, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{t(moodLabels[entry.mood - 1])}{entry.emotions?.length ? ` · ${labelsFor(emotionOptions, entry.emotions.slice(0, 3)).map(t).join(", ")}` : ""}{entry.energy != null ? `\u00b7 ${t("Energy")} ${entry.energy}/5` : `\u00b7 ${t("Quick check-in")}`}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{entry.shared_with_mentor ? t("Shared") : t("Private")}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail t={t} entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} onDelete={removeEntry} />}</article>)}</div>}
+      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("sn_recentEyebrow")}</span><h2>{t("sn_patterns")}</h2></div></div><MoodTrendChart entries={sortedEntries} label={t("sn_chartLabel")} emptyText={t("sn_chartEmpty")} legend={{ mood: t("moodLabel"), energy: t("energyLabel"), comfort: t("comfortLabel") }} />
+        {sortedEntries.length >= 4 && <div className="sensory-insights">{tiredCount >= 3 && <p>{t("sn_insightTired")}</p>}{stressedCount >= 3 && <p>{t("sn_insightStressed")}</p>}{recentMoodAverage != null && recentMoodAverage > earlierMoodAverage && <p>{t("sn_insightMood")}</p>}{tiredCount < 3 && stressedCount < 3 && !(recentMoodAverage != null && recentMoodAverage > earlierMoodAverage) && <p>{t("sn_insightDefault")}</p>}</div>}
+      </section>
+
+      <section className="sensory-card"><div className="sensory-card-title"><div><span className="sensory-step">{t("sn_historyEyebrow")}</span><h2>{t("sn_prevCheckins")}</h2></div></div>
+        {!sortedEntries.length ? <p className="sensory-muted">{t(parents.length ? "sn_historyEmpty" : "sn_historyEmptyPrivate")}</p> : <div className="sensory-history">{sortedEntries.map((entry) => <article key={entry.id} className="sensory-history-entry"><button type="button" onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}><span><strong>{formatLocalizedDate(entry.created_at, { weekday: "short", month: "short", day: "numeric" })}</strong><small>{t(`mood_${entry.mood}`)}{entry.emotions?.length ? ` · ${labelsFor(t, "emotion", entry.emotions.slice(0, 3)).join(", ")}` : ""}{entry.energy != null ? ` · ${t("sn_energyN", { n: entry.energy })}` : ` · ${t("sn_quick")}`}{shortNote(entry) ? ` · ${shortNote(entry)}` : ""}</small><em className={entry.shared_with_mentor ? "is-shared" : ""}>{t(entry.shared_with_mentor ? "sn_sharedTag" : "sn_privateTag")}</em></span>{expandedId === entry.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>{expandedId === entry.id && <EntryDetail entry={entry} reply={responses.find((response) => response.checkin_id === entry.id)?.mentor_message} t={t} />}</article>)}</div>}
       </section>
     </section>
   );

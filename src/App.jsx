@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 import React, { useEffect, useMemo, useState } from "react";
 import { Accessibility, CheckCircle2, Coffee, Heart, X } from "lucide-react";
 import { classNames, demoStudents, initialSessions, readStudents, subjects } from "./constants";
+=======
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { classNames, demoStudents, getSessionTitle, initialSessions, readStudents, subjects } from "./constants";
+>>>>>>> origin/main
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
 import { HomePage, AboutPage, SessionsPage, StudyPage, FlowPage, MessagesPage } from "./components/LearningPages";
@@ -9,21 +16,34 @@ import { StudentPage } from "./components/student/StudentPage";
 import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
 import { SettingsPage } from "./components/student/pages/SettingsPage";
 import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
+<<<<<<< HEAD
 import { createStudentActivity, readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { saveStudentLearningActivity } from "./studentSensory";
 import { fetchSessions, loadStudentHandwriting, loadStudentPrivateSessions, loadStudentSessionRegistrations, markPrivateSessionsSeen, markRegisteredSessionAttended, registerStudentForSession } from "./mentorContent";
+=======
+import { clearDemoStudentCheckins } from "./studentSensory";
+import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
+import { fetchSessions, fetchStudentNotes } from "./mentorContent";
+import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
+>>>>>>> origin/main
 import { supabase, supabaseConfigured } from "./supabaseClient";
+import { loadLatestHandwriting } from "./studentHandwriting";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
 import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
+<<<<<<< HEAD
 import { MindfulCorner } from "./components/student/pages/MindfulCorner";
 import { RelaxationRoom } from "./components/RelaxationRoom";
 import { ReflectionJournal } from "./components/student/pages/ReflectionJournal";
 import { readMindfulBoard } from "./mindfulPoints";
 import { useImmersiveEffects } from "./immersiveEffects";
 import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
+=======
+import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
+import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
+>>>>>>> origin/main
 
 const readPreferredSubjects = (email) => {
   if (!email) return [];
@@ -41,9 +61,17 @@ const App = () => {
   const [learningNotes, setLearningNotes] = useState([]);
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
-  const [activeTab, setActiveTab] = useState("home");
+  const location = useLocation();
+  const navigate = useNavigate();
+  // The URL decides which student page (and open session) shows; App state decides who may see it.
+  const route = parseStudentPath(location.pathname);
+  const activeTab = route.tab || "home";
+  const setActiveTab = (next) => {
+    const tab = typeof next === "function" ? next(activeTab) : next;
+    const path = studentTabPaths[tab];
+    if (path && normalizePath(location.pathname) !== path) navigate(path);
+  };
   const [scrollToAboutOnHome, setScrollToAboutOnHome] = useState(false);
-  const [selectedSession, setSelectedSession] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mentorOpen, setMentorOpen] = useState(false);
   const [parentOpen, setParentOpen] = useState(false);
@@ -74,6 +102,7 @@ const App = () => {
       return "English";
     }
   });
+  const [readAloud, setReadAloud] = useState({ enabled: false, volume: 0.8 });
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState("");
@@ -81,6 +110,7 @@ const App = () => {
   const [studentProfile, setStudentProfile] = useState(null);
   const [preferredSubjects, setPreferredSubjects] = useState([]);
   const [subjectSelectionPending, setSubjectSelectionPending] = useState(false);
+  const subjectSelectionUser = useRef(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [authUserId, setAuthUserId] = useState(null);
   const [authRole, setAuthRole] = useState(null);
@@ -97,11 +127,13 @@ const App = () => {
   const [toast, setToast] = useState("");
   const [premiumCartPlan, setPremiumCartPlan] = useState(null);
   const [premiumCheckoutOpen, setPremiumCheckoutOpen] = useState(false);
+  const [premiumSubscription, setPremiumSubscription] = useState(null);
   const [pendingPremiumLogin, setPendingPremiumLogin] = useState(false);
   const t = useMemo(
     () => (key, values) => translate(studentLanguage, key, values),
     [studentLanguage],
   );
+<<<<<<< HEAD
 
   useEffect(() => {
     if (!signedIn || !studentEmail || profileOpen || signupEmail || (authRole && authRole !== "student")) return undefined;
@@ -135,6 +167,13 @@ const App = () => {
   useEffect(() => {
     if (!lowSensory) setRestReminderOpen(false);
   }, [lowSensory]);
+=======
+  const selectedSession = route.sessionId
+    ? sessions.find((session) => String(session.id) === route.sessionId) || null
+    : null;
+  const openSession = (session) => navigate(sessionPath(session.id));
+  const closeSession = () => navigate(studentTabPaths.sessions);
+>>>>>>> origin/main
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
@@ -172,11 +211,100 @@ const App = () => {
   const sensoryTrackerEnabled = Boolean(
     signedIn && (sensoryTrackerDemoMode || (supabaseConfigured && authUserId && authRole === "student")),
   );
-  const studentSessions = preferredSubjects.length
-    ? sessions.filter((session) => preferredSubjects.includes(session.subject))
-    : sessions;
   const classLabel = String(studentProfile?.studentClass || "").trim().toLowerCase();
   const isGrade12 = /(^|[^a-z0-9])(12(?:th)?|xii|twelfth)(?=$|[^a-z0-9])/.test(classLabel);
+  const studentSessions = sessions.filter((session) => (
+    session.subject !== "Physical Education"
+    && (!preferredSubjects.length || preferredSubjects.includes(session.subject))
+  ));
+  const today = new Date().toLocaleDateString("en-CA");
+  // Upcoming sessions first (soonest first), then recent past ones, so Cogni-Flow sees what the student sees.
+  const assistantSessions = [
+    ...studentSessions.filter((session) => session.date >= today).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)),
+    ...studentSessions.filter((session) => session.date < today).sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`)),
+  ].slice(0, 15);
+  const assistantContext = {
+    today,
+    signedIn,
+    checkInAvailable: sensoryTrackerEnabled,
+    subjects: preferredSubjects,
+    sessions: assistantSessions.map((session) => ({
+      id: session.id,
+      title: getSessionTitle(session, t),
+      subject: session.subject,
+      date: session.date,
+      time: session.time,
+      endTime: session.endTime,
+      registered: registeredSessionIds.includes(session.id),
+    })),
+  };
+
+  const savePreferredSubjects = async (selection) => {
+    const selected = subjects.filter((subject) => selection.includes(subject));
+    if (!selected.length) return false;
+    if (supabaseConfigured) {
+      if (!authUserId) {
+        notify(t("subjectSaveError"));
+        return false;
+      }
+      const { error } = await supabase.from("profiles").update({ preferred_subjects: selected }).eq("id", authUserId);
+      if (error) {
+        notify(t("subjectSaveError"));
+        return false;
+      }
+    } else {
+      try {
+        const updatedStudents = readStudents().map((student) => (
+          student.email?.toLowerCase() === (studentEmail || signupEmail).toLowerCase()
+            ? { ...student, preferredSubjects: selected }
+            : student
+        ));
+        localStorage.setItem("cognibridge_students", JSON.stringify(updatedStudents));
+      } catch {
+        notify(t("subjectSaveError"));
+        return false;
+      }
+    }
+    setPreferredSubjects(selected);
+    setStudentProfile((profile) => profile ? { ...profile, preferredSubjects: selected } : profile);
+    setSubjectSelectionPending(false);
+    subjectSelectionUser.current = authUserId || (studentEmail || signupEmail).toLowerCase();
+    return true;
+  };
+
+  useEffect(() => {
+    if (!studentEmail) {
+      setPremiumSubscription(null);
+      return;
+    }
+    try {
+      setPremiumSubscription(JSON.parse(localStorage.getItem(`cognibridge_premium_${studentEmail.toLowerCase()}`) || "null"));
+    } catch {
+      setPremiumSubscription(null);
+    }
+  }, [studentEmail]);
+
+  const completeDemoPurchase = (planId) => {
+    const months = { monthly: 1, quarterly: 3, yearly: 12 }[planId];
+    if (!signedIn || !studentEmail || !months) return;
+    const purchasedAt = new Date();
+    const expiresAt = new Date(purchasedAt);
+    const expiryDay = expiresAt.getDate();
+    expiresAt.setDate(1);
+    expiresAt.setMonth(expiresAt.getMonth() + months);
+    expiresAt.setDate(Math.min(expiryDay, new Date(expiresAt.getFullYear(), expiresAt.getMonth() + 1, 0).getDate()));
+    const purchase = { planId, purchasedAt: purchasedAt.toISOString(), expiresAt: expiresAt.toISOString(), paymentType: "demo" };
+    try {
+      localStorage.setItem(`cognibridge_premium_${studentEmail.toLowerCase()}`, JSON.stringify(purchase));
+    } catch {
+      // Keep the demo purchase visible for this session if browser storage is unavailable.
+    }
+    setPremiumSubscription(purchase);
+    setPremiumCheckoutOpen(false);
+    setPremiumCartPlan(null);
+    setActiveTab("settings");
+    setToast(t("pf_demoSuccessToast"));
+  };
 
   const scrollToAbout = () => {
     const aboutSection = document.getElementById("about-us");
@@ -227,21 +355,44 @@ const App = () => {
       setStudentEmail("");
       setPreferredSubjects([]);
       setSubjectSelectionPending(false);
+      subjectSelectionUser.current = null;
       setMentorOpen(false);
       setParentOpen(false);
-      if (activeTab === "sensory") setActiveTab("home");
+      setLearningNotes([]);
       return undefined;
     }
 
     let isCurrent = true;
     const user = authSession.user;
-    supabase.from("profiles")
+    let oauthRole = null;
+    try {
+      oauthRole = window.localStorage.getItem("cognibridge_oauth_role");
+    } catch { /* storage unavailable */ }
+    const loadProfile = () => supabase.from("profiles")
       .select("id, display_name, role, preferred_subjects")
       .eq("id", user.id)
-      .maybeSingle()
+      .maybeSingle();
+    loadProfile()
+      .then(async (result) => {
+        let { data: profile } = result;
+        // A fresh Google account starts as a student; the Parent tab converts it.
+        if (oauthRole === "parent" && profile?.role === "student") {
+          const { error: claimError } = await supabase.rpc("claim_parent_role");
+          if (!claimError) profile = (await loadProfile()).data;
+        }
+        return { data: profile, error: result.error };
+      })
       .then(({ data: profile, error }) => {
         if (!isCurrent) return;
+        // Cleared only once a run has handled it, so a re-run of this effect still enforces it.
+        try { window.localStorage.removeItem("cognibridge_oauth_role"); } catch { /* storage unavailable */ }
         if (error || !profile) {
+          supabase.auth.signOut();
+          return;
+        }
+        // Google sign-in must land on the side the person chose; mentors use their own credentials.
+        if (oauthRole && profile.role !== oauthRole) {
+          notify(t(profile.role === "mentor" ? "ms_mentorOnlyEmail" : profile.role === "parent" ? "ms_wrongRoleParent" : "ms_wrongRoleStudent"));
           supabase.auth.signOut();
           return;
         }
@@ -257,6 +408,9 @@ const App = () => {
           setSignedIn(true);
           setStudentEmail(user.email || "");
           setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: savedSubjects });
+          loadLatestHandwriting(user.id).then((handwriting) => {
+            if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
+          }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
           setActiveTab((currentTab) => currentTab === "home" ? "study" : currentTab);
         } else if (profile.role === "mentor") {
           setSignedIn(false);
@@ -289,6 +443,20 @@ const App = () => {
     };
   }, []);
 
+  // Students see every mentor's notes; the mentor portal loads its own notes itself.
+  useEffect(() => {
+    if (!supabaseConfigured || !signedIn || authRole !== "student") return undefined;
+    let isCurrent = true;
+    fetchStudentNotes()
+      .then((rows) => {
+        if (isCurrent) setLearningNotes(rows);
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, [signedIn, authRole]);
+
   useEffect(() => {
     if (activeTab !== "home" || !scrollToAboutOnHome) return;
 
@@ -296,14 +464,47 @@ const App = () => {
     setScrollToAboutOnHome(false);
   }, [activeTab, scrollToAboutOnHome]);
 
+  // Auth is settled once Supabase has answered and, for a signed-in user, the profile role has loaded.
+  const authSettled = authReady && (!authSession?.user || authRole !== null);
+
+  // Gated or unknown URLs fall back to home, but only once auth has settled so a reload keeps its page.
   useEffect(() => {
-    if (!sensoryTrackerEnabled && activeTab === "sensory") setActiveTab("home");
-  }, [sensoryTrackerEnabled, activeTab]);
+    if (!authSettled || mentorOpen || parentOpen) return;
+    const path = normalizePath(location.pathname);
+    const gated = (activeTab === "sensory" && !sensoryTrackerEnabled) || (activeTab === "careers" && !(signedIn && isGrade12));
+    const unknown = !route.tab && path !== "/";
+    if (gated || unknown) navigate("/", { replace: true });
+  }, [authSettled, mentorOpen, parentOpen, location.pathname, sensoryTrackerEnabled, signedIn, isGrade12]);
+
+  // Portals keep their own tab in the URL under /mentor and /parent.
+  useEffect(() => {
+    if (mentorOpen && !isPortalPath(location.pathname, "mentor")) navigate("/mentor", { replace: true });
+    else if (parentOpen && !isPortalPath(location.pathname, "parent")) navigate("/parent", { replace: true });
+  }, [mentorOpen, parentOpen, location.pathname]);
 
   useEffect(() => {
+    if (supabaseConfigured) {
+      if (!signedIn || !authUserId) {
+        setRegisteredSessionIds([]);
+        setAttendedSessionIds(new Set());
+        return undefined;
+      }
+      let isCurrent = true;
+      loadMyRegistrations()
+        .then((registrations) => {
+          if (!isCurrent) return;
+          setRegisteredSessionIds(registrations.registeredSessionIds);
+          setAttendedSessionIds(registrations.attendedSessionIds);
+        })
+        .catch(() => {});
+      return () => {
+        isCurrent = false;
+      };
+    }
+
     if (!signedIn || !studentEmail) {
       setAttendedSessionIds(new Set());
-      return;
+      return undefined;
     }
     try {
       setAttendedSessionIds(new Set(
@@ -312,7 +513,8 @@ const App = () => {
     } catch {
       setAttendedSessionIds(new Set());
     }
-  }, [signedIn, studentEmail, activityVersion]);
+    return undefined;
+  }, [signedIn, studentEmail, authUserId, activityVersion]);
 
   useEffect(() => {
     if (!supabaseConfigured || !signedIn || authRole !== "student" || !authUserId) return undefined;
@@ -348,6 +550,7 @@ const App = () => {
   }, [textScale]);
 
   useEffect(() => {
+<<<<<<< HEAD
     document.documentElement.dataset.motion = motionSetting;
     try { localStorage.setItem("cognibridge_motion", motionSetting); } catch { /* Session choice remains active. */ }
   }, [motionSetting]);
@@ -356,6 +559,14 @@ const App = () => {
     document.documentElement.dataset.lowSensory = String(lowSensory);
     try { localStorage.setItem("cognibridge_low_sensory", String(lowSensory)); } catch { /* Session choice remains active. */ }
   }, [lowSensory]);
+=======
+    if (!readAloud.enabled) stopSpeaking();
+  }, [readAloud.enabled]);
+
+  useEffect(() => {
+    setSpeakingVolume(readAloud.volume);
+  }, [readAloud.volume]);
+>>>>>>> origin/main
 
   useEffect(() => {
     try {
@@ -404,6 +615,7 @@ const App = () => {
     window.setTimeout(() => setToast(""), 2800);
   };
 
+<<<<<<< HEAD
   const savePreferredSubjects = async (selection) => {
     const selected = subjects.filter((subject) => selection.includes(subject));
     if (!selected.length) return false;
@@ -434,15 +646,30 @@ const App = () => {
     return true;
   };
 
+=======
+>>>>>>> origin/main
   const registerForSession = async (sessionId) => {
     if (registeredSessionIds.includes(sessionId)) return;
 
     const session = sessions.find((item) => item.id === sessionId);
+<<<<<<< HEAD
     if (supabaseConfigured && authUserId && authRole === "student") {
       try {
         await registerStudentForSession(sessionId);
       } catch {
         notify("Couldn't register for this session. Please try again.");
+=======
+    if (supabaseConfigured) {
+      try {
+        const created = await saveRegistration(sessionId);
+        if (created) {
+          setSessions((items) => items.map((item) => (
+            item.id === sessionId ? { ...item, attendees: item.attendees + 1 } : item
+          )));
+        }
+      } catch {
+        notify(t("registrationError"));
+>>>>>>> origin/main
         return;
       }
     }
@@ -457,14 +684,26 @@ const App = () => {
       notify(t("signInToSaveAttendance"));
       return;
     }
-    try {
-      const activity = createStudentActivity(session);
-      if (readStudentActivities(studentEmail).some((item) => item.sessionId === activity.sessionId)) {
-        notify(t("attendanceAlreadyRecorded"));
-        return;
+    if (supabaseConfigured) {
+      try {
+        const recorded = await saveAttendance(session.id);
+        if (!recorded) {
+          notify(t("attendanceAlreadyRecorded"));
+          return;
+        }
+        setActivityVersion((version) => version + 1);
+        notify(t("attendanceRecordedToast"));
+      } catch {
+        notify(t("attendanceSyncError"));
       }
+<<<<<<< HEAD
       if (supabaseConfigured && authUserId && authRole === "student") await markRegisteredSessionAttended(session.id);
       if (supabaseConfigured && authUserId) await saveStudentLearningActivity(authUserId, activity);
+=======
+      return;
+    }
+    try {
+>>>>>>> origin/main
       const recorded = recordStudentAttendance(studentEmail, session);
       if (!recorded) {
         notify(t("attendanceAlreadyRecorded"));
@@ -479,6 +718,7 @@ const App = () => {
 
   const logOut = () => {
     if (supabaseConfigured) supabase.auth.signOut();
+    else clearDemoStudentCheckins(studentEmail);
     setSignedIn(false);
     setAuthUserId(null);
     setAuthRole(null);
@@ -488,6 +728,7 @@ const App = () => {
     setStudentEmail("");
     setPreferredSubjects([]);
     setSubjectSelectionPending(false);
+    subjectSelectionUser.current = null;
     setAttendedSessionIds(new Set());
     notify(t("loggedOut"));
   };
@@ -497,7 +738,6 @@ const App = () => {
     if (tab === "careers" && (!signedIn || !isGrade12)) return;
     if (tab === "about") {
       setActiveTab("about");
-      setSelectedSession(null);
       scrollToAbout();
       return;
     }
@@ -507,7 +747,29 @@ const App = () => {
     }
 
     setActiveTab(tab);
-    if (tab !== "sessions") setSelectedSession(null);
+  };
+
+  // Actions requested by Cogni-Flow; api/chat.js has already checked them against the context it was sent.
+  const handleAssistantAction = (action) => {
+    if (action.type === "open") {
+      goToTab(action.page);
+    } else if (action.type === "openSession") {
+      const session = sessions.find((item) => item.id === action.sessionId);
+      if (session) openSession(session);
+    } else if (action.type === "register") {
+      if (signedIn) registerForSession(action.sessionId);
+      else setLoginOpen(true);
+    } else if (action.type === "setting") {
+      if (action.name === "textSize") {
+        setTextScale((scale) => (action.value === "reset"
+          ? 1
+          : Math.min(1.35, Math.max(0.85, Math.round((scale + (action.value === "larger" ? 0.1 : -0.1)) * 100) / 100))));
+      } else if (action.name === "appearance") {
+        setAppearance(action.value);
+      } else if (action.name === "readAloud") {
+        setReadAloud((current) => ({ ...current, enabled: action.value === "on" }));
+      }
+    }
   };
 
   if (mentorOpen) {
@@ -526,6 +788,7 @@ const App = () => {
             session.id === updatedSession.id ? { ...session, ...updatedSession } : session
           )))}
           onAddNote={(note) => setLearningNotes((items) => [note, ...items])}
+          onRemoveNote={(id) => setLearningNotes((items) => items.filter((note) => note.id !== id))}
           onLoadNotes={setLearningNotes}
           onBack={() => {
             setMentorOpen(false);
@@ -536,6 +799,7 @@ const App = () => {
         />
         {accessibilityOpen && (
           <AccessibilityPanel
+            className="accessibility-panel-left"
             textScale={textScale}
             setTextScale={setTextScale}
             motionSetting={motionSetting}
@@ -557,10 +821,50 @@ const App = () => {
   }
 
   if (parentOpen) {
+<<<<<<< HEAD
     return <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
       <ParentPortal parentId={authUserId} parentName={authSession?.user?.user_metadata?.full_name || "Parent"} onLogout={() => { setParentOpen(false); if (supabaseConfigured) supabase.auth.signOut(); }} language={studentLanguage} setLanguage={setStudentLanguage} t={t} />
       <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
     </div>;
+=======
+    return (
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <ParentPortal
+          key={authUserId}
+          parentId={authUserId}
+          parentName={authSession?.user?.user_metadata?.full_name || "Parent"}
+          onLogout={() => {
+            setParentOpen(false);
+            if (supabaseConfigured) supabase.auth.signOut();
+          }}
+          accessibilityOpen={accessibilityOpen}
+          onToggleAccessibility={() => setAccessibilityOpen((isOpen) => !isOpen)}
+          accessibilityPanel={(
+            <AccessibilityPanel
+              textScale={textScale}
+              setTextScale={setTextScale}
+              appearance={appearance}
+              setAppearance={setAppearance}
+              language={studentLanguage}
+              setLanguage={setStudentLanguage}
+              showLanguage
+              t={t}
+              onClose={() => setAccessibilityOpen(false)}
+            />
+          )}
+          t={t}
+        />
+      </div>
+    );
+  }
+
+  if (subjectSelectionPending) {
+    return (
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+      </div>
+    );
+>>>>>>> origin/main
   }
 
   if (subjectSelectionPending && signedIn && authRole !== "mentor" && !parentOpen) {
@@ -627,6 +931,7 @@ const App = () => {
           onBack={() => setProfileOpen(false)}
           onComplete={(profile) => {
             setStudentProfile(profile);
+            setPreferredSubjects(profile.preferredSubjects || preferredSubjects);
             setProfileOpen(false);
           }}
         />
@@ -646,6 +951,9 @@ const App = () => {
             if (account.requiresProfileSetup) {
               setSignupEmail(account.email);
               setSignupStudentClass(account.studentClass);
+              setPreferredSubjects([]);
+              setSubjectSelectionPending(true);
+              subjectSelectionUser.current = account.email.toLowerCase();
             } else {
               setStudentEmail(account.email);
               setStudentProfile({ id: account.id, email: account.email, name: account.name, studentClass: account.studentClass });
@@ -654,6 +962,9 @@ const App = () => {
               setSubjectSelectionPending(savedSubjects.length === 0);
               setAuthUserId(account.id);
               setAuthRole("student");
+              setPreferredSubjects([]);
+              setSubjectSelectionPending(true);
+              subjectSelectionUser.current = account.id;
               setSignedIn(true);
               setActiveTab("study");
             }
@@ -673,6 +984,7 @@ const App = () => {
         sensoryTrackerEnabled={sensoryTrackerEnabled}
         isGrade12={isGrade12}
         studentName={studentName}
+        studentId={supabaseConfigured && authRole === "student" ? authUserId : null}
         t={t}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
@@ -693,6 +1005,8 @@ const App = () => {
             setAppearance={setAppearance}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
+            readAloud={readAloud}
+            setReadAloud={setReadAloud}
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
@@ -705,6 +1019,7 @@ const App = () => {
               sessions={studentSessions}
               studentEmail={studentEmail}
               studentName={studentName}
+              handwritingType={studentProfile?.handwritingType}
               activityVersion={activityVersion}
               screenTimeVersion={screenTimeVersion}
               screenTimeStudentKey={supabaseConfigured ? authUserId : studentEmail}
@@ -712,28 +1027,35 @@ const App = () => {
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}
               onScrollToAbout={scrollToAbout}
-              onOpenSession={(session) => {
-                setSelectedSession(session);
-                setActiveTab("sessions");
-              }}
+              onOpenSession={openSession}
             />
           ),
+<<<<<<< HEAD
           leaderboard: <LeaderboardPage t={t} studentName={studentName} mindfulBoard={readMindfulBoard(studentEmail)} mindfulVersion={mindfulVersion} />,
           mindful: <MindfulCorner studentId={studentEmail} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} />,
           relax: <RelaxationRoom onBack={() => goToTab("home")} t={t} />,
           journal: <ReflectionJournal studentId={authRole === "student" ? authUserId : null} studentKey={studentEmail} signedIn={signedIn} language={studentLanguage} t={t} />,
+=======
+          leaderboard: <LeaderboardPage signedIn={signedIn} t={t} />,
+>>>>>>> origin/main
           sessions: (
             <SessionsPage
               sessions={studentSessions}
               notes={learningNotes}
               selectedSession={selectedSession}
               signedIn={signedIn}
+              preferredSubjects={preferredSubjects}
               t={t}
               registeredSessionIds={registeredSessionIds}
               attendedSessionIds={attendedSessionIds}
+<<<<<<< HEAD
               privateSessions={privateSessions}
               onSelect={setSelectedSession}
               onBack={() => setSelectedSession(null)}
+=======
+              onSelect={openSession}
+              onBack={closeSession}
+>>>>>>> origin/main
               onSignIn={() => setLoginOpen(true)}
               onRegister={registerForSession}
               onMarkAttended={markSessionAttended}
@@ -742,18 +1064,26 @@ const App = () => {
           study: (
             <StudyPage
               sessions={studentSessions}
+              registeredSessionIds={registeredSessionIds}
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
+              onEditHandwriting={() => setProfileOpen(true)}
               t={t}
-              onOpenSession={(session) => {
-                setSelectedSession(session);
-                setActiveTab("sessions");
-              }}
+              onOpenSession={openSession}
             />
           ),
           careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
-          flow: <FlowPage t={t} language={studentLanguage} />,
+          flow: (
+            <FlowPage
+              t={t}
+              language={studentLanguage}
+              studentEmail={studentEmail}
+              readAloud={readAloud}
+              assistantContext={assistantContext}
+              onAction={handleAssistantAction}
+            />
+          ),
           premium: <PremiumFlowPage
             t={t}
             signedIn={signedIn}
@@ -761,6 +1091,7 @@ const App = () => {
             studentName={studentName}
             cartPlan={premiumCartPlan}
             checkoutOpen={premiumCheckoutOpen}
+            onCompletePurchase={completeDemoPurchase}
             onAddToCart={setPremiumCartPlan}
             onRemoveFromCart={() => setPremiumCartPlan(null)}
             onBeginCheckout={() => {
@@ -779,13 +1110,25 @@ const App = () => {
               studentId={authUserId}
               studentName={studentName}
               studentProfile={studentProfile}
+              preferredSubjects={preferredSubjects}
+              onSaveSubjects={savePreferredSubjects}
+              premiumSubscription={premiumSubscription}
               activityVersion={activityVersion}
               onEditProfile={() => setProfileOpen(true)}
               t={t}
             />
           ),
           sensory: sensoryTrackerEnabled ? (
+<<<<<<< HEAD
             <SensoryTrackerPage studentId={supabaseConfigured ? authUserId : studentEmail} demoMode={sensoryTrackerDemoMode} t={t} lowSensory={lowSensory} onToggleLowSensory={() => setLowSensory((value) => !value)} />
+=======
+            <SensoryTrackerPage
+              key={supabaseConfigured ? authUserId : studentEmail}
+              studentId={supabaseConfigured ? authUserId : studentEmail}
+              demoMode={sensoryTrackerDemoMode}
+              t={t}
+            />
+>>>>>>> origin/main
           ) : null,
         }}
       />

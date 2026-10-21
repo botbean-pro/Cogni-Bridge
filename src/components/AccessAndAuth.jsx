@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronRight,
@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Volume2,
   X,
 } from "lucide-react";
 import {
@@ -129,15 +130,15 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
     if (supabaseConfigured) {
       setError("");
       if (tab === "parent" && parentSignUp) {
-        if (!parentName.trim()) { setError("Enter your name to create a parent account."); return; }
+        if (!parentName.trim()) { setError("ms_enterName"); return; }
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
           options: { data: { full_name: parentName.trim(), account_type: "parent" } },
         });
-        if (signUpError) { setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "Parent account couldn't be created. Please try again."); return; }
+        if (signUpError) { setError(signUpError.message.toLowerCase().includes("already") ? "accountExists" : "ms_parentCreateFail"); return; }
         if (data.session && data.user) onParent(data.user.id, data.user.email, parentName.trim());
-        else setError("Check your email to confirm your parent account, then sign in.");
+        else setError("ms_parentConfirmEmail");
         return;
       }
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -156,7 +157,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
         .maybeSingle();
       if (profileError || !profile || profile.role !== tab) {
         await supabase.auth.signOut();
-        setError(tab === "mentor" ? "mentorAccessDenied" : tab === "parent" ? "This account is not registered as a parent." : "studentAccessDenied");
+        setError(tab === "mentor" ? "mentorAccessDenied" : tab === "parent" ? "parentAccessDenied" : "studentAccessDenied");
         return;
       }
 
@@ -167,7 +168,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
     }
 
     if (tab === "parent") {
-      setError("Parent accounts require secure school sign-in to protect student information.");
+      setError("ms_parentSecure");
       return;
     }
 
@@ -208,12 +209,19 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 
   const googleSignIn = () => {
     if (supabaseConfigured) {
+      // Google sign-in leaves the page; App.jsx reads this on return to enforce the chosen role.
+      try { window.localStorage.setItem("cognibridge_oauth_role", tab); } catch { /* storage unavailable */ }
       supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: window.location.origin },
       }).then(({ error: authError }) => {
         if (authError) setError("googleIdentityError");
       });
+      return;
+    }
+
+    if (tab === "parent") {
+      setError("ms_parentSecure");
       return;
     }
 
@@ -255,13 +263,13 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
   const tabLabels = [
     ["student", "studentLogin"],
     ["mentor", "mentorLogin"],
-    ["parent", "Parent"],
+    ["parent", "parentLogin"],
   ];
 
   const description = {
     student: t("studentLoginDescription"),
     mentor: t("mentorDescription"),
-    parent: "Sign in or create an account to connect with your child and their teachers.",
+    parent: t("parentLoginDescription"),
   }[tab];
 
   return (
@@ -292,7 +300,7 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
               role="tab"
               aria-selected={tab === key}
             >
-              {labelKey === "Parent" ? labelKey : t(labelKey)}
+              {t(labelKey)}
             </button>
           ))}
         </div>
@@ -300,7 +308,11 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
         <p className="modal-copy">{description}</p>
 
         <form className="auth-form" onSubmit={submit}>
+<<<<<<< HEAD
           {tab === "parent" && parentSignUp && <label className="input-label">{t("fullName")}<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
+=======
+          {tab === "parent" && parentSignUp && <label className="input-label">{t("ms_fullName")}<input className="auth-input" value={parentName} onChange={(event) => setParentName(event.target.value)} autoComplete="name" required /></label>}
+>>>>>>> origin/main
           <label className="input-label">
             {t("email")}
             <input
@@ -388,8 +400,24 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             </div>
           ) : tab === "parent" ? (
             <div className="auth-button-group">
+<<<<<<< HEAD
               <button className="auth-login-btn" type="submit">{parentSignUp ? t("createParentAccount") : t("logIn")} <ChevronRight size={18} /></button>
               <div className="create-account-prompt"><span>{t(parentSignUp ? "alreadyHaveParentAccount" : "newToParentPortal")}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
+=======
+              <button className="auth-login-btn" type="submit">{parentSignUp ? t("ms_createParent") : t("logIn")} <ChevronRight size={18} /></button>
+              <div className="create-account-prompt"><span>{t(parentSignUp ? "ms_haveParent" : "ms_newParent")}</span><button type="button" className="create-account-link" onClick={() => { setParentSignUp((value) => !value); setError(""); }}>{parentSignUp ? t("logIn") : t("createAccount")}</button></div>
+              {!parentSignUp && (
+                <>
+                  <div className="auth-divider">{t("continueWith")}</div>
+                  <div className="social-buttons-grid" style={{ gridTemplateColumns: "1fr" }}>
+                    <button type="button" className="social-btn" onClick={googleSignIn}>
+                      <SocialIcon provider="Google" />
+                      Google
+                    </button>
+                  </div>
+                </>
+              )}
+>>>>>>> origin/main
             </div>
           ) : (
             <button className="auth-login-btn" type="submit">
@@ -415,10 +443,27 @@ const AccessibilityPanel = ({
   language,
   setLanguage,
   showLanguage = true,
+  readAloud,
+  setReadAloud,
   onClose,
+  className = "",
   t,
-}) => (
-  <aside className="accessibility-panel" aria-label={t("accessibilityOptions")}>
+}) => {
+  const panelRef = useRef(null);
+
+  // Clicking or tapping anywhere outside the panel closes it. The toggle buttons are skipped
+  // (they carry data-accessibility-toggle) so they can still close it themselves.
+  useEffect(() => {
+    const closeOnOutsidePress = (event) => {
+      if (panelRef.current?.contains(event.target) || event.target.closest?.("[data-accessibility-toggle]")) return;
+      onClose();
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [onClose]);
+
+  return (
+  <aside ref={panelRef} className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
       <div className="accessibility-panel-title">
         <span className="accessibility-panel-icon"><Sparkles size={18} /></span>
@@ -471,6 +516,33 @@ const AccessibilityPanel = ({
 
     {showLanguage && <LanguagePicker value={language} onChange={setLanguage} t={t} />}
 
+    {readAloud && (
+      <div className="read-aloud-settings">
+        <label className="appearance-row">
+          <strong><Volume2 size={17} /> {t("readAloud")}</strong>
+          <input
+            type="checkbox"
+            role="switch"
+            className="read-aloud-switch"
+            checked={readAloud.enabled}
+            onChange={(event) => setReadAloud((current) => ({ ...current, enabled: event.target.checked }))}
+          />
+        </label>
+        <label className="range-row">
+          <span>{t("readAloudVolume")}</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step=".05"
+            value={readAloud.volume}
+            disabled={!readAloud.enabled}
+            onChange={(event) => setReadAloud((current) => ({ ...current, volume: Number(event.target.value) }))}
+          />
+        </label>
+      </div>
+    )}
+
     <label className="appearance-row">
       <strong>{t("appearance")}</strong>
       <select
@@ -486,7 +558,8 @@ const AccessibilityPanel = ({
       {t("resetTextSize")}
     </button>
   </aside>
-);
+  );
+};
 
 const SignupPage = ({ email, onBack, onComplete, t }) => {
   const [form, setForm] = useState({ name: "", studentClass: "", age: "" });

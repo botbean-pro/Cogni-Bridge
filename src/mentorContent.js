@@ -7,6 +7,7 @@ const throwIfError = ({ data, error }) => {
 
 const toClientSession = (row) => ({
   id: row.id,
+  mentorId: row.mentor_id,
   subject: row.subject,
   title: row.title,
   description: row.description,
@@ -27,10 +28,12 @@ export async function fetchSessions() {
   return rows.map(toClientSession);
 }
 
+// Attended sessions of this mentor's assigned students (from session_registrations).
 export async function loadMentorLearningActivity() {
   return throwIfError(await supabase.rpc("mentor_student_activity"));
 }
 
+<<<<<<< HEAD
 export async function loadMentorSharedJournal(mentorId) {
   const entries = throwIfError(await supabase.from("student_journal_entries")
     .select("id, student_id, entry, chart, show_to_support, created_at")
@@ -151,6 +154,10 @@ export async function loadStudentHandwriting(studentId) {
   const { data, error } = await supabase.storage.from("handwriting").createSignedUrl(row.image_path, 3600);
   if (error) throw error;
   return { handwritingType: row.handwriting_type, analyzedAt: row.analyzed_at, handwritingImage: data.signedUrl };
+=======
+export async function loadMentorLeaderboard() {
+  return throwIfError(await supabase.rpc("mentor_leaderboard"));
+>>>>>>> origin/main
 }
 
 export async function createSession(mentorId, session) {
@@ -194,6 +201,7 @@ const toClientNote = (row) => ({
   title: row.title,
   subject: row.subject,
   fileName: row.file_name,
+  filePath: row.file_path,
 });
 
 export async function loadMentorNotes(mentorId) {
@@ -205,8 +213,66 @@ export async function loadMentorNotes(mentorId) {
   return rows.map(toClientNote);
 }
 
+// Every mentor's notes, for students (RLS lets students read all of them).
+export async function fetchStudentNotes() {
+  const rows = throwIfError(await supabase
+    .from("mentor_notes")
+    .select("*")
+    .order("created_at", { ascending: false }));
+  return rows.map(toClientNote);
+}
+
+// Demo-mode notes carry their file as a data URL. Supabase notes are private, so they
+// are fetched through a short-lived signed URL that forces a download.
+export async function downloadNote(note) {
+  const url = note.dataUrl || throwIfError(await supabase.storage
+    .from("mentor-notes")
+    .createSignedUrl(note.filePath, 60, { download: note.fileName })).signedUrl;
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = note.fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+// Opens the note in a new tab so the mentor can read it on the website.
+export async function viewNote(note) {
+  const tab = window.open("", "_blank");
+  try {
+    let url = note.dataUrl;
+    if (url) {
+      url = URL.createObjectURL(await (await fetch(url)).blob());
+    } else {
+      url = throwIfError(await supabase.storage.from("mentor-notes").createSignedUrl(note.filePath, 300)).signedUrl;
+    }
+    if (tab) tab.location.href = url;
+    else window.location.assign(url);
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
+}
+
+// Removes the row first, then the file; a leftover file is harmless, a row without a file is not.
+export async function deleteMentorNote(note) {
+  throwIfError(await supabase.from("mentor_notes").delete().eq("id", note.id).select("id").single());
+  await supabase.storage.from("mentor-notes").remove([note.filePath]);
+}
+
+export async function getNotePreviewUrl(note) {
+  if (note.dataUrl) return note.dataUrl;
+  return throwIfError(await supabase.storage
+    .from("mentor-notes")
+    .createSignedUrl(note.filePath, 60 * 60)).signedUrl;
+}
+
 export async function uploadMentorNote(mentorId, { title, subject, file }) {
-  const filePath = `${mentorId}/${Date.now()}-${file.name}`;
+  // Storage keys reject some characters (e.g. brackets or non-Latin script), so store a
+  // safe name and keep the original in file_name.
+  const safeName = file.name.replace(/[^\w.-]+/g, "_");
+  const filePath = `${mentorId}/${Date.now()}-${safeName}`;
   const { error: uploadError } = await supabase.storage
     .from("mentor-notes")
     .upload(filePath, file);
@@ -225,4 +291,13 @@ export async function uploadMentorNote(mentorId, { title, subject, file }) {
     .select()
     .single());
   return toClientNote(row);
+}
+
+// Every registered student (name and join date only) with whether they are under this mentor.
+export async function listStudentsForMentor() {
+  return throwIfError(await supabase.rpc("list_students_for_mentor"));
+}
+
+export async function setMyStudent(studentId, assigned) {
+  throwIfError(await supabase.rpc("set_my_student", { p_student_id: studentId, p_assigned: assigned }));
 }

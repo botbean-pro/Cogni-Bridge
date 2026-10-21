@@ -36,18 +36,26 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
       <div className="student-rail-brand">
         <span className="student-rail-logo"><LogoImage size={42} /></span>
         <span className="student-rail-brand-copy"><strong>CogniBridge</strong><small>{t("learnTogether")}</small></span>
-        <button type="button" className="student-rail-toggle" onClick={() => setPinnedOpen((open) => !open)} aria-label={pinnedOpen ? "Collapse navigation" : "Expand navigation"} aria-expanded={pinnedOpen}>
+        <button type="button" className="student-rail-toggle" onClick={() => setPinnedOpen((open) => !open)} aria-label={pinnedOpen ? t("collapseNavigation") : t("expandNavigation")} aria-expanded={pinnedOpen}>
           {pinnedOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
       </div>
       <nav className="student-rail-nav" aria-label={t("mainNavigation")}>
         {items.map(([Icon, tab]) => {
           const careerLocked = tab === "careers" && !isGrade12;
+<<<<<<< HEAD
           const label = tab === "mindful" ? "Mindful Corner" : tab === "leaderboard" ? "Cogni Board" : t(navigationLabels[tab] || tab);
           return <button key={tab} type="button" className={classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked")} aria-current={activeTab === tab ? "page" : undefined} aria-disabled={careerLocked} onClick={() => !careerLocked && onNavigate(tab)} title={careerLocked ? "Career Options are available to Grade 12 students" : label}>
             <Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{label}</span>
           </button>
         })}
+=======
+          return <button key={tab} type="button" className={classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked")} aria-current={activeTab === tab ? "page" : undefined} aria-disabled={careerLocked} onClick={() => !careerLocked && onNavigate(tab)} title={careerLocked ? t("career_locked") : t(navigationLabels[tab])}>
+            <Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{t(navigationLabels[tab])}</span>
+          </button>
+        })}
+        {signedIn && <button type="button" className="student-rail-link calm-rail-button" onClick={onOpenCalm} title={t("sn_needBreak")}><Wind size={20} /><span>{t("sn_needBreak")}</span></button>}
+>>>>>>> origin/main
       </nav>
     </div>
   );

@@ -1,0 +1,71 @@
+/* Keep the accessibility settings consistent across student, mentor and parent views. */
+.theme-dark {
+  color-scheme: dark;
+}
+
+.theme-dark.app {
+  background: var(--canvas);
+  color: var(--text);
+}
+
+.theme-dark :is(.content, .mentor-content, .parent-page, .settings-page, .sensory-page) {
+  color: var(--text);
+}
+
+.theme-dark :is(
+  .settings-details,
+  .sensory-card,
+  .student-subject-setup-card,
+  .student-calm-dialog,
+  .student-note-card,
+  .performance-card,
+  .performance-summary article,
+  .mentor-sensory-card,
+  .mentor-parent-thread,
+  .mentor-leaderboard-row,
+  .mentor-students-table-wrap,
+  .parent-card,
+  .parent-session,
+  .career-card,
+  .ai-chat-history
+) {
+  border-color: var(--line);
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+.theme-dark :is(
+  .settings-details h3,
+  .sensory-card h2,
+  .sensory-card h3,
+  .parent-card h2,
+  .parent-card h3,
+  .performance-card h2,
+  .performance-card h3,
+  .mentor-sensory-card h2,
+  .mentor-sensory-card h3
+) {
+  color: var(--text);
+}
+
+.theme-dark :is(
+  input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='file']),
+  select,
+  textarea
+) {
+  border-color: var(--line);
+  background-color: var(--surface-2);
+  color: var(--text);
+}
+
+.theme-dark :is(
+  input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='file']),
+  textarea
+)::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.theme-dark .mentor-parent-thread-messages > p.from-mentor {
+  color: var(--text);
+}

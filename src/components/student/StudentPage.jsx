@@ -1,9 +1,19 @@
+<<<<<<< HEAD
 import React from "react";
 import { Accessibility } from "lucide-react";
+=======
+import React, { useEffect, useState } from "react";
+import { Accessibility, X } from "lucide-react";
+>>>>>>> origin/main
 import { classNames } from "../../constants";
 import { AnimatedLogo, MouseTrail } from "../Brand";
 import { StudentSidebar } from "./StudentSidebar";
 import { StudentTopBar } from "./StudentTopBar";
+<<<<<<< HEAD
+=======
+import { StudentNotifications } from "./StudentNotifications";
+import { CalmCorner } from "./pages/SensoryTrackerPage";
+>>>>>>> origin/main
 
 export const StudentPage = ({
   activeTab,
@@ -12,6 +22,7 @@ export const StudentPage = ({
   sensoryTrackerEnabled,
   isGrade12,
   studentName,
+  studentId,
   t,
   onLogin,
   onLogout,
@@ -23,6 +34,20 @@ export const StudentPage = ({
   onToggleAccessibility,
   accessibilityPanel,
 }) => {
+<<<<<<< HEAD
+=======
+  const [calmCornerOpen, setCalmCornerOpen] = useState(false);
+  const [breathingOpen, setBreathingOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!settingsOpen) return undefined;
+    const closeOnEscape = (event) => { if (event.key === "Escape") setSettingsOpen(false); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [settingsOpen]);
+
+>>>>>>> origin/main
   return <>
     <MouseTrail />
     {showIntro && (
@@ -33,16 +58,33 @@ export const StudentPage = ({
     )}
     <div className="student-app-shell">
       <aside className={`student-rail${accessibilityOpen ? " accessibility-open" : ""}`}>
+<<<<<<< HEAD
         <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} />
+=======
+        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(false); setCalmCornerOpen(true); }} />
+>>>>>>> origin/main
         <div className="student-rail-footer">
-          <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
+          {studentId && <StudentNotifications studentId={studentId} t={t} />}
+          <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>
           </button>
-          <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} onOpenAccount={onOpenAccount} t={t} />
+          <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} onOpenAccount={onOpenAccount} onOpenSettings={() => setSettingsOpen(true)} t={t} />
         </div>
       </aside>
       <main className="main"><div className="route-transition" key={`${activeTab}-${signedIn ? "student" : "guest"}`}>{pageContent[activeTab === "about" ? "home" : activeTab]}</div></main>
     </div>
+<<<<<<< HEAD
+=======
+    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? t("sn_breathingEx") : t("sn_calmTitle")}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label={t("close")}><X size={20} /></button><CalmCorner startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} t={t} /></div></div>}
+    {settingsOpen && (
+      <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("settings")} onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
+        <div className="student-calm-dialog student-settings-dialog">
+          <button className="student-calm-dismiss" type="button" onClick={() => setSettingsOpen(false)} aria-label={t("close")}><X size={20} /></button>
+          {pageContent.settings}
+        </div>
+      </div>
+    )}
+>>>>>>> origin/main
     {accessibilityOpen && accessibilityPanel}
   </>
 };

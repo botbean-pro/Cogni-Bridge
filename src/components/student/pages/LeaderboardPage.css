@@ -1,7 +1,7 @@
 .leaderboard-page { min-height: calc(100vh - 82px); background: var(--canvas); }
 .mindful-points-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;max-width:1040px;margin:0 auto 22px;padding:18px 22px;border:1px solid #c5ded6;border-radius:18px;background:linear-gradient(110deg,#e8f4ed,var(--surface));color:var(--text)}.mindful-points-medal{display:grid;width:44px;height:44px;place-items:center;border-radius:14px;background:#d2e9dc;color:#43785f;font-size:25px}.mindful-points-summary .eyebrow{margin:0;color:#43785f;font-size:11px;font-weight:800;letter-spacing:.1em}.mindful-points-summary h2{margin:2px 0 4px;font-size:18px}.mindful-points-summary>p:last-child{margin:0;color:var(--muted);font-size:13px}.mindful-points-total{color:#2f7159;font-size:30px}.mindful-points-total small{font-size:13px}.mindful-points-card ul{grid-column:2/4;display:grid;gap:6px;margin:0;padding:10px 0 0 18px;border-top:1px solid #ccdfd5;color:var(--muted);font-size:13px}
 .leaderboard-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; max-width:1040px; margin:0 auto 26px; }
-.leaderboard-heading h1 { margin:5px 0 8px; color:var(--text); font-size:clamp(32px,4vw,48px); letter-spacing:-.05em; }
+.leaderboard-heading h1 { margin:5px 0 8px; color:var(--text); font-size: calc((clamp(32px,4vw,48px)) * var(--text-scale, 1)); letter-spacing:-.05em; }
 .leaderboard-heading p:last-child { margin:0; color:var(--muted); font-size:calc(16px * var(--text-scale, 1)); }
 .leaderboard-trophy { display:grid; place-items:center; width:68px; height:68px; border-radius:22px; color:var(--teal); background:#d9f1ed; box-shadow:0 8px 22px rgba(8,127,119,.13); }
 .points-info-box { display:flex; gap:16px; max-width:1040px; margin:0 auto 24px; padding:22px 24px; border:1px solid #b9ded8; border-radius:18px; background:#e4f4f1; color:var(--charcoal-2); }
@@ -19,9 +19,9 @@
 .podium-card-1 { order:2; transform:translateY(-7px); border-color:var(--teal); box-shadow:0 10px 22px rgba(8,127,119,.12); }
 .podium-card-2 { order:1; }
 .podium-card-3 { order:3; }
-.podium-medal { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; color:var(--teal-dark); background:#d1ebe6; font-size:12px; font-weight:900; }
+.podium-medal { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; color:var(--teal-dark); background:#d1ebe6; font-size: calc((12px) * var(--text-scale, 1)); font-weight:900; }
 .podium-card-1 .podium-medal { color:#fff; background:var(--teal); }
-.podium-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:15px; color:var(--teal-dark); background:#dff4f0; font-size:19px; font-weight:900; }
+.podium-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:15px; color:var(--teal-dark); background:#dff4f0; font-size: calc((19px) * var(--text-scale, 1)); font-weight:900; }
 .podium-card strong { color:var(--charcoal-2); font-size:calc(16px * var(--text-scale, 1)); }
 .podium-score { color:var(--teal-dark); font-size:calc(16px * var(--text-scale, 1)); font-weight:900; }
 .streak-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; color:#c25b36; background:#fff0e8; font-size:calc(12px * var(--text-scale, 1)); font-weight:800; }
@@ -29,6 +29,8 @@
 .leaderboard-table-header, .leaderboard-row { display:grid; grid-template-columns:80px 1.5fr 1fr .7fr 1fr; align-items:center; gap:18px; padding:17px 25px; }
 .leaderboard-table-header { color:var(--muted); background:var(--surface-2); font-size:calc(12px * var(--text-scale, 1)); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
 .leaderboard-row { min-height:76px; border-top:1px solid var(--line); color:var(--text); }
+.leaderboard-row-me { background:var(--surface-2); }
+.leaderboard-loading { margin-top:17px; color:var(--muted); }
 .leaderboard-rank-1 { background:linear-gradient(90deg,#e8f7f4,var(--surface)); }
 .leaderboard-rank { display:flex; align-items:center; justify-content:center; width:31px; height:31px; border-radius:10px; color:var(--muted); font-weight:800; }
 .leaderboard-rank-1 .leaderboard-rank { color:var(--teal-dark); background:#d1ebe6; }
@@ -37,7 +39,7 @@
 .leaderboard-name strong { color:var(--charcoal-2); font-size:calc(16px * var(--text-scale, 1)); }
 .leaderboard-attendance { font-weight:700; color:var(--charcoal-2); }
 .leaderboard-streak { display:inline-flex; align-items:center; gap:4px; color:#c25b36; font-weight:800; }
-.leaderboard-attendance small, .leaderboard-points small { color:#829394; font-size:12px; font-weight:500; }
+.leaderboard-attendance small, .leaderboard-points small { color:#829394; font-size: calc((12px) * var(--text-scale, 1)); font-weight:500; }
 .leaderboard-points { color:var(--teal-dark); font-size:calc(22px * var(--text-scale, 1)); font-weight:900; }
 .theme-dark .leaderboard-page { background:var(--canvas); }
 .theme-dark .leaderboard-heading h1,
@@ -81,7 +83,6 @@
 .leaderboard-student-details { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:3px; }
 .leaderboard-student-details .leaderboard-rank-title { font-size:9px; letter-spacing:.08em; }
 .podium-card-1 .podium-rank-title { color:#a46a07; }
-.podium-motivation { max-width:220px; margin:2px 0 0; color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); line-height:1.45; text-align:center; }
 .leaderboard-rank-2 .leaderboard-rank { color:#68727e; background:#edf0f4; }
 .leaderboard-rank-3 .leaderboard-rank { color:#a9663c; background:#fff0e7; }
 .theme-dark .podium-card-1 { background:linear-gradient(155deg,#493f29,#263738 70%); border-color:#927435; }
@@ -89,7 +90,6 @@
 .theme-dark .podium-rank-title { color:#75dfd1; }
 .theme-dark .leaderboard-student-details .leaderboard-rank-title { color:#75dfd1; }
 .theme-dark .podium-card-1 .podium-rank-title { color:#f3d477; }
-.theme-dark .podium-motivation { color:var(--muted); }
 .theme-dark .leaderboard-rank-2 .leaderboard-rank { color:#d5dce4; background:#354149; }
 .theme-dark .leaderboard-rank-3 .leaderboard-rank { color:#ffb68e; background:#49332c; }
 @media (prefers-reduced-motion: reduce) {
@@ -99,7 +99,7 @@
 @media (max-width:700px) {
   .leaderboard-heading { align-items:flex-start; }
   .leaderboard-table-header, .leaderboard-row { grid-template-columns:38px 1fr 72px 48px 65px; gap:7px; padding:14px 10px; }
-  .leaderboard-table-header { font-size:10px; }
+  .leaderboard-table-header { font-size: calc((10px) * var(--text-scale, 1)); }
   .leaderboard-table-header span:nth-child(n+3) { text-align:right; }
   .leaderboard-row > :nth-child(n+3) { justify-content:flex-end; text-align:right; }
   .points-info-box { padding:18px; }

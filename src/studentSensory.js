@@ -30,8 +30,15 @@ export const mentorHelpOptions = [
   ["specific_mentor", "I'd like to talk to a specific mentor"],
 ];
 
+// Demo check-ins stay in this tab's memory only. They are never written to
+// localStorage or sent to mentors, and clear on sign-out or page reload.
 const demoCheckinsByStudent = new Map();
 const demoStudentKey = (studentId) => String(studentId || "").trim().toLowerCase();
+
+export function clearDemoStudentCheckins(studentId) {
+  const key = demoStudentKey(studentId);
+  if (key) demoCheckinsByStudent.delete(key);
+}
 
 const throwIfError = ({ data, error }) => {
   if (error) throw error;
@@ -40,8 +47,9 @@ const throwIfError = ({ data, error }) => {
 
 export async function loadStudentCheckins(studentId) {
   if (!supabase) {
-    const entries = demoCheckinsByStudent.get(demoStudentKey(studentId)) || [];
-    return [...entries].sort((first, second) => second.created_at.localeCompare(first.created_at));
+    const key = demoStudentKey(studentId);
+    return [...(demoCheckinsByStudent.get(key) || [])]
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }
   return throwIfError(await supabase
     .from("sensory_checkins")
@@ -63,34 +71,55 @@ export async function loadAssignedMentors(studentId) {
     .in("id", assignments.map(({ mentor_id: mentorId }) => mentorId)));
 }
 
+// Parents linked to this student. They can see check-in ratings, never written notes.
+export async function loadLinkedParents(studentId) {
+  if (!supabase) return [];
+  const links = throwIfError(await supabase
+    .from("parent_student_links")
+    .select("parent_id")
+    .eq("student_id", studentId));
+  if (!links.length) return [];
+  return throwIfError(await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .in("id", links.map(({ parent_id: parentId }) => parentId)));
+}
+
 export async function saveStudentCheckin(studentId, checkin) {
   if (!supabase) {
     const key = demoStudentKey(studentId);
     if (!key) throw new Error("A signed-in demo student is required.");
+    const createdAt = new Date().toISOString();
+    const entryId = `demo-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const entry = {
       checkin_type: "quick",
       mood: 3,
       mood_note: "",
       emotions: [],
+      emotion_note: "",
       energy: null,
       comfort: null,
       day_note: "",
       causes: [],
+      cause_note: "",
       overwhelm_note: "",
       helpful_actions: [],
+      helpful_note: "",
       mentor_help: "none",
+      selected_mentor_id: null,
       mentor_message: "",
       shared_with_mentor: false,
       ...checkin,
-      id: `demo-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: entryId,
       student_id: key,
-      created_at: new Date().toISOString(),
+      created_at: createdAt,
       mentor_help: "none",
+      selected_mentor_id: null,
       mentor_message: "",
       shared_with_mentor: false,
     };
     demoCheckinsByStudent.set(key, [entry, ...(demoCheckinsByStudent.get(key) || [])]);
-    return entry;
+    return { id: entry.id, created_at: entry.created_at };
   }
   return throwIfError(await supabase
     .from("sensory_checkins")
@@ -103,7 +132,7 @@ export async function deleteStudentCheckin(studentId, checkinId) {
   if (!supabase) {
     const key = demoStudentKey(studentId);
     demoCheckinsByStudent.set(key, (demoCheckinsByStudent.get(key) || []).filter((entry) => entry.id !== checkinId));
-    return;
+    return null;
   }
   return throwIfError(await supabase
     .from("sensory_checkins")
@@ -120,18 +149,8 @@ export async function loadStudentResponses() {
     .not("mentor_message", "eq", ""));
 }
 
-export async function saveStudentLearningActivity(studentId, activity) {
-  const { error } = await supabase.from("student_learning_activity").upsert({
-    student_id: studentId,
-    session_id: activity.sessionId,
-    subject: activity.subject,
-    activity_date: activity.activityDate,
-    duration_minutes: activity.durationMinutes,
-  }, { onConflict: "student_id,session_id", ignoreDuplicates: true });
-  if (error) throw error;
-}
-
 export async function loadMentorCheckins(mentorId) {
+  if (!supabase) return { checkins: [], notifications: [], students: [] };
   const assignments = throwIfError(await supabase
     .from("mentor_student_assignments")
     .select("student_id")
@@ -161,6 +180,7 @@ export async function loadMentorCheckins(mentorId) {
 }
 
 export async function markMentorNotificationViewed(mentorId, notificationId) {
+  if (!supabase) return null;
   return throwIfError(await supabase
     .from("sensory_notifications")
     .update({ viewed_at: new Date().toISOString() })
@@ -169,13 +189,13 @@ export async function markMentorNotificationViewed(mentorId, notificationId) {
     .is("viewed_at", null));
 }
 
-export async function respondToMentorRequest(mentorId, notificationId, message) {
+export async function respondToMentorRequest(mentorId, notificationId, message, addressed = false) {
+  if (!supabase) throw new Error("Mentor responses are unavailable in demo mode.");
+  const update = { mentor_message: message.trim().slice(0, 2000) };
+  if (addressed) update.addressed_at = new Date().toISOString();
   return throwIfError(await supabase
     .from("sensory_notifications")
-    .update({
-      addressed_at: new Date().toISOString(),
-      mentor_message: message.trim().slice(0, 2000),
-    })
+    .update(update)
     .eq("id", notificationId)
     .eq("recipient_id", mentorId)
     .is("addressed_at", null));

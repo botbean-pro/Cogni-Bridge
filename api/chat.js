@@ -1,4 +1,29 @@
+import { createClient } from "@supabase/supabase-js";
+
 const reply = (response, status, body) => response.status(status).json(body);
+
+const DAILY_TOKEN_LIMIT = 5000;
+const MAX_RESPONSE_TOKENS = 2000;
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+// Rough fallback when the provider doesn't report usage (~4 characters per token).
+const estimateTokens = (text) => Math.ceil(text.length / 4);
+const tokensUsed = (data, fallbackText) => data?.usage?.total_tokens || estimateTokens(fallbackText);
+
+// Returns a Supabase client acting as the caller, or null if the bearer token is missing/invalid.
+async function getUserClient(request) {
+  const token = request.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
+  if (!token) return null;
+
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data, error } = await client.auth.getUser(token);
+  return error || !data.user ? null : client;
+}
 
 const tutorInstructions =
   "You are Cogni-Flow, a supportive learning assistant for students. Explain ideas clearly, " +
@@ -23,11 +48,19 @@ const chatInstructions =
   "The relatedQuestions must contain four short, useful follow-up questions directly related to the student's latest question. " +
   "Do not include the follow-up questions in the answer text. Write translatedQuestion, answer, and relatedQuestions in the selected response language.";
 
+const audioInstructions =
+  "Turn the student's notes into a script that will be read aloud by a text-to-speech voice. " +
+  "Keep every important fact from the notes and do not add new facts. Use short, clear sentences and a warm, calm tone. " +
+  "Write for the ear: no markdown, bullets, headings, emojis, or symbols. Spell out abbreviations, and say formulas and numbers in words. " +
+  "Start with a one-sentence overview, walk through the notes in order, and end with a one-sentence recap. " +
+  "Return only valid JSON with this exact shape: {\"script\": string}.";
+
 const translationInstructions =
   "Translate every natural-language string in the user's JSON object into the requested language. " +
   "Keep JSON keys, formulas, code, names, and numbers unchanged. Preserve the meaning and return only valid JSON " +
   "with this exact shape: {\"translatedQuestion\": string, \"answer\": string, \"relatedQuestions\": [string, string, string, string]}.";
 
+<<<<<<< HEAD
 const journalInstructions =
   "Create a gentle reflection chart from a student's journal entry. This is not therapy, diagnosis, or a reliable measurement of a person's feelings. " +
   "Return only valid JSON with this exact shape: {\"segments\":[{\"label\":\"joy|calm|hope|worry|frustration|tiredness|other\",\"value\":number}],\"reflection\":string}. " +
@@ -35,6 +68,60 @@ const journalInstructions =
   "If the entry contains an optional self-reported check-in, give the student's selected mood and emotions priority and include those themes in the chart; do not contradict the student's choices. " +
   "If the entry is unclear, use other and calm rather than inventing an interpretation. Keep reflection kind, brief, non-judgmental, age-appropriate, and in the requested language. " +
   "Never infer personality, diagnosis, intelligence, intent, or risk level. Say the chart is only a lightweight AI reflection of this one entry.";
+=======
+const appPages = ["study", "sessions", "sensory", "leaderboard", "premium", "careers", "messages", "settings"];
+const settingValues = { textSize: ["larger", "smaller", "reset"], appearance: ["light", "dark"], readAloud: ["on", "off"] };
+
+// The browser sends the student's own app state so the assistant can answer about it and act on it.
+function sanitizeAppContext(context) {
+  if (!context || typeof context !== "object") return null;
+  const text = (value, max = 120) => (typeof value === "string" ? value.slice(0, max) : "");
+  return {
+    today: text(context.today, 10),
+    signedIn: Boolean(context.signedIn),
+    checkInAvailable: Boolean(context.checkInAvailable),
+    subjects: Array.isArray(context.subjects) ? context.subjects.slice(0, 12).map((subject) => text(subject, 40)).filter(Boolean) : [],
+    sessions: Array.isArray(context.sessions)
+      ? context.sessions.slice(0, 15).map((session) => ({
+        id: text(session?.id, 64),
+        title: text(session?.title),
+        subject: text(session?.subject, 40),
+        date: text(session?.date, 10),
+        time: text(session?.time, 5),
+        endTime: text(session?.endTime, 5),
+        registered: Boolean(session?.registered),
+      })).filter((session) => session.id)
+      : [],
+  };
+}
+
+const appActionInstructions = (context) =>
+  `Student app context (the only source of truth about the student's sessions): ${JSON.stringify(context)}. ` +
+  "When the student asks about sessions, answer only from this context with titles, dates, and times. Never invent sessions; say so if none match. " +
+  "You can act inside the app: in addition to the other fields, include \"actions\" in the JSON object, an array that is empty unless the student asks for something. Allowed actions: " +
+  "{\"type\": \"open\", \"page\": one of \"study\" (dashboard), \"sessions\", \"sensory\" (daily mood check-in / sensory tracker), \"leaderboard\" (Cogni Board), \"premium\", \"careers\", \"messages\", \"settings\"}; " +
+  "{\"type\": \"openSession\", \"sessionId\": string}; " +
+  "{\"type\": \"register\", \"sessionId\": string}, only when the student asks to register for or join a session they are not registered for; " +
+  "{\"type\": \"setting\", \"name\": \"textSize\", \"value\": \"larger\" | \"smaller\" | \"reset\"}; {\"type\": \"setting\", \"name\": \"appearance\", \"value\": \"light\" | \"dark\"}; " +
+  "{\"type\": \"setting\", \"name\": \"readAloud\", \"value\": \"on\" | \"off\"}. " +
+  "Only use session IDs from the context. If checkInAvailable is false, explain that the check-in needs a student sign-in instead of opening it. " +
+  "When you add an action, say briefly in the answer what you did; for register, say they can tap the button to confirm.";
+
+function sanitizeActions(actions, context) {
+  if (!Array.isArray(actions) || !context) return [];
+  const sessionIds = new Set(context.sessions.map((session) => session.id));
+  return actions
+    .filter((action) => {
+      if (!action || typeof action !== "object") return false;
+      if (action.type === "open") return appPages.includes(action.page);
+      if (action.type === "openSession" || action.type === "register") return sessionIds.has(action.sessionId);
+      if (action.type === "setting") return Boolean(settingValues[action.name]?.includes(action.value));
+      return false;
+    })
+    .slice(0, 3)
+    .map(({ type, page, sessionId, name, value }) => ({ type, page, sessionId, name, value }));
+}
+>>>>>>> origin/main
 
 const supportedLanguages = new Set([
   "English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Kannada", "Malayalam", "Punjabi", "French", "German", "Spanish",
@@ -55,13 +142,14 @@ function isValidMessages(messages) {
   );
 }
 
-async function callOpenRouter(messages, task, language) {
+async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE_TOKENS, extraInstructions = "") {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL;
   if (!apiKey || !model) {
     throw new Error("Cogni-Flow is not configured. Add OPENROUTER_API_KEY and OPENROUTER_MODEL to the server environment.");
   }
 
+<<<<<<< HEAD
   const languageInstruction = task === "journal"
     ? `Write the reflection in ${language}.`
     : `Write the entire response, including all related questions, in ${language}. Keep names, formulas, and code unchanged when needed.`;
@@ -73,6 +161,17 @@ async function callOpenRouter(messages, task, language) {
         ? translationInstructions
         : chatInstructions;
   const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions}`;
+=======
+  const languageInstruction = `Write the entire response, including all related questions, in ${language}. Keep names, formulas, and code unchanged when needed.`;
+  const taskInstructions = task === "mcq"
+    ? quizInstructions
+    : task === "translate"
+      ? translationInstructions
+      : task === "audio"
+        ? audioInstructions
+        : chatInstructions;
+  const systemPrompt = `${tutorInstructions} ${languageInstruction} ${taskInstructions} ${extraInstructions}`.trim();
+>>>>>>> origin/main
 
   return fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -84,18 +183,25 @@ async function callOpenRouter(messages, task, language) {
     },
     body: JSON.stringify({
       model,
+      max_tokens: Math.max(1, Math.min(MAX_RESPONSE_TOKENS, maxTokens)),
       messages: [{ role: "system", content: systemPrompt }, ...messages],
     }),
   });
 }
 
-async function translateChatResult(result, language) {
+async function translateChatResult(result, language, usage) {
+  const input = JSON.stringify(result);
+  const translationPromptEstimate = estimateTokens(input + tutorInstructions + translationInstructions + language);
+  const translationBudget = DAILY_TOKEN_LIMIT - usage.startingTokens - usage.tokens - translationPromptEstimate;
+  if (translationBudget <= 0) return result;
   const response = await callOpenRouter(
-    [{ role: "user", content: JSON.stringify(result) }],
+    [{ role: "user", content: input }],
     "translate",
     language,
+    translationBudget,
   );
   const data = await response.json();
+  if (response.ok) usage.tokens += tokensUsed(data, input + (data.choices?.[0]?.message?.content || ""));
   if (!response.ok) {
     throw new Error(data.error?.message || "The translation request failed.");
   }
@@ -126,15 +232,68 @@ export default async function handler(request, response) {
     return reply(response, 405, { error: "Only POST requests are supported." });
   }
 
+<<<<<<< HEAD
   const { task = "chat", messages, language = "English" } = request.body || {};
   if (!["chat", "mcq", "journal"].includes(task) || !isValidMessages(messages)) {
+=======
+  const { task = "chat", messages, language = "English", context } = request.body || {};
+  if (task === "usage") {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return reply(response, 200, { used: 0, limit: DAILY_TOKEN_LIMIT });
+    }
+    const userClient = await getUserClient(request);
+    if (!userClient) return reply(response, 401, { error: "Sign in to view Cogni-Flow usage." });
+    const { data: used, error } = await userClient.rpc("ai_tokens_used_today");
+    if (error) return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable." });
+    return reply(response, 200, { used: Number(used) || 0, limit: DAILY_TOKEN_LIMIT });
+  }
+
+  if (!["chat", "mcq", "audio"].includes(task) || !isValidMessages(messages)) {
+>>>>>>> origin/main
     return reply(response, 400, { error: "A valid task and conversation are required." });
   }
 
+  const appContext = task === "chat" ? sanitizeAppContext(context) : null;
+  const extraInstructions = appContext ? appActionInstructions(appContext) : "";
+
+  // Without Supabase (demo mode) there are no accounts, so the per-user limit can't apply.
+  let userClient = null;
+  let usedToday = 0;
+  if (supabaseUrl && supabaseAnonKey) {
+    userClient = await getUserClient(request);
+    if (!userClient) {
+      return reply(response, 401, { error: "Sign in to use Cogni-Flow." });
+    }
+
+    const { data, error: usageError } = await userClient.rpc("ai_tokens_used_today");
+    if (usageError) {
+      return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable. Please try again later." });
+    }
+    usedToday = Number(data) || 0;
+    const taskPrompt = task === "mcq" ? quizInstructions : task === "audio" ? audioInstructions : chatInstructions;
+    const promptEstimate = estimateTokens(messages.map((message) => message.content).join("") + tutorInstructions + taskPrompt + language + extraInstructions);
+    if (usedToday + promptEstimate >= DAILY_TOKEN_LIMIT) {
+      return reply(response, 429, {
+        error: "You've reached today's Cogni-Flow limit. It resets tomorrow.",
+        used: Number(usedToday) || 0,
+        limit: DAILY_TOKEN_LIMIT,
+      });
+    }
+  }
+
+  const requestPrompt = messages.map((message) => message.content).join("");
+  const taskPrompt = task === "mcq" ? quizInstructions : task === "audio" ? audioInstructions : chatInstructions;
+  const promptEstimate = estimateTokens(requestPrompt + tutorInstructions + taskPrompt + language + extraInstructions);
+  const responseTokenBudget = DAILY_TOKEN_LIMIT - usedToday - promptEstimate;
+  const usage = { tokens: 0, startingTokens: usedToday };
   try {
     const responseLanguage = supportedLanguages.has(language) ? language : "English";
-    const upstreamResponse = await callOpenRouter(messages, task, responseLanguage);
+    const upstreamResponse = await callOpenRouter(messages, task, responseLanguage, responseTokenBudget, extraInstructions);
     const data = await upstreamResponse.json();
+    if (upstreamResponse.ok) usage.tokens += tokensUsed(
+      data,
+      messages.map((message) => message.content).join("") + (data.choices?.[0]?.message?.content || ""),
+    );
     if (!upstreamResponse.ok) {
       return reply(response, upstreamResponse.status, {
         error: data.error?.message || "The AI provider rejected the request.",
@@ -171,6 +330,7 @@ export default async function handler(request, response) {
     if (task === "chat") {
       const latestUserMessage = messages.filter((message) => message.role === "user").at(-1);
       let chatResult;
+      let actions = [];
       try {
         const parsed = JSON.parse(content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, ""));
         chatResult = {
@@ -182,6 +342,7 @@ export default async function handler(request, response) {
           ? parsed.relatedQuestions.filter((question) => typeof question === "string").slice(0, 4)
             : [],
         };
+        actions = sanitizeActions(parsed.actions, appContext);
       } catch {
         chatResult = {
           answer: content,
@@ -192,12 +353,27 @@ export default async function handler(request, response) {
 
       const localizedResult = responseLanguage === "English"
         ? chatResult
-        : await translateChatResult(chatResult, responseLanguage);
+        : await translateChatResult(chatResult, responseLanguage, usage);
       return reply(response, 200, {
         content: localizedResult.answer,
         translatedQuestion: localizedResult.translatedQuestion,
         relatedQuestions: localizedResult.relatedQuestions,
+        actions,
       });
+    }
+
+    if (task === "audio") {
+      let script;
+      try {
+        script = JSON.parse(content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")).script;
+      } catch {
+        // Fall back to the raw text if the model skipped the JSON wrapper.
+        script = content;
+      }
+      if (typeof script !== "string" || !script.trim()) {
+        return reply(response, 502, { error: "The AI provider returned an invalid audio script." });
+      }
+      return reply(response, 200, { script: script.trim() });
     }
 
     let quiz;
@@ -225,5 +401,9 @@ export default async function handler(request, response) {
         ? error.message
         : "Unable to reach the AI provider. Please try again.",
     });
+  } finally {
+    if (userClient && usage.tokens > 0) {
+      await userClient.rpc("record_ai_usage", { p_tokens: usage.tokens });
+    }
   }
 }

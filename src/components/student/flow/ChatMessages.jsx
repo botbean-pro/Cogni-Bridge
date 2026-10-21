@@ -1,6 +1,8 @@
 ﻿import React from "react";
-import { ArrowUpRight, Sparkles, UserRound, X } from "lucide-react";
+import { ArrowUpRight, CalendarPlus, CheckCircle2, Square, UserRound, Volume2, X } from "lucide-react";
+import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
+import { AudioPlayer } from "./AudioNotes";
 
 function renderInline(text) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, index) => {
@@ -29,27 +31,65 @@ function FormattedAnswer({ content }) {
   );
 }
 
-function Message({ message, t, onAskRelated, disabled }) {
+const timeLocales = {
+  Hindi: "hi-IN",
+  Bengali: "bn-IN",
+  Telugu: "te-IN",
+  Marathi: "mr-IN",
+  Tamil: "ta-IN",
+  Gujarati: "gu-IN",
+  Kannada: "kn-IN",
+  Malayalam: "ml-IN",
+  Punjabi: "pa-IN",
+};
+
+function RegisterButtons({ actions, sessions, onAction, t }) {
+  const sessionsToRegister = (actions || [])
+    .filter((action) => action.type === "register")
+    .map((action) => sessions.find((session) => session.id === action.sessionId))
+    .filter(Boolean);
+  if (!sessionsToRegister.length) return null;
+  return (
+    <div className="ai-message-actions">
+      {sessionsToRegister.map((session) => (
+        <button
+          type="button"
+          key={session.id}
+          className="ai-action-button"
+          disabled={session.registered}
+          onClick={() => onAction({ type: "register", sessionId: session.id })}
+        >
+          {session.registered
+            ? <><CheckCircle2 size={16} /> {t("registered")}</>
+            : <><CalendarPlus size={16} /> {t("aiRegisterFor", { title: session.title })}</>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Message({ message, language, readAloudEnabled, speaking, onToggleSpeaking, sessions, onAction, t }) {
   const isAssistant = message.role === "assistant";
 
   return (
     <article className={`ai-message ${message.role}`}>
       <div className="message-avatar">
-        {isAssistant ? <Sparkles size={18} /> : <UserRound size={18} />}
+        {isAssistant ? <LogoImage size={24} /> : <UserRound size={18} />}
       </div>
       <div className="message-content">
         <div className="message-text">
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
+        {isAssistant && readAloudEnabled && (
+          <button type="button" className="ai-listen-button" onClick={() => onToggleSpeaking(message)} aria-pressed={speaking}>
+            {speaking ? <><Square size={14} /> {t("audioStop")}</> : <><Volume2 size={16} /> {t("listen")}</>}
+          </button>
+        )}
+        {isAssistant && <RegisterButtons actions={message.actions} sessions={sessions} onAction={onAction} t={t} />}
+        {message.audioScript && <AudioPlayer script={message.audioScript} language={language} t={t} />}
         {message.quiz && <PracticeQuestion quiz={message.quiz} t={t} />}
-        {isAssistant && <RelatedQuestionCards
-          questions={message.relatedQuestions}
-          onAsk={onAskRelated}
-          disabled={disabled}
-          t={t}
-        />}
         <time className="message-time">
-          {message.timestamp.toLocaleTimeString("en-US", {
+          {message.timestamp.toLocaleTimeString(timeLocales[language] || "en-US", {
             hour: "2-digit",
             minute: "2-digit",
           })}
@@ -60,32 +100,69 @@ function Message({ message, t, onAskRelated, disabled }) {
 }
 
 export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
-  const [dismissedQuestions, setDismissedQuestions] = React.useState([]);
-  const visibleQuestions = questions?.filter((question) => !dismissedQuestions.includes(question)) || [];
-  if (!visibleQuestions.length) return null;
+  const [dismissed, setDismissed] = React.useState([]);
+  React.useEffect(() => setDismissed([]), [questions]);
+
+  const visible = questions?.filter((question) => !dismissed.includes(question));
+  if (!visible?.length) return null;
   return (
-    <div className="related-question-cards" aria-label={t("relatedTopics")}>
-      {visibleQuestions.slice(0, 4).map((question) => (
-        <div className="related-question-row" key={question}>
-          <button className="related-question-prompt" type="button" onClick={() => onAsk(question)} disabled={disabled}>
-            <span>{question}</span><ArrowUpRight size={16} />
-          </button>
-          <button className="related-question-dismiss" type="button" aria-label={t("close")} title={t("close")} onClick={() => setDismissedQuestions((current) => [...current, question])}>
-            <X size={15} />
-          </button>
-        </div>
-      ))}
+    <div className="related-questions">
+      <p className="quick-prompts-title">{t("relatedTopics")}</p>
+      <div className="related-question-cards" aria-label={t("relatedTopics")}>
+        {visible.slice(0, 4).map((question) => (
+          <div key={question} className="related-question-card">
+            <button type="button" className="related-question-text" onClick={() => onAsk(question)} disabled={disabled}>
+              <span>{question}</span>
+            </button>
+            <button type="button" className="related-question-ask" onClick={() => onAsk(question)} disabled={disabled} aria-label={question} title={question}>
+              <ArrowUpRight size={18} />
+            </button>
+            <button
+              type="button"
+              className="related-question-dismiss"
+              onClick={() => setDismissed((prev) => [...prev, question])}
+              aria-label={t("dismiss")}
+              title={t("dismiss")}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-export function ChatMessages({ messages, isLoading, messagesEndRef, t, onAskRelated }) {
+export function ChatMessages({
+  messages,
+  isLoading,
+  messagesEndRef,
+  language,
+  readAloudEnabled,
+  speakingId,
+  onToggleSpeaking,
+  sessions,
+  onAction,
+  t,
+}) {
   return (
     <div className="ai-chat-messages" aria-live="polite">
-      {messages.map((message) => <Message key={message.id} message={message} t={t} onAskRelated={onAskRelated} disabled={isLoading} />)}
+      {messages.map((message) => (
+        <Message
+          key={message.id}
+          message={message}
+          language={language}
+          readAloudEnabled={readAloudEnabled}
+          speaking={speakingId === message.id}
+          onToggleSpeaking={onToggleSpeaking}
+          sessions={sessions}
+          onAction={onAction}
+          t={t}
+        />
+      ))}
       {isLoading && (
         <div className="ai-message assistant" aria-label={t("aiThinking")}>
-          <div className="message-avatar"><Sparkles size={18} /></div>
+          <div className="message-avatar"><LogoImage size={24} /></div>
           <div className="message-content">
             <div className="typing-indicator"><span /><span /><span /></div>
           </div>
