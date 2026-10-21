@@ -42,6 +42,25 @@
 .mentor-form-actions { display:flex; align-items:center; gap:12px; }
 .mentor-edit-session,
 .mentor-cancel-edit { margin-top:12px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--teal-dark); font-weight:800; cursor:pointer; }
+.mentor-session-roster { margin-top:8px; }
+.mentor-roster-list { display:grid; gap:8px; margin-top:10px; }
+.mentor-roster-row { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:11px; border:1px solid var(--line); border-radius:11px; background:var(--surface); font-size:13px; }
+.mentor-roster-row > strong { min-width:110px; }
+.mentor-roster-row > span { color:var(--muted); }
+.mentor-roster-row label { display:flex; align-items:center; gap:5px; color:var(--muted); }
+.mentor-roster-row select { min-height:34px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text); }
+.mentor-roster-row button,.private-session-list button { padding:7px 9px; border:1px solid var(--line); border-radius:8px; color:var(--teal-dark); background:var(--surface-2); font-weight:700; cursor:pointer; }
+.private-session-list { display:grid; gap:10px; margin-top:20px; }
+.private-session-list article { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:16px; border:1px solid var(--line); border-radius:13px; background:var(--surface); }
+.private-session-list article div { display:grid; gap:5px; }
+.private-session-list article span { color:var(--muted); }
+.private-session-list a { color:var(--teal-dark); font-weight:800; }
+.mentor-rankings { margin:24px 0; }
+.mentor-rankings h2 { font-size:18px; }
+.mentor-rankings > div { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+.mentor-rankings article { display:grid; grid-template-columns:auto 1fr; align-items:center; column-gap:10px; padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.mentor-rankings article > span { grid-row:span 2; color:var(--teal-dark); font-weight:900; }
+.mentor-rankings article small { color:var(--muted); }
 .mentor-cancel-edit { margin-top:0; background:transparent; }
 .mentor-edit-session + .mentor-edit-session { margin-left:8px; }
 .mentor-edit-session svg { vertical-align:-3px; }
@@ -321,3 +340,4 @@
 .mentor-login-language .language-picker-compact { padding: 0; border: 0; }
 .mentor-login-language select { color: var(--text); }
 @media (max-width: 760px) { .mentor-login-language { top: 82px; right: 18px; } }
+.mentor-page-content{min-height:100%;padding:clamp(20px,3vw,42px)}.mentor-page-heading{margin-bottom:22px}.mentor-page-heading h1{margin:0;font-size:clamp(25px,3vw,36px)}.mentor-shared-journal-list{display:grid;gap:18px}.mentor-shared-journal-card{padding:22px;border:1px solid #dce8e3;border-radius:18px;background:#fff;box-shadow:0 10px 26px #173e300d}.mentor-shared-journal-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;color:#344c45}

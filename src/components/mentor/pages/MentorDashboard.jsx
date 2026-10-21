@@ -11,6 +11,8 @@ import {
   Trash2,
   FileText,
   Home,
+  Headphones,
+  BookHeart,
   Heart,
   LogOut,
   MessageCircle,
@@ -26,9 +28,13 @@ import { formatLocalizedDate, formatSession, getSessionSubjectLabel, readStudent
 import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
+import { RelaxationRoom } from "../../RelaxationRoom";
+import { ReflectionChart } from "../../student/pages/ReflectionJournal";
+import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
+import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
-import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
+import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, loadMentorSharedJournal, setMyStudent } from "../../../mentorContent";
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
@@ -38,7 +44,9 @@ import {
 function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCount, unreadParentCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
+    ["relax", Headphones, t("quietSpaceTitle")],
     ["performance", TrendingUp, t("md_perfNav")],
+    ...(mentorId ? [["journal", BookHeart, t("sharedJournalHeading")]] : []),
     ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
@@ -89,6 +97,19 @@ function useMentorName(mentorId) {
     };
   }, [mentorId]);
   return name;
+}
+
+function SharedJournalPage({ mentorId, t }) {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let live = true;
+    loadMentorSharedJournal(mentorId).then((rows) => { if (live) setEntries(rows); }).catch(() => {}).finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
+  }, [mentorId]);
+  return <section className="mentor-page-content"><div className="mentor-page-heading"><div><p className="mentor-kicker">{t("sharedJournalHeading")}</p><h1>{t("sharedJournalHeading")}</h1></div></div>
+    {loading ? <p>{t("loading")}</p> : entries.length ? <div className="mentor-shared-journal-list">{entries.map((item) => <article className="mentor-shared-journal-card" key={item.id}><p className="mentor-kicker">{item.student_name} · {new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</p><p className="mentor-shared-journal-text">{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>)}</div> : <p className="parent-empty">{t("sharedJournalEmpty")}</p>}
+  </section>;
 }
 
 // Loads shared check-ins for the mentor's assigned students; refreshes every 30s
@@ -493,6 +514,26 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
   const [localStudents, setLocalStudents] = useState([]);
   const [loading, setLoading] = useState(Boolean(mentorId));
   const [error, setError] = useState("");
+  const [screenTimeRows, setScreenTimeRows] = useState([]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const refresh = async () => {
+      if (mentorId) {
+        try {
+          const rows = await loadScreenTime(assignedStudents.map((student) => student.id));
+          if (isCurrent) setScreenTimeRows(rows);
+        } catch { if (isCurrent) setScreenTimeRows([]); }
+      } else {
+        const localRows = readStudents().filter((student) => (student.role || "Student").toLowerCase() === "student")
+          .flatMap((student) => readLocalScreenTime(student.email).map((row) => ({ ...row, student_id: student.email.toLowerCase() })));
+        if (isCurrent) setScreenTimeRows(localRows);
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 30_000);
+    return () => { isCurrent = false; window.clearInterval(interval); };
+  }, [mentorId, assignedStudents]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -557,6 +598,7 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
           return <article className="performance-card" key={student.id}>
             <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? t("md_lastActivity", { date: new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString() }) : t("md_noSessionsYet")}</small></div></div>
             <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>{t("sessions")}</span></div><div><strong>{student.stats.learningTime}</strong><span>{t("md_learningTime")}</span></div><div><strong>{student.stats.learningStreak}</strong><span>{t("md_dayStreak")}</span></div></div>
+            <ScreenTimeSummary rows={screenTimeRows} studentId={student.id} t={t} />
             <div className="performance-subjects"><strong>{t("md_subjectsLabel")}</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>{t("md_noSubjects")}</small>}</div>
           </article>;
         })}</div>}
@@ -764,6 +806,8 @@ export function MentorDashboard({
         <section className="mentor-content">
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {tab === "relax" && <RelaxationRoom onBack={() => setTab("overview")} t={t} />}
+          {tab === "journal" && mentorId && <SharedJournalPage mentorId={mentorId} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
           {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Accessibility, LogOut } from "lucide-react";
+import { Accessibility, Headphones, LogOut } from "lucide-react";
 import { MouseTrail } from "../Brand";
 import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentMessages, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
 import { ParentSidebar } from "./ParentSidebar";
@@ -9,6 +9,10 @@ import { ParentMoodsPage } from "./pages/ParentMoodsPage";
 import { ParentOverviewPage } from "./pages/ParentOverviewPage";
 import { ParentSessionsPage } from "./pages/ParentSessionsPage";
 import { ParentTeachersPage } from "./pages/ParentTeachersPage";
+import { RelaxationRoom } from "../RelaxationRoom";
+import { ReflectionChart } from "../student/pages/ReflectionJournal";
+import { ScreenTimeSummary } from "../shared/ScreenTimeSummary";
+import { loadScreenTime } from "../../screenTime";
 import "./ParentPortal.css";
 
 function ParentLoading({ t }) {
@@ -40,6 +44,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   const [childData, setChildData] = useState(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  const [relaxing, setRelaxing] = useState(false);
   // The overview's "Connect another child" card can be crossed out; it stays available under Settings.
   const [connectHidden, setConnectHidden] = useState(() => {
     try {
@@ -112,6 +117,22 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     };
   }, [tab, parentId, Boolean(portal)]);
 
+  // Screen time keeps counting while the child uses the app, so re-read it every 30 seconds.
+  useEffect(() => {
+    const studentIds = portal?.children.map((item) => item.id) || [];
+    if (!studentIds.length) return undefined;
+    let isCurrent = true;
+    const interval = window.setInterval(() => {
+      loadScreenTime(studentIds)
+        .then((screenTime) => { if (isCurrent) setPortal((current) => current && { ...current, screenTime }); })
+        .catch(() => {});
+    }, 30_000);
+    return () => {
+      isCurrent = false;
+      window.clearInterval(interval);
+    };
+  }, [portal?.children]);
+
   const refreshPortal = async () => {
     const next = await loadParentPortal(parentId);
     setPortal(next);
@@ -165,8 +186,15 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   } else if (tab === "sessions") {
     body = <ParentSessionsPage child={child} sessions={childData.sessions} t={t} />;
   } else {
-    body = <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} showConnect={!connectHidden} onDismissConnect={hideConnectCard} t={t} />;
+    const journalEntries = (portal.journalEntries || []).filter((item) => item.student_id === child.id);
+    body = <>
+      <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} showConnect={!connectHidden} onDismissConnect={hideConnectCard} t={t} />
+      <ScreenTimeSummary rows={portal.screenTime || []} studentId={child.id} t={t} />
+      <section className="parent-teachers parent-journal-shares"><h4>{t("sharedJournalHeading")}</h4>{journalEntries.length ? journalEntries.map((item) => <article className="parent-shared-journal-entry" key={item.id}><time>{new Date(item.created_at).toLocaleDateString(document.documentElement.lang || undefined, { dateStyle: "medium" })}</time><p>{item.entry}</p><ReflectionChart chart={item.chart} t={t} /></article>) : <p className="parent-no-teacher">{t("sharedJournalEmpty")}</p>}</section>
+    </>;
   }
+
+  if (relaxing) return <RelaxationRoom onBack={() => setRelaxing(false)} t={t} />;
 
   return (
     <>
@@ -175,6 +203,9 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
         <aside className="student-rail">
           <ParentSidebar activeTab={tab} onNavigate={setTab} t={t} />
           <div className="student-rail-footer">
+            <button type="button" className="student-rail-link" onClick={() => setRelaxing(true)} title={t("quietSpaceTitle")}>
+              <Headphones size={19} /><span>{t("quietSpaceTitle")}</span>
+            </button>
             <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
               <Accessibility size={19} /><span>{t("accessibility")}</span>
             </button>

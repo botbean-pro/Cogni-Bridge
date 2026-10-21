@@ -43,6 +43,18 @@ export async function loadMentorLeaderboard() {
   return throwIfError(await supabase.rpc("mentor_leaderboard"));
 }
 
+// Journal entries students chose to share with their support team.
+export async function loadMentorSharedJournal() {
+  const entries = throwIfError(await supabase.from("student_journal_entries")
+    .select("id, student_id, entry, chart, show_to_support, created_at")
+    .eq("show_to_support", true).order("created_at", { ascending: false }).limit(100));
+  if (!entries.length) return [];
+  const profiles = throwIfError(await supabase.from("profiles").select("id, display_name")
+    .in("id", [...new Set(entries.map((item) => item.student_id))]));
+  const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]));
+  return entries.map((item) => ({ ...item, student_name: names.get(item.student_id) || "Student" }));
+}
+
 export async function createSession(mentorId, session) {
   const row = throwIfError(await supabase
     .from("sessions")

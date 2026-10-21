@@ -5,7 +5,6 @@ import { AnimatedLogo, MouseTrail } from "../Brand";
 import { StudentSidebar } from "./StudentSidebar";
 import { StudentTopBar } from "./StudentTopBar";
 import { StudentNotifications } from "./StudentNotifications";
-import { CalmCorner } from "./pages/SensoryTrackerPage";
 
 export const StudentPage = ({
   activeTab,
@@ -26,8 +25,6 @@ export const StudentPage = ({
   onToggleAccessibility,
   accessibilityPanel,
 }) => {
-  const [calmCornerOpen, setCalmCornerOpen] = useState(false);
-  const [breathingOpen, setBreathingOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -47,7 +44,7 @@ export const StudentPage = ({
     )}
     <div className="student-app-shell">
       <aside className={`student-rail${accessibilityOpen ? " accessibility-open" : ""}`}>
-        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(false); setCalmCornerOpen(true); }} />
+        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} />
         <div className="student-rail-footer">
           {studentId && <StudentNotifications studentId={studentId} t={t} />}
           <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
@@ -56,9 +53,8 @@ export const StudentPage = ({
           <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} onOpenAccount={onOpenAccount} onOpenSettings={() => setSettingsOpen(true)} t={t} />
         </div>
       </aside>
-      <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
+      <main className="main"><div className="route-transition" key={`${activeTab}-${signedIn ? "student" : "guest"}`}>{pageContent[activeTab === "about" ? "home" : activeTab]}</div></main>
     </div>
-    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? t("sn_breathingEx") : t("sn_calmTitle")}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label={t("close")}><X size={20} /></button><CalmCorner startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} t={t} /></div></div>}
     {settingsOpen && (
       <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("settings")} onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
         <div className="student-calm-dialog student-settings-dialog">
