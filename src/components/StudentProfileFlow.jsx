@@ -2,6 +2,9 @@ import React, { useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, ImagePlus, Loader2, Upload } from "lucide-react";
 import { readStudents } from "../constants";
 import { LogoImage } from "./Brand";
+import { loadStudentHandwriting, saveStudentHandwriting } from "../mentorContent";
+import { supabaseConfigured } from "../supabaseClient";
+import { analyzeHandwritingSample } from "../handwritingAnalysis";
 import "./StudentProfileFlow.css";
 
 const readImage = (file) => new Promise((resolve, reject) => {
@@ -23,7 +26,7 @@ const readImage = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
-export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile, initialClass = "", t }) => {
+export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, existingProfile, initialClass = "", handwritingPrompt = false, t }) => {
   const [profile, setProfile] = useState(existingProfile || { name: "", studentClass: initialClass, age: "", section: "", school: "" });
   const [image, setImage] = useState("");
   const [imageName, setImageName] = useState("");
@@ -47,16 +50,42 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
     }
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    const result = {
+    if (!image) {
+      setError("uploadClearImage");
+      return;
+    }
+    setStep("loading");
+    let analysis;
+    try {
+      analysis = await analyzeHandwritingSample(image);
+    } catch {
+      setError("handwritingAnalysisReadError");
+      setStep("form");
+      return;
+    }
+    let result = {
       ...profile,
       email,
       handwritingImage: image,
       handwritingImageName: imageName || "Demo sample",
-      handwritingType: `Type ${1 + Math.floor(Math.random() * 4)}`,
+      handwritingType: analysis.type,
+      handwritingPatternKey: analysis.patternKey,
+      handwritingMeaningKey: analysis.meaningKey,
       analyzedAt: new Date().toISOString(),
     };
+    try {
+      if (supabaseConfigured && studentId && image) {
+        await saveStudentHandwriting(studentId, image, result.handwritingType);
+        const saved = await loadStudentHandwriting(studentId);
+        result = { ...result, ...saved, handwritingImageName: imageName || "Handwriting sample" };
+      }
+    } catch {
+      setError("The handwriting sample couldn't be saved. Please try again.");
+      setStep("form");
+      return;
+    }
     try {
       const students = readStudents();
       const updated = students.some((student) => student.email === email)
@@ -67,7 +96,6 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
       // Keep the result available in this session if browser storage is disabled.
     }
     setProfile(result);
-    setStep("loading");
     window.setTimeout(() => setStep("result"), 2200);
   };
 
@@ -95,9 +123,10 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
           <div className="profile-result-mark"><CheckCircle2 size={26} /></div>
           <p className="eyebrow">{t("handwritingAnalysis")}</p>
           <h1>{profile.name || t("profileYourProfile")}</h1>
-          <p className="handwriting-type">{profile.handwritingType}</p>
+          <p className="handwriting-type">{profile.handwritingPatternKey ? t(profile.handwritingPatternKey) : profile.handwritingType}</p>
           {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt="Uploaded handwriting sample" />}
-          <p className="profile-result-copy">{t("profileCompleteCopy")}</p>
+      <p className="profile-result-copy">{t(profile.handwritingMeaningKey || "handwritingAnalysisDisclaimer")}</p>
+      <p className="profile-result-copy handwriting-disclaimer">{t("handwritingAnalysisDisclaimer")}</p>
           <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? t("backToAccount") : t("continueToCogniBridge")}</button>
         </section>
       </main>
@@ -106,12 +135,12 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
 
   return (
     <main className="profile-flow-page">
-      <button className="profile-flow-back" onClick={onBack}><ArrowLeft size={18} /> {t("back")}</button>
+      <button className="profile-flow-back" onClick={onBack}><ArrowLeft size={18} /> {t(handwritingPrompt ? "skipForNow" : "back")}</button>
       <section className="profile-flow-card">
         <div className="profile-flow-icon"><ImagePlus size={24} /></div>
         <p className="eyebrow">{existingProfile ? t("studentAccount") : t("newStudentProfile")}</p>
-        <h1>{existingProfile ? t("updateHandwriting") : t("setUpLearningProfile")}</h1>
-        <p className="profile-flow-copy">{existingProfile ? t("analyzeNewImage") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
+        <h1>{handwritingPrompt ? t("handwritingPromptTitle") : existingProfile ? t("updateHandwriting") : t("setUpLearningProfile")}</h1>
+        <p className="profile-flow-copy">{handwritingPrompt ? t("handwritingPromptCopy") : existingProfile ? t("analyzeNewImage") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
         {existingProfile && <>
           <div className="profile-locked-name"><span>{t("profileName")}</span><strong>{existingProfile.name}</strong></div>
           <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{existingProfile.handwritingType || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
@@ -133,8 +162,9 @@ export const StudentProfileFlow = ({ email, onBack, onComplete, existingProfile,
             {image ? <img src={image} alt="Preview of handwriting sample" /> : <Upload size={22} />}
             <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("optionalHandwritingHint")}</small></span>
           </button>
-          {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
+          {error && <p className="profile-flow-error" role="alert">{error.startsWith("The handwriting") ? error : t(error)}</p>}
           <button className="primary-btn" type="submit">{existingProfile ? t("analyzeNewImageButton") : t("analyzeImage")}</button>
+          {!existingProfile && !handwritingPrompt && <button type="button" className="profile-skip-button" onClick={() => onComplete({ ...profile, email })}>{t("skipForNow")}</button>}
         </form>
       </section>
     </main>

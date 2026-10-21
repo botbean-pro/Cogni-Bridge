@@ -305,6 +305,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             {t("email")}
             <input
               type="email"
+              name={tab === "student" || tab === "mentor" ? "username" : "email"}
+              autoComplete={tab === "parent" && parentSignUp ? "email" : "username"}
               className="auth-input"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -318,6 +320,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             <div className="password-input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete={tab === "parent" && parentSignUp ? "new-password" : "current-password"}
                 className="auth-input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -402,6 +406,10 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 const AccessibilityPanel = ({
   textScale,
   setTextScale,
+  motionSetting = "full",
+  setMotionSetting = () => {},
+  lowSensory = false,
+  setLowSensory = () => {},
   appearance,
   setAppearance,
   language,
@@ -436,6 +444,28 @@ const AccessibilityPanel = ({
         step=".05"
         value={textScale}
         onChange={(event) => setTextScale(Number(event.target.value))}
+      />
+    </label>
+
+    <label className="appearance-row motion-row">
+      <strong>Animation</strong>
+      <select value={motionSetting} onChange={(event) => setMotionSetting(event.target.value)} aria-label="Animation level">
+        <option value="full">Full</option>
+        <option value="reduced">Reduced</option>
+        <option value="off">Off</option>
+      </select>
+    </label>
+
+    <label className="low-sensory-row">
+      <span>
+        <strong>{t("Low sensory mode")}</strong>
+        <small>{t("lowSensoryDescription")}</small>
+      </span>
+      <input
+        type="checkbox"
+        checked={lowSensory}
+        onChange={(event) => setLowSensory(event.target.checked)}
+        aria-label={t("Low sensory mode")}
       />
     </label>
 

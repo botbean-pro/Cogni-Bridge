@@ -1,12 +1,27 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createParentLinkCode } from "../../../parentPortal";
+import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
+import { supabaseConfigured } from "../../../supabaseClient";
 import { StudentStats } from "../shared/StudentStats";
+import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 
-export function SettingsPage({ studentEmail, studentId, studentName, studentProfile, activityVersion, onEditProfile, t }) {
+export function SettingsPage({ studentEmail, studentId, studentName, studentProfile, activityVersion, screenTimeVersion, screenTimeStudentKey, screenTimeDemoMode, onEditProfile, t }) {
   const [parentCode, setParentCode] = useState("");
   const [parentCodeError, setParentCodeError] = useState("");
   const [creatingParentCode, setCreatingParentCode] = useState(false);
   const [parentCodeCopied, setParentCodeCopied] = useState(false);
+  const [screenTimeRows, setScreenTimeRows] = useState([]);
+
+  useEffect(() => {
+    let current = true;
+    setScreenTimeRows([]);
+    if (screenTimeDemoMode) {
+      setScreenTimeRows(readLocalScreenTime(screenTimeStudentKey));
+    } else if (supabaseConfigured && screenTimeStudentKey) {
+      loadScreenTime([screenTimeStudentKey]).then((rows) => { if (current) setScreenTimeRows(rows); }).catch(() => {});
+    }
+    return () => { current = false; };
+  }, [screenTimeVersion, screenTimeStudentKey, screenTimeDemoMode]);
 
   const copyParentCode = async () => {
     try {
@@ -83,6 +98,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
         )}
         {parentCodeError && <p className="parent-link-error" role="alert">{parentCodeError}</p>}
       </section>
+      <ScreenTimeSummary rows={screenTimeRows} studentId={supabaseConfigured ? screenTimeStudentKey : undefined} t={t} />
       <StudentStats
         studentEmail={studentEmail}
         studentName={studentName}

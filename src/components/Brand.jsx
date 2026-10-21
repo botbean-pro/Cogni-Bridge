@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
-import logoWithoutText from "../assets/logo without text.svg";
+import logoWithoutText from "../assets/logo-without-text-optimized.svg";
 
 export function Card() {
   return (
@@ -42,6 +42,8 @@ export function AnimatedLogo() {
 }
 export function MouseTrail() {
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return undefined;
     const circle = document.createElement('div');
     circle.className = 'mouse-trail-circle';
     document.body.appendChild(circle);

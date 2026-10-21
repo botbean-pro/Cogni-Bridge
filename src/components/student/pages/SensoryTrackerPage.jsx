@@ -13,6 +13,7 @@ import {
   saveStudentCheckin,
 } from "../../../studentSensory";
 import "./SensoryTrackerPage.css";
+import { SensorySessionSupport } from "./SensorySessionSupport";
 
 const labelFor = (options, key) => options.find(([value]) => value === key)?.[1] || key;
 const labelsFor = (options, keys = []) => keys.map((key) => labelFor(options, key));
@@ -93,7 +94,7 @@ export function CalmCorner({ onClose, startBreathing = false, t = (value) => val
   </section>;
 }
 
-export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) => value }) {
+export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) => value, lowSensory = false, onToggleLowSensory = () => {} }) {
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
   const [responses, setResponses] = useState([]);
@@ -102,7 +103,6 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
   const [expandedId, setExpandedId] = useState(null);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
-  const [lowSensory, setLowSensory] = useState(false);
   const [showCalmCorner, setShowCalmCorner] = useState(false);
   const [showCheckinForm, setShowCheckinForm] = useState(true);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
@@ -222,7 +222,8 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t = (value) =>
 
   return (
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
-      <header className="sensory-heading"><div><p className="eyebrow">{t("A private space for you")}</p><h1>{t("Sensory Tracker")}</h1><p>{t("Check in with yourself. Share only what you choose.")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {lowSensory ? t("Low sensory on") : t("Low sensory mode")}</button><span><Heart size={18} /> {t("No judgement, just your own notes")}</span></div></header>
+      <header className="sensory-heading"><div><p className="eyebrow">{t("A private space for you")}</p><h1>{t("Sensory Tracker")}</h1><p>{t("Check in with yourself. Share only what you choose.")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {lowSensory ? t("Low sensory on") : t("Low sensory mode")}</button><span><Heart size={18} /> {t("No judgement, just your own notes")}</span></div></header>
+      <SensorySessionSupport studentId={studentId} t={t} />
       <section className="break-banner"><div><span className="sensory-step">{t("IT'S OKAY TO PAUSE")}</span><h2>{t("Need a little break?")}</h2><p>{t("Take a moment for yourself. There is no rush to continue.")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("I need a break")}</button></section>
       {showCalmCorner && <CalmCorner t={t} onClose={() => setShowCalmCorner(false)} />}
       <div className="sensory-privacy"><LockKeyhole size={17} /> {t(demoMode ? "demoPrivateMessage" : "Your check-ins are private by default. You'll see a clear label when you choose to share one.")}</div>

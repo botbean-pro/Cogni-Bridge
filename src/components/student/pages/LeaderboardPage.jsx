@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Award, CheckCircle2, Flame, Info, MinusCircle, PlusCircle, Trophy } from "lucide-react";
 import "./LeaderboardPage.css";
+import { fetchCogniBoard } from "../../../mentorContent";
+import { supabaseConfigured } from "../../../supabaseClient";
 
 const leaderboardStudents = [
   { name: "Harsh", registered: 4, attended: 3, mentorGood: 2, streak: 1 },
@@ -25,17 +27,24 @@ const scoreStudent = (student) => {
   return {
     ...student,
     missed,
-    points: (student.registered * 5) + (student.attended * 10) - (missed * 10) + (student.mentorGood * 5),
+    points: Number.isFinite(Number(student.points)) ? Number(student.points) : (student.registered * 5) + (student.attended * 10) - (missed * 10) + (student.mentorGood * 5),
   };
 };
 
-export function LeaderboardPage({ t }) {
+export function LeaderboardPage({ t, mindfulBoard, studentName }) {
+  const [liveRows, setLiveRows] = useState(null);
+  useEffect(() => {
+    if (!supabaseConfigured) return undefined;
+    let current = true;
+    fetchCogniBoard().then((rows) => { if (current && rows?.length) setLiveRows(rows); }).catch(() => {});
+    return () => { current = false; };
+  }, []);
   const rankCopy = [
     { line: "You're setting the pace. Keep that glow." },
     { line: "One great session could change everything." },
     { line: "Every session moves you closer to the top." },
   ];
-  const rows = leaderboardStudents
+  const rows = (liveRows || leaderboardStudents)
     .map(scoreStudent)
     .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 
@@ -44,11 +53,22 @@ export function LeaderboardPage({ t }) {
       <div className="leaderboard-heading">
         <div>
           <p className="eyebrow">{t("cogniPoints")}</p>
-          <h1>{t("leaderboard")}</h1>
+          <h1>Cogni Board</h1>
           <p>{t("leaderboardDescription")}</p>
         </div>
         <div className="leaderboard-trophy" aria-hidden="true"><Trophy size={34} /></div>
       </div>
+
+      <section className="mindful-points-card" aria-labelledby="mindful-points-title">
+        <div className="mindful-points-medal" aria-hidden="true">✦</div>
+        <div className="mindful-points-summary">
+          <p className="eyebrow">MINDFUL CORNER</p>
+          <h2 id="mindful-points-title">{studentName ? `${studentName}'s CogniPoints` : 'Your CogniPoints'}</h2>
+          <p>Points from exploring activities. A wrong answer never takes points away.</p>
+        </div>
+        <strong className="mindful-points-total">{mindfulBoard?.points || 0}<small> pts</small></strong>
+        {mindfulBoard?.entries?.length > 0 && <ul aria-label="Recent Mindful Corner notes">{mindfulBoard.entries.slice(0, 3).map((entry) => <li key={entry.id}>{entry.note}</li>)}</ul>}
+      </section>
 
       <aside className="points-info-box" aria-label={t("howPointsWork")}>
         <div className="points-info-icon"><Info size={20} /></div>

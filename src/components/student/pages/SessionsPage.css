@@ -148,3 +148,11 @@
   .sessions-value:hover,.sessions-scroll-cue:hover,.sessions-cta:hover { transform:none; }
   .sessions-cta:hover svg { transform:none; }
 }
+.private-student-sessions { display:grid; gap:12px; margin:8px 0 24px; }
+.private-student-sessions h3 { margin:0; }
+.private-student-sessions article { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
+.private-student-sessions article > div { display:grid; justify-items:start; gap:6px; }
+.private-student-sessions article strong { color:var(--text); }
+.private-student-sessions article small { color:var(--muted); }
+.private-student-sessions article a { display:inline-flex; align-items:center; color:var(--teal-dark); font-weight:800; text-decoration:none; }
+@media (max-width:600px) { .private-student-sessions article { align-items:flex-start; flex-direction:column; } }

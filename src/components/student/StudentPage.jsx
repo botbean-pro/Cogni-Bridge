@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { Accessibility, X } from "lucide-react";
+import React from "react";
+import { Accessibility } from "lucide-react";
 import { classNames } from "../../constants";
 import { AnimatedLogo, MouseTrail } from "../Brand";
 import { StudentSidebar } from "./StudentSidebar";
 import { StudentTopBar } from "./StudentTopBar";
-import { CalmCorner } from "./pages/SensoryTrackerPage";
 
 export const StudentPage = ({
   activeTab,
@@ -24,8 +23,6 @@ export const StudentPage = ({
   onToggleAccessibility,
   accessibilityPanel,
 }) => {
-  const [calmCornerOpen, setCalmCornerOpen] = useState(false);
-  const [breathingOpen, setBreathingOpen] = useState(false);
   return <>
     <MouseTrail />
     {showIntro && (
@@ -36,7 +33,7 @@ export const StudentPage = ({
     )}
     <div className="student-app-shell">
       <aside className={`student-rail${accessibilityOpen ? " accessibility-open" : ""}`}>
-        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} onOpenCalm={() => { setBreathingOpen(true); setCalmCornerOpen(true); }} />
+        <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} t={t} />
         <div className="student-rail-footer">
           <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>
@@ -44,9 +41,8 @@ export const StudentPage = ({
           <StudentTopBar signedIn={signedIn} studentName={studentName} onLogin={onLogin} onLogout={onLogout} onOpenAccount={onOpenAccount} t={t} />
         </div>
       </aside>
-      <main className="main">{pageContent[activeTab === "about" ? "home" : activeTab]}</main>
+      <main className="main"><div className="route-transition" key={`${activeTab}-${signedIn ? "student" : "guest"}`}>{pageContent[activeTab === "about" ? "home" : activeTab]}</div></main>
     </div>
-    {calmCornerOpen && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={breathingOpen ? t("Breathing exercise") : t("My calm corner")}><div className="student-calm-dialog"><button className="student-calm-dismiss" type="button" onClick={() => setCalmCornerOpen(false)} aria-label={t("Close calm corner")}><X size={20} /></button><CalmCorner t={t} startBreathing={breathingOpen} onClose={() => setCalmCornerOpen(false)} /></div></div>}
     {accessibilityOpen && accessibilityPanel}
   </>
 };

@@ -63,7 +63,7 @@ function SessionList({ sessions, onSelect, t }) {
   );
 }
 
-export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
+export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, registeredSessionIds, attendedSessionIds, privateSessions = [], onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const [section, setSection] = useState("sessions");
   const registered = selectedSession && registeredSessionIds.includes(selectedSession.id);
 
@@ -99,7 +99,10 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
           t={t}
         />
       ) : (
-        <SessionList sessions={sessions} onSelect={onSelect} t={t} />
+        <>
+          {privateSessions.length > 0 && <section className="private-student-sessions"><h3>Your one-to-one sessions</h3>{privateSessions.map((session) => <article key={session.id}><div><span className="subject-pill">{session.subject}</span><strong>{session.title}</strong><small>{session.mentor_name} · {session.session_date} · {session.start_time}–{session.end_time}</small></div><a href={session.meet_link} target="_blank" rel="noopener noreferrer">Join meeting <ChevronRight size={15} /></a></article>)}</section>}
+          <SessionList sessions={sessions} onSelect={onSelect} t={t} />
+        </>
       )}
     </section>
   );
