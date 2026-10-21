@@ -13,14 +13,12 @@ const surfaceSelector = [
   '.profile-flow-card', '.uploaded-notes > div', '.performance-empty',
   '.mentor-rankings article',
   '.quick-prompt-row', '.related-question-row', '.career-opportunity-card',
-  '.mc-card', '.mc-level-card', '.mc-clue-game', '.mc-clue-level-intro', '.mc-clue-level-win',
   '.about-approach-card', '.about-value-card', '.home-feature-card', '.feature-card',
 ].join(', ');
 
 export function useImmersiveEffects() {
   useEffect(() => {
     const systemReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const canTilt = !systemReducedMotion && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     const tracked = new Set();
     let revealObserver;
 
@@ -53,9 +51,6 @@ export function useImmersiveEffects() {
       delete surface.dataset.reveal;
       delete surface.dataset.visible;
       surface.style.removeProperty('--depth-delay');
-      surface.style.removeProperty('--depth-rotation');
-      surface.style.removeProperty('--depth-glow-x');
-      surface.style.removeProperty('--depth-glow-y');
     };
 
     const scan = (node) => {
@@ -77,49 +72,6 @@ export function useImmersiveEffects() {
     });
     mutations.observe(document.body, { childList: true, subtree: true });
 
-    let activeSurface = null;
-    const resetSurface = (surface) => {
-      surface.style.removeProperty('--depth-rotation');
-    };
-    const movePointer = (event) => {
-      if (!canTilt || document.documentElement.dataset.motion !== 'full' || event.pointerType === 'touch') return;
-      const surface = event.target instanceof Element ? event.target.closest('[data-depth-surface="true"]') : null;
-      if (!surface) {
-        if (activeSurface) resetSurface(activeSurface);
-        activeSurface = null;
-        return;
-      }
-      if (surface.closest('.reduced-motion, .low-sensory-mode')) {
-        if (activeSurface) resetSurface(activeSurface);
-        activeSurface = null;
-        return;
-      }
-      if (activeSurface && activeSurface !== surface) resetSurface(activeSurface);
-      activeSurface = surface;
-      const bounds = surface.getBoundingClientRect();
-      const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-      const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-      const tiltX = -y * 6;
-      const tiltY = x * 7;
-      const tilt = Math.hypot(tiltX, tiltY);
-      const axisX = tilt ? tiltX / tilt : 0;
-      const axisY = tilt ? tiltY / tilt : 1;
-      surface.style.setProperty('--depth-rotation', `${axisX.toFixed(3)} ${axisY.toFixed(3)} 0 ${tilt.toFixed(2)}deg`);
-      surface.style.setProperty('--depth-glow-x', `${((x + 0.5) * 100).toFixed(1)}%`);
-      surface.style.setProperty('--depth-glow-y', `${((y + 0.5) * 100).toFixed(1)}%`);
-    };
-    const leaveSurface = (event) => {
-      if (!(event.target instanceof Element)) return;
-      const previous = event.target.closest('[data-depth-surface="true"]');
-      const next = event.relatedTarget instanceof Element
-        ? event.relatedTarget.closest('[data-depth-surface="true"]')
-        : null;
-      if (!previous || previous === next) return;
-      resetSurface(previous);
-      if (activeSurface === previous) activeSurface = null;
-    };
-    document.addEventListener('pointermove', movePointer, { passive: true });
-    document.addEventListener('pointerout', leaveSurface);
     const syncPageVisibility = () => { document.documentElement.dataset.pageVisible = String(document.visibilityState === 'visible'); };
     syncPageVisibility();
     document.addEventListener('visibilitychange', syncPageVisibility);
@@ -127,18 +79,13 @@ export function useImmersiveEffects() {
     return () => {
       mutations.disconnect();
       revealObserver?.disconnect();
-      document.removeEventListener('pointermove', movePointer);
-      document.removeEventListener('pointerout', leaveSurface);
       document.removeEventListener('visibilitychange', syncPageVisibility);
       delete document.documentElement.dataset.pageVisible;
-      if (activeSurface) resetSurface(activeSurface);
       tracked.forEach((surface) => {
         delete surface.dataset.depthSurface;
         delete surface.dataset.reveal;
         delete surface.dataset.visible;
         surface.style.removeProperty('--depth-delay');
-        surface.style.removeProperty('--depth-glow-x');
-        surface.style.removeProperty('--depth-glow-y');
       });
     };
   }, []);

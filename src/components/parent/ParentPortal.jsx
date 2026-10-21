@@ -219,7 +219,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
           </div>
         </aside>
         <main className="main">
-          <section className="content parent-page" key={tab}>
+          <section className="content parent-page route-transition" key={tab}>
             <header className="parent-heading parent-rise">
               <div>
                 <p className="eyebrow">{t("parentSpace")}</p>

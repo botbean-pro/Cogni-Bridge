@@ -6,5 +6,6 @@ import "./mentor.css";
 import "./design-system.css";
 import App from "./App";
 import "./accessibility-overrides.css";
+import "./motion.css";
 
 createRoot(document.getElementById("root")).render(<StrictMode><BrowserRouter><App /></BrowserRouter></StrictMode>);

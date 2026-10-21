@@ -89,7 +89,14 @@ const App = () => {
       return "English";
     }
   });
-  const [readAloud, setReadAloud] = useState({ enabled: false, volume: 0.8 });
+  const [readAloud, setReadAloud] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("cognibridge_read_aloud") || "null");
+      return { enabled: saved?.enabled === true, volume: typeof saved?.volume === "number" ? saved.volume : 0.8 };
+    } catch {
+      return { enabled: false, volume: 0.8 };
+    }
+  });
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState("");
@@ -128,20 +135,21 @@ const App = () => {
 
   useEffect(() => {
     if (!signedIn || !studentEmail || profileOpen || signupEmail || (authRole && authRole !== "student")) return undefined;
-    const currentType = studentProfile?.handwritingType;
-    if (currentType && !/^type\s*\d+$/i.test(currentType)) return undefined;
+    // Any saved sample counts, including older "Type N" results, so the prompt only appears once.
+    if (studentProfile?.handwritingType) return undefined;
     let current = true;
     const checkSample = async () => {
       if (supabaseConfigured && authUserId) {
         try {
           const saved = await loadLatestHandwriting(authUserId);
           if (!current) return;
-          if (saved?.handwritingType && !/^type\s*\d+$/i.test(saved.handwritingType)) {
+          if (saved?.handwritingType) {
             setStudentProfile((profile) => ({ ...profile, ...saved }));
             return;
           }
         } catch {
-          // If the sample cannot be retrieved, let the student retry by uploading a new one.
+          // Don't nag on a failed lookup; the student can still update it from Settings.
+          return;
         }
       }
       if (current) setHandwritingPromptOpen(true);
@@ -532,6 +540,10 @@ const App = () => {
     setSpeakingVolume(readAloud.volume);
   }, [readAloud.volume]);
 
+  useEffect(() => {
+    try { localStorage.setItem("cognibridge_read_aloud", JSON.stringify(readAloud)); } catch { /* Session choice remains active. */ }
+  }, [readAloud]);
+
   useHoverReadAloud({ enabled: readAloud.enabled, language: studentLanguage, volume: readAloud.volume });
 
   useEffect(() => {
@@ -741,6 +753,8 @@ const App = () => {
             language={studentLanguage}
             setLanguage={setStudentLanguage}
             showLanguage
+            readAloud={readAloud}
+            setReadAloud={setReadAloud}
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
@@ -776,6 +790,8 @@ const App = () => {
               language={studentLanguage}
               setLanguage={setStudentLanguage}
               showLanguage
+              readAloud={readAloud}
+              setReadAloud={setReadAloud}
               t={t}
               onClose={() => setAccessibilityOpen(false)}
             />

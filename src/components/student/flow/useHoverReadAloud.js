@@ -1,11 +1,14 @@
 import { useEffect } from "react";
-import { isReadingReply, isSpeaking, speak } from "./readAloud";
+import { isReadingLabel, isReadingReply, speak, stopSpeaking } from "./readAloud";
 
-const READABLE = [
+const INTERACTIVE = [
   "button", "a[href]", "summary", "label", "select", "textarea", "input:not([type=\"hidden\"])",
   "[role=\"button\"]", "[role=\"tab\"]", "[role=\"switch\"]", "[role=\"menuitem\"]", "[role=\"option\"]", "[role=\"link\"]",
 ].join(", ");
-const HOVER_DELAY_MS = 200;
+// Plain text is read too, so headings and descriptions aren't silent.
+const TEXT_BLOCKS = "h1, h2, h3, h4, h5, h6, p, li, dt, dd, th, td, figcaption, blockquote, [data-read-aloud]";
+// Long enough that sweeping the mouse across the page reads nothing.
+const HOVER_DELAY_MS = 450;
 const MAX_LABEL_LENGTH = 300;
 
 function labelFor(element) {
@@ -21,57 +24,49 @@ function labelFor(element) {
   return label.slice(0, label.lastIndexOf(" ", MAX_LABEL_LENGTH) > 0 ? label.lastIndexOf(" ", MAX_LABEL_LENGTH) : MAX_LABEL_LENGTH);
 }
 
-// While read aloud is on, reads the button, link or field under the mouse (or given keyboard focus).
+// A control wins over the text inside it, so a card button reads as one thing.
+const readableFrom = (target) => target?.closest?.(INTERACTIVE) || target?.closest?.(TEXT_BLOCKS) || null;
+
+// While read aloud is on, reads whatever is under the mouse (or given keyboard focus) once it rests there.
 export function useHoverReadAloud({ enabled, language, volume }) {
   useEffect(() => {
     if (!enabled) return undefined;
     let timer = null;
     let lastElement = null;
-    let waiting = null;
 
-    const readNow = (element) => {
-      const label = labelFor(element);
-      if (!label) return;
-      speak(label, {
-        language,
-        volume,
-        kind: "label",
-        onEnd: () => {
-          // Read whatever the mouse moved onto while this label was playing, if it's still there.
-          const next = waiting;
-          waiting = null;
-          if (next && next === lastElement && next.matches(":hover")) readNow(next);
-        },
-      });
-    };
+    const stillThere = (element) => element === lastElement && (element.matches(":hover") || element === document.activeElement);
 
     const read = (element) => {
       // Moving between a button's icon and its text is still the same button.
       if (element === lastElement) return;
       window.clearTimeout(timer);
       lastElement = element;
+      // Leaving a label stops it, so nothing is read after the mouse has already moved on.
+      if (isReadingLabel()) stopSpeaking();
       if (!element) return;
       timer = window.setTimeout(() => {
-        // A quick pass over a button shouldn't read it.
-        if (isReadingReply() || (!element.matches(":hover") && element !== document.activeElement)) return;
-        if (isSpeaking()) waiting = element;
-        else readNow(element);
+        if (isReadingReply() || !stillThere(element)) return;
+        const label = labelFor(element);
+        if (label) speak(label, { language, volume, kind: "label", stillWanted: () => stillThere(element) });
       }, HOVER_DELAY_MS);
     };
 
     const onPointerOver = (event) => {
       if (event.pointerType === "touch") return;
-      read(event.target.closest?.(READABLE) || null);
+      read(readableFrom(event.target));
     };
+    const onPointerLeave = () => read(null);
     const onFocusIn = (event) => {
-      if (event.target.matches?.(":focus-visible") && event.target.matches(READABLE)) read(event.target);
+      if (event.target.matches?.(":focus-visible") && event.target.matches(INTERACTIVE)) read(event.target);
     };
 
     document.addEventListener("pointerover", onPointerOver);
+    document.documentElement.addEventListener("pointerleave", onPointerLeave);
     document.addEventListener("focusin", onFocusIn);
     return () => {
       window.clearTimeout(timer);
       document.removeEventListener("pointerover", onPointerOver);
+      document.documentElement.removeEventListener("pointerleave", onPointerLeave);
       document.removeEventListener("focusin", onFocusIn);
     };
   }, [enabled, language, volume]);

@@ -247,7 +247,6 @@ body {
 .quick-prompt-btn,
 .practice-option,
 .career-choices button,
-.mc-filters button,
 .sensory-mood-options button,
 .sensory-chips button {
   box-shadow: 0 5px 13px rgba(20, 67, 64, .06);
@@ -266,13 +265,11 @@ body {
 }
 
 .hero-primary.cognibridge-button,
-.mc-primary,
 .about-approach-cta {
   box-shadow: 0 12px 0 rgba(4, 102, 96, .4), 0 20px 30px rgba(4, 93, 89, .2);
 }
 
 .hero-primary.cognibridge-button:active,
-.mc-primary:active,
 .about-approach-cta:active {
   box-shadow: 0 4px 0 rgba(4, 102, 96, .4), 0 9px 15px rgba(4, 93, 89, .2);
   transform: translateY(7px);
@@ -1543,8 +1540,8 @@ html[data-low-sensory="true"] .home-hero-art-wrap::after { animation:none !impor
   .app button:not(:disabled):hover,.mentor-page button:not(:disabled):hover,.parent-portal button:not(:disabled):hover { filter:saturate(1.04); }
   .app button:not(:disabled):active,.mentor-page button:not(:disabled):active,.parent-portal button:not(:disabled):active { transform:scale(.985); }
 }
-.mc-spark,.mc-card-icon,.hero-art-label { animation:sharedGentleFloat 6.5s ease-in-out infinite; }
-.mc-card:nth-child(2n) .mc-card-icon,.feature-grid article:nth-child(2n) .feature-icon { animation-delay:-2.1s; }
+.hero-art-label { animation:sharedGentleFloat 6.5s ease-in-out infinite; }
+.feature-grid article:nth-child(2n) .feature-icon { animation-delay:-2.1s; }
 @keyframes sharedGentleFloat { 0%,100% { translate:0 0; } 50% { translate:0 -4px; } }
 
 html[data-motion="reduced"] [data-depth-surface="true"],
