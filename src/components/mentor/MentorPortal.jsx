@@ -22,6 +22,15 @@ const createSessionForm = () => ({
 
 const createNoteForm = () => ({ title: "", subject: "Maths", file: null });
 
+// Turns a Supabase error from publishing into a reason the mentor can act on.
+const publishErrorKey = (error, isPrivate) => {
+  const message = String(error?.message || "");
+  if (error?.code === "42P01" || /does not exist/i.test(message)) return isPrivate ? "ps_errMissingTable" : "ms_saveSessionFail";
+  if (error?.code === "42501" || /row-level security/i.test(message)) return isPrivate ? "ps_errNotAssigned" : "ms_errNotMentor";
+  if (error?.code === "23514" || /check constraint/i.test(message)) return "ms_errBadFields";
+  return isPrivate ? "ps_saveFail" : "ms_saveSessionFail";
+};
+
 export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorId, language, setLanguage, onAddSession, onUpdateSession, onAddNote, onRemoveNote, onLoadNotes, onBack, accessibilityOpen, onToggleAccessibility, t }) {
   const [loggedIn, setLoggedIn] = useState(initialLoggedIn);
   const [email, setEmail] = useState("");
@@ -91,7 +100,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
         setPrivateVersion((current) => current + 1);
       } catch (privateError) {
         console.error("Private session failed:", privateError);
-        setActionError(t("ps_saveFail"));
+        setActionError(t(publishErrorKey(privateError, true)));
       }
       return;
     }
@@ -118,8 +127,9 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
         setEditingSessionId(null);
         setForm(createSessionForm());
         setTab("overview");
-      } catch {
-        setActionError(t("ms_saveSessionFail"));
+      } catch (sessionError) {
+        console.error("Publishing the session failed:", sessionError);
+        setActionError(t(publishErrorKey(sessionError, false)));
       }
       return;
     }
