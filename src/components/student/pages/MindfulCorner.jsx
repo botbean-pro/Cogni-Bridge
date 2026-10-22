@@ -38,6 +38,7 @@ export function MindfulCorner({ studentId = '', startBreathing = false, signedIn
   const leaveActivity = () => { if (activity) awardActivity(activity, false); setActivity(''); };
   const completeClueLevel = (completedLevel) => setClueProgress(recordCuriousCluesLevel(studentId, completedLevel, curiousClueLevels.length));
   const selected = activities.find((item) => item.id === activity);
+  useEffect(() => { if (activity && !selected) setActivity(''); }, [activity, selected]);
   const visibleActivities = activities.filter((item) => (category === 'All' || item.group === category) && `${t(activityTitleKeys[item.id])} ${t(activityNoteKeys[item.id])}`.toLowerCase().includes(search.toLowerCase()));
   return <div className={`mindful-corner theme-${settings.theme.toLowerCase().replace(' ', '-')} text-${settings.text.toLowerCase().replace(' ', '-')}${!settings.motion ? ' reduced-motion' : ''}`}>
     <header className="mc-top">
@@ -53,7 +54,7 @@ export function MindfulCorner({ studentId = '', startBreathing = false, signedIn
       <h1>{t('mcSignInRequiredTitle')}</h1>
       <p>{t('mcSignInRequiredDescription')}</p>
       <button type="button" className="mc-primary" onClick={onSignIn}><LogIn size={18}/> {t('mcSignInToPlay')}</button>
-    </section> : !activity ? <>
+    </section> : !selected ? <>
       <section className="mc-intro">
         <h1>{t('mcTitle')}</h1>
         <p>{t('mcWelcomeDescription')} {t('mcNoScore')}</p>

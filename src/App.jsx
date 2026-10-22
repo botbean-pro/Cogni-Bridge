@@ -31,6 +31,7 @@ import { MindfulCorner } from "./components/student/pages/MindfulCorner";
 import { RelaxationRoom } from "./components/RelaxationRoom";
 import { readMindfulBoard } from "./mindfulPoints";
 import { useImmersiveEffects } from "./immersiveEffects";
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
 
 const readPreferredSubjects = (email) => {
@@ -1043,7 +1044,7 @@ const App = () => {
             />
           ),
           leaderboard: <LeaderboardPage signedIn={signedIn} studentName={studentName} mindfulBoard={readMindfulBoard(studentEmail)} t={t} />,
-          mindful: <MindfulCorner studentId={studentEmail} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} />,
+          mindful: <ErrorBoundary name="Mindful Corner" t={t} onClose={() => goToTab("home")}><MindfulCorner studentId={studentEmail} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} /></ErrorBoundary>,
           relax: <RelaxationRoom onBack={() => goToTab("home")} t={t} />,
           sessions: (
             <SessionsPage

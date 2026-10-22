@@ -1291,3 +1291,9 @@ html[data-low-sensory="true"] .rest-reminder-backdrop { backdrop-filter:none; }
 .primary-btn.registered-button:hover:not(:disabled) { background:color-mix(in srgb, var(--teal) 12%, var(--surface)); }
 .primary-btn.registered-button:disabled { cursor:default; opacity:1; }
 .register-toggle-hint { color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); }
+
+/* Shown by ErrorBoundary when a screen crashes, instead of a blank page. */
+.error-boundary-card { max-width:520px; margin:60px auto; padding:28px; border:1px solid var(--line); border-radius:18px; background:var(--surface); color:var(--text); text-align:center; }
+.error-boundary-card h2 { margin:0 0 8px; font-size:calc(22px * var(--text-scale, 1)); }
+.error-boundary-card p { margin:0 0 20px; color:var(--muted); line-height:1.55; }
+.error-boundary-card > div { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
