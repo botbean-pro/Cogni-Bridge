@@ -1297,3 +1297,8 @@ html[data-low-sensory="true"] .rest-reminder-backdrop { backdrop-filter:none; }
 .error-boundary-card h2 { margin:0 0 8px; font-size:calc(22px * var(--text-scale, 1)); }
 .error-boundary-card p { margin:0 0 20px; color:var(--muted); line-height:1.55; }
 .error-boundary-card > div { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+
+/* Notifications: a large centred panel over the page, with a margin of the page still showing. */
+.student-notify-overlay { z-index:1000; padding:5vh 4vw; backdrop-filter:blur(3px); }
+.student-notify-overlay .student-notify-dialog { width:min(960px, 100%); min-height:min(70vh, 640px); max-height:90vh; color:var(--text); font-family:var(--font-body); }
+@media (max-width:620px) { .student-notify-overlay { padding:10px; } .student-notify-overlay .student-notify-dialog { min-height:0; } }
