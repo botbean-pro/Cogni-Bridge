@@ -96,13 +96,6 @@
 .mc-puzzle { display:grid; grid-template-columns:repeat(2,110px); justify-content:center; gap:4px; margin:22px; }
 .mc-puzzle button { height:100px; border-radius:4px!important; background:#ecf2e9!important; font-size:42px; }
 
-.mc-sounds { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:22px; }
-.mc-sounds button { display:flex; min-width:120px; min-height:72px!important; align-items:center; justify-content:center; gap:8px; }
-.mc-sounds svg { width:20px; }
-.mc-volume { display:grid; gap:10px; max-width:390px; margin:12px auto; }
-.mc-volume label { display:flex; align-items:center; gap:12px; }
-.mc-volume input { flex:1; accent-color:var(--mc-accent); }
-.mc-visual-alternative { margin:20px; padding:14px; border-radius:8px; background:var(--mc-soft); font-size:32px; }
 
 .mc-feeling-canvas { display:grid; min-height:180px; max-width:550px; margin:15px auto; border:2px dashed var(--mc-line); border-radius:8px; background:#fbfcfb; }
 .mc-feeling-canvas button { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:9px; border:0!important; background:transparent!important; font-size:38px; }

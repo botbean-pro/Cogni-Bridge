@@ -1105,7 +1105,7 @@ const App = () => {
           }}
         />
       )}
-      {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}</div>}
+      {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}<button type="button" className="toast-close" onClick={() => setToast("")} aria-label={t("close")}><X size={16} /></button></div>}
       <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
     </div>
   );

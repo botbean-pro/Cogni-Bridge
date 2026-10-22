@@ -1034,6 +1034,9 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .theme-dark .auth-modal h2,.theme-dark .signup-card h1,.theme-dark .mentor-login-card h1 { color:var(--text); }
 .theme-dark .detail-action,.theme-dark .form-section,.theme-dark .quiz-placeholder { border-color:var(--line); }
 .theme-dark .toast { color:var(--text); background:#243538; border:1px solid var(--line); }
+.toast-close { flex:none; display:grid; width:28px; height:28px; place-items:center; margin:-4px -6px -4px 4px; padding:0; border:0; border-radius:8px; background:transparent; color:inherit; opacity:.75; cursor:pointer; }
+.toast-close:hover { background:rgba(255,255,255,.12); opacity:1; }
+.toast-close:focus-visible { outline:2px solid #79e4d8; outline-offset:1px; opacity:1; }
 .theme-dark .ai-error { border-color:#713b3d; color:#ffc0c0; background:#3d2527; }
 .theme-dark .ai-chat-input:focus { box-shadow:0 0 0 3px rgba(32,203,183,.22); }
 
