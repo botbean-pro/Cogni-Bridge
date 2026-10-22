@@ -100,3 +100,20 @@ export async function sendMentorParentReply({ mentorId, studentId, parentId, mes
     message: message.trim(),
   }));
 }
+
+// One thread per (parent, child) pair for the calling mentor; contacts come from
+// mentor_parent_contacts() in 20261022000100_mentor_parent_chat.sql.
+export async function loadMentorParentChats(mentorId) {
+  const [contacts, messages] = await Promise.all([
+    supabase.rpc("mentor_parent_contacts"),
+    loadMentorParentMessages(mentorId),
+  ]);
+  return throwIfError(contacts).map((contact) => ({
+    key: `${contact.parent_id}:${contact.student_id}`,
+    parentId: contact.parent_id,
+    parentName: contact.parent_name,
+    studentId: contact.student_id,
+    studentName: contact.student_name,
+    messages: messages.filter((message) => message.parent_id === contact.parent_id && message.student_id === contact.student_id),
+  }));
+}

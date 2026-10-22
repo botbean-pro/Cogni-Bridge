@@ -13,6 +13,7 @@ import {
   Home,
   Heart,
   LogOut,
+  MessageCircle,
   Plus,
   TrendingUp,
   Upload,
@@ -24,6 +25,7 @@ import { formatSession, getSessionSubjectLabel, readStudents, subjects } from ".
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
 import { SessionStudents } from "../SessionStudents";
+import { MentorParentChat } from "../MentorParentChat";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, setMyStudent } from "../../../mentorContent";
 import {
@@ -39,7 +41,7 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
     ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
-    ...(mentorId ? [["sensory", Heart, t("sensoryRequests")]] : []),
+    ...(mentorId ? [["sensory", Heart, t("sensoryRequests")], ["parents", MessageCircle, t("md_parentsNav")]] : []),
     ["settings", Settings, t("settings")],
   ];
 
@@ -606,7 +608,7 @@ export function MentorDashboard({
     <main className="mentor-page">
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
-        <section className="mentor-content">
+        <section className={`mentor-content${tab === "parents" ? " is-chat" : ""}`}>
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
@@ -615,6 +617,7 @@ export function MentorDashboard({
           {tab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
+          {tab === "parents" && mentorId && <MentorParentChat mentorId={mentorId} t={t} />}
         </section>
       </div>
     </main>
