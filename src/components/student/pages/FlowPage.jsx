@@ -5,6 +5,7 @@ import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
 import { QuickPrompts } from "../flow/QuickPrompts";
 import { askLearningAssistant, getLearningAssistantUsage } from "../flow/flowApi";
+import { readDocumentText } from "../flow/documentText";
 import { speak, stopSpeaking } from "../flow/readAloud";
 import "../flow/flow.css";
 
@@ -141,7 +142,7 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
       stopSpeaking();
       setSpeakingId(null);
     } else {
-      speakMessage(message.id, message.content);
+      speakMessage(message.id, message.studyPack?.summary || message.content);
     }
   };
 
@@ -214,6 +215,42 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
       reply({ content: t("audioReadyMsg"), audioScript: script });
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      await refreshUsage();
+      setIsLoading(false);
+    }
+  };
+
+  // Documents are read in the browser; only their text is sent to build the summary, mind map and flashcards.
+  const summarizeDocument = async (file) => {
+    if (isLoading) return;
+    const userMessage = {
+      id: `${Date.now()}-user`,
+      role: "user",
+      content: t("docUserMessage", { name: file.name }),
+      timestamp: new Date(),
+    };
+    setMessages((current) => [...current, userMessage]);
+    setIsLoading(true);
+    setError("");
+    try {
+      const { text, truncated } = await readDocumentText(file);
+      const studyPack = await askLearningAssistant([{ role: "user", content: text }], "document", language);
+      const answerId = `${Date.now()}-document`;
+      // The summary lives in the study pack; flowApi adds it to the history so follow-ups can use it.
+      const content = studyPack.title ? `## ${studyPack.title}\n\n${t("docReady")}` : t("docReady");
+      setMessages((current) => [...current, {
+        id: answerId,
+        role: "assistant",
+        content,
+        studyPack,
+        fileName: file.name,
+        truncated,
+        timestamp: new Date(),
+      }]);
+      if (readAloud.enabled) speakMessage(answerId, studyPack.summary);
+    } catch (requestError) {
+      setError(requestError.i18nKey ? t(requestError.i18nKey) : requestError.message);
     } finally {
       await refreshUsage();
       setIsLoading(false);
@@ -299,6 +336,7 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
           disabled={remainingTokens <= 0}
           onChange={setInput}
           onSubmit={sendMessage}
+          onAttach={summarizeDocument}
           t={t}
         />
       </div>

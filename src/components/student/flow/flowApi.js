@@ -31,6 +31,11 @@ export async function getLearningAssistantUsage() {
   return { used: Number(data.used) || 0, limit: Number(data.limit) || 5000 };
 }
 
+// A document reply shows its summary in the study pack, so follow-up questions need it in the history.
+const withStudyPack = (content, studyPack) => (studyPack
+  ? [content, studyPack.summary, ...studyPack.keyPoints.map((point) => `- ${point}`)].join("\n\n").slice(0, 4000)
+  : content);
+
 export async function askLearningAssistant(conversation, task = "chat", language = "English", context = null) {
   const response = await fetchWithAuth("/api/chat", {
     method: "POST",
@@ -41,7 +46,7 @@ export async function askLearningAssistant(conversation, task = "chat", language
       context: task === "chat" ? context : undefined,
       messages: conversation
         .filter((message) => message.role === "user" || message.role === "assistant")
-        .map(({ role, content }) => ({ role, content })),
+        .map(({ role, content, studyPack }) => ({ role, content: withStudyPack(content, studyPack) })),
     }),
   });
   const data = await response.json().catch(() => ({}));
@@ -51,6 +56,7 @@ export async function askLearningAssistant(conversation, task = "chat", language
   }
 
   if (task === "audio") return data.script;
+  if (task === "document") return data.studyPack;
   return task === "chat"
     ? {
       content: data.content,
