@@ -29,6 +29,7 @@ import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
 import { MentorParentChat } from "../MentorParentChat";
+import { usePageTitle } from "../../../pageTitle";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
@@ -47,6 +48,7 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")], ["messages", MessageCircle, t("md_parentNav")]] : []),
     ["settings", Settings, t("settings")],
   ];
+  usePageTitle(t("pt_mentor"), items.find(([key]) => key === tab)?.[2]);
 
   return (
     <aside className="mentor-nav">

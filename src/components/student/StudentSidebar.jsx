@@ -4,6 +4,7 @@ import { navigation, classNames } from "../../constants";
 import { LogoImage } from "../Brand";
 import { BookOpen, Compass, Crown, Headphones, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
 import { studentTabPaths } from "../../routes";
+import { usePageTitle } from "../../pageTitle";
 
 const navigationLabels = {
   home: "home",
@@ -18,6 +19,7 @@ const navigationLabels = {
 };
 
 export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, t }) => {
+  usePageTitle(t("pt_student"), activeTab === "mindful" ? t("mcTitle") : activeTab === "settings" ? t("settings") : t(navigationLabels[activeTab] || activeTab));
   const [pinnedOpen, setPinnedOpen] = useState(false);
   const items = signedIn
     ? [
