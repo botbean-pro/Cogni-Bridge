@@ -102,3 +102,7 @@
   .wa-back { display:grid; }
   .wa-bubble { max-width:85%; }
 }
+
+/* Parent portal: the chat sits under the page heading, so it gets a shorter fixed height. */
+.parent-page .wa-shell { height:min(72vh, 680px); }
+@media (max-width:760px) { .parent-page .wa-shell { height:calc(100vh - 140px); border:1px solid var(--line); border-radius:14px; } }
