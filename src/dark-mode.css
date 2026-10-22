@@ -1,0 +1,45 @@
+/* Dark-mode fixes for components that hardcode light pastel backgrounds.
+   In dark mode --teal-dark and --text turn light, so these need dark backgrounds to stay readable.
+   Loaded last so it wins over the light rules in the other stylesheets. */
+
+body.theme-dark { background:var(--canvas); color:var(--text); }
+
+/* Teal chips: subject pills, filters, the Cogni-Flow status badge */
+.theme-dark .subject-pill,
+.theme-dark .mentor-subject,
+.theme-dark .ai-status { background:#173b38; color:#7fe3d4; }
+.theme-dark .ai-status { box-shadow:none; }
+.theme-dark .filter-bar button:hover,
+.theme-dark .filter-bar button.selected { background:#173b38; border-color:#2f6d66; color:#7fe3d4; }
+
+/* Parent portal mood badges */
+.theme-dark .parent-mood-1 { background:#45231f; color:#f6a99f; }
+.theme-dark .parent-mood-2 { background:#43301c; color:#f3c08b; }
+.theme-dark .parent-mood-4 { background:#173b36; color:#7fdcca; }
+.theme-dark .parent-mood-5 { background:#11443d; color:#8ff0df; }
+.theme-dark .parent-link-error { color:#f8b4b4 !important; }
+
+/* Pastel icon tiles on the Sessions and About pages */
+.theme-dark .sessions-value-icon.mint,
+.theme-dark .about-value-icon { color:#6fdccb; background:#173b38; }
+.theme-dark .sessions-value-icon.cream,
+.theme-dark .about-value-2 .about-value-icon { color:#f0c27e; background:#3d301b; }
+.theme-dark .sessions-value-icon.blue,
+.theme-dark .about-value-3 .about-value-icon { color:#9db8ef; background:#1f2c48; }
+.theme-dark .sessions-value-icon.peach,
+.theme-dark .about-value-4 .about-value-icon { color:#f1a88d; background:#43271f; }
+.theme-dark .about-principle > span { background:#173b38; color:#7fe3d4; }
+
+/* Buttons and controls with white fills */
+.theme-dark .calm-breath-card .calm-action { background:var(--surface); color:#7fe3d4; }
+.theme-dark .accessibility-close { border-color:var(--line); background:var(--surface-2); color:var(--text); }
+.theme-dark .accessibility-close:hover { background:#173b38; }
+.theme-dark .premium-demo-pay-button:disabled { background:var(--surface-2); color:var(--muted); }
+.theme-dark .auth-the-divider::before { background:var(--line); }
+
+/* Error text that was tuned for white backgrounds */
+.theme-dark .profile-flow-error { color:#ff9f94; }
+.theme-dark .audio-notes-error,
+.theme-dark .student-notify-error { color:#ff9f94; }
+.theme-dark .practice-feedback.is-correct { color:#7fe0b0; }
+.theme-dark .practice-feedback.is-incorrect { color:#f3c08b; }

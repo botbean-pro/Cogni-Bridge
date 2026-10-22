@@ -60,7 +60,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     [t("age"), studentProfile?.age],
     [t("section"), studentProfile?.section],
     [t("school"), studentProfile?.school],
-    [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType)],
+    [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType) || t("notAnalyzed")],
   ];
   const planNameKeys = { monthly: "pf_planMonthly", quarterly: "pf_planQuarterly", yearly: "pf_planYearly" };
   const subscriptionActive = Boolean(premiumSubscription?.expiresAt && new Date(premiumSubscription.expiresAt) > new Date());

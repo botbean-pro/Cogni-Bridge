@@ -291,7 +291,18 @@ const App = () => {
           setStudentEmail(user.email || "");
           setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: savedSubjects });
           loadLatestHandwriting(user.id).then((handwriting) => {
-            if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
+            if (!isCurrent) return;
+            if (handwriting) {
+              setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
+              return;
+            }
+            // New accounts get the handwriting analysis once; after that it lives in Settings.
+            const promptKey = `cognibridge_handwriting_prompted:${user.id}`;
+            try {
+              if (window.localStorage.getItem(promptKey)) return;
+              window.localStorage.setItem(promptKey, "1");
+            } catch { /* storage unavailable: still show it this once */ }
+            setProfileOpen(true);
           }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
           setActiveTab((currentTab) => currentTab === "home" ? "study" : currentTab);
         } else if (profile.role === "mentor") {
@@ -403,6 +414,8 @@ const App = () => {
       // Keep the selected theme for this session if browser storage is unavailable.
     }
     document.documentElement.style.colorScheme = appearance;
+    // The page behind the app (overscroll, anything rendered outside .app) follows the theme too.
+    document.body.classList.toggle("theme-dark", appearance === "dark");
   }, [appearance]);
 
   useEffect(() => {
@@ -766,7 +779,6 @@ const App = () => {
               sessions={studentSessions}
               studentEmail={studentEmail}
               studentName={studentName}
-              handwritingType={studentProfile?.handwritingType}
               activityVersion={activityVersion}
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}
@@ -802,7 +814,6 @@ const App = () => {
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
-              onEditHandwriting={() => setProfileOpen(true)}
               t={t}
               onOpenSession={(session) => {
                 setSelectedSession(session);

@@ -164,7 +164,7 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
   );
 }
 
-export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, studentName, handwritingType, activityVersion, onOpenSession, onEditHandwriting, eyebrow, heading, t }) {
+export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, studentName, activityVersion, onOpenSession, eyebrow, heading, t }) {
   const today = new Date().toISOString().slice(0, 10);
   const registeredIds = new Set(registeredSessionIds.map(String));
   const upcomingRegisteredSessions = sessions
@@ -189,23 +189,6 @@ export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, s
             ))}
           </div>
         ) : <p className="study-empty">{t("noRegisteredSessions")}</p>}
-      </section>
-      <section className="study-profile-card">
-        <div className="study-profile-glow" aria-hidden="true" />
-        <div>
-          <p className="eyebrow">{t("yourLearningStyle")}</p>
-          <h3>{t("handwritingType")}</h3>
-          <p>{t("handwritingTypeStudyCopy")}</p>
-        </div>
-        <button type="button" onClick={onEditHandwriting} aria-label={t("updateHandwriting")}>{(() => {
-          try {
-            const profile = JSON.parse(localStorage.getItem("cognibridge_students") || "[]")
-              .find((student) => student.email?.toLowerCase() === studentEmail?.toLowerCase());
-            return handwritingType || profile?.handwritingType || t("notAnalyzed");
-          } catch {
-            return t("notAnalyzed");
-          }
-        })()}</button>
       </section>
       <StudentStats
         studentEmail={studentEmail}
