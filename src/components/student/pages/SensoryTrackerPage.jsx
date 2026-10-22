@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Users, VolumeX, Wind, X } from "lucide-react";
+import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Share2, Sparkles, Users, VolumeX } from "lucide-react";
 import {
   causeOptions,
   emotionOptions,
@@ -55,36 +55,6 @@ function EntryDetail({ entry, reply, t }) {
   );
 }
 
-const calmVideos = [
-  { id: "v2", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=TCoUnEPeuQk" },
-  { id: "v3", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=8rp5bpFIUpg" },
-];
-
-export function CalmCorner({ onClose, startBreathing = false, t }) {
-  const [breathing, setBreathing] = useState(startBreathing);
-  const [phase, setPhase] = useState(startBreathing ? "in" : "out");
-  useEffect(() => {
-    if (!breathing) return undefined;
-    const timer = window.setInterval(() => setPhase((current) => current === "in" ? "out" : "in"), 4000);
-    return () => window.clearInterval(timer);
-  }, [breathing]);
-  const phaseLabel = t(phase === "in" ? "sn_breatheIn" : "sn_breatheOut");
-  return <section className="sensory-card calm-corner" id="calm-corner" aria-labelledby="calm-corner-title">
-    <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_calmEyebrow")}</span><h2 id="calm-corner-title">{t("sn_calmTitle")}</h2></div></div>
-    <p className="calm-intro">{t("sn_calmIntro")}</p>
-    <div className="calm-tools">
-      <div className="calm-breath-card"><div className="breathing-copy"><h3>{t("sn_breathingEx")}</h3><p aria-live="polite">{breathing ? t(phase === "in" ? "sn_breatheInSlow" : "sn_breatheOutSlow") : t("sn_followCircle")}</p></div>
-        <div className={`breathing-stage${breathing ? " is-active" : ""}${breathing && phase === "out" ? " is-exhaling" : ""}`} aria-label={breathing ? phaseLabel : t("sn_circleLabel")}>
-          <div className="breathing-ring" aria-hidden="true"><span className={`breathing-cue${breathing ? ` is-active ${phase === "out" ? "is-exhaling" : ""}` : ""}`}>{breathing ? t(phase === "in" ? "sn_cueIn" : "sn_cueOut") : t("sn_cueBreathe")}</span></div>
-        </div>
-        <button type="button" className="calm-action" onClick={() => { setBreathing((current) => !current); setPhase("in"); }} aria-pressed={breathing}>{breathing ? <><Pause size={16} /> {t("sn_pause")}</> : <><Play size={16} /> {t("sn_begin")}</>}</button>
-      </div>
-      <div className="calm-videos"><h3>{t("sn_quietVideos")}</h3>{calmVideos.map((item) => <a key={item.id} href={item.url} target="_blank" rel="noreferrer"><span><strong>{t(`sn_${item.id}t`)}</strong><small>{t(`sn_${item.id}n`)} · {item.source}</small></span><span aria-hidden="true">↗</span></a>)}</div>
-    </div>
-    <button type="button" className="calm-close" onClick={onClose}>{t("sn_backCheckin")}</button>
-  </section>;
-}
-
 const MAX_FULL_CHECKINS_PER_DAY = 3;
 
 export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory = false, onToggleLowSensory = () => {} }) {
@@ -98,18 +68,10 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
   const [status, setStatus] = useState("");
   const [formStatus, setFormStatus] = useState("");
   const [saving, setSaving] = useState(false);
-  const [showCalmCorner, setShowCalmCorner] = useState(false);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
   const todayFullEntries = sortedEntries.filter((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
   const todayFullEntry = todayFullEntries[0];
   const fullLimitReached = todayFullEntries.length >= MAX_FULL_CHECKINS_PER_DAY;
-
-  useEffect(() => {
-    if (!showCalmCorner) return undefined;
-    const closeOnEscape = (event) => { if (event.key === "Escape") setShowCalmCorner(false); };
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [showCalmCorner]);
 
   const refresh = async () => {
     const [history, assignedMentors, mentorResponses] = await Promise.all([
@@ -234,18 +196,8 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
       <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
       <SensorySessionSupport studentId={studentId} t={t} />
-      <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
-      {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
-        <div className="student-calm-dialog">
-          <button className="student-calm-dismiss" type="button" onClick={() => setShowCalmCorner(false)} aria-label={t("close")}><X size={20} /></button>
-          <CalmCorner onClose={() => setShowCalmCorner(false)} t={t} />
-        </div>
-      </div>}
-      {demoMode ? (
-        <div className="sensory-demo-banner" role="note"><LockKeyhole size={17} /> {t("sn_demoBanner")}</div>
-      ) : (
-        <div className="sensory-privacy"><LockKeyhole size={17} /> {t("sn_privacy")}</div>
-      )}
+      <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div></section>
+      {!demoMode && <div className="sensory-privacy"><LockKeyhole size={17} /> {t("sn_privacy")}</div>}
       {!demoMode && parents.length > 0 && (
         <div className="sensory-privacy"><Users size={17} /> {t("sn_parentsSee", { names: parents.map((parent) => parent.display_name).join(", ") })}</div>
       )}
