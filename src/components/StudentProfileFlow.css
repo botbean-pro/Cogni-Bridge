@@ -45,7 +45,6 @@
 .current-handwriting-result img { width: min(100%, 280px); max-height: 150px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; object-fit: contain; }
 .profile-flow-back { position: fixed; z-index: 1; top: 22px; left: 22px; display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-radius: 10px; background: #f1f6f6; color: #263638; font-weight: 700; }
 .profile-skip-button { justify-self: center; padding: 9px 14px; color: var(--teal-dark); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
-.handwriting-disclaimer { margin-top: -10px; font-size: calc(13px * var(--text-scale, 1)); }
 .handwriting-result { text-align: center; }
 .handwriting-result { position:relative; isolation:isolate; }
 .analysis-burst { position:absolute; z-index:1; inset:50% 50% auto auto; width:1px; height:1px; pointer-events:none; }
