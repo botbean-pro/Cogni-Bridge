@@ -176,14 +176,6 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
         <button type="button" aria-pressed={active.includes(id)} onClick={() => play(id)}>{active.includes(id) ? t("pauseSound") : t("playSound")}</button>
       </article>)}
     </section>
-    <section className="relax-voice" aria-labelledby="relax-voice-title">
-      <div className="relax-voice-copy"><span className="relax-voice-icon" aria-hidden="true">✦</span><div><p className="relax-voice-kicker">Optional guided pause</p><h2 id="relax-voice-title">A calming voice</h2><p>A gentle breathing guide, spoken aloud. It only starts when you press play.</p></div></div>
-      <div className="relax-voice-actions">
-        {voices.length > 0 && <label className="relax-voice-picker">Voice<select value={voiceName} onChange={(event) => setVoiceName(event.target.value)} disabled={voiceState !== "idle"}>{voices.map((voice) => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name} · {voice.lang}</option>)}</select></label>}
-        {voiceState === "idle" ? <button type="button" onClick={startVoice}><Play size={16} fill="currentColor" /> Play voice</button> : <><button type="button" onClick={pauseVoice}><Pause size={16} fill="currentColor" /> {voiceState === "paused" ? "Resume" : "Pause"}</button><button className="relax-voice-stop" type="button" onClick={stopVoice}><Square size={15} fill="currentColor" /> Stop voice</button></>}
-      </div>
-      {!speech && <p className="relax-voice-unavailable">Spoken guidance is not available in this browser.</p>}
-    </section>
     <section className="relax-controls"><label htmlFor="relax-volume">{t("soundLevel")} <strong>{volume}%</strong></label><input id="relax-volume" type="range" min="0" max="200" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /><button type="button" onClick={stopAll} disabled={!active.length}>{t("stopAllSounds")}</button></section>
     <p className="relax-kind-note">{t("quietSpaceNote")}</p><p className="relax-status" role="status" aria-live="polite">{message}</p>
   </div>;

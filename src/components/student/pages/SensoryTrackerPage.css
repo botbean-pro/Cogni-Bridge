@@ -34,7 +34,7 @@
 .low-sensory-mode .sensory-card { border-color:#e5e9e6; }
 .low-sensory-mode .sensory-page * { animation:none !important; transition:none !important; }
 .low-sensory-mode .breathing-cue { transform:none !important; }
-.theme-dark .break-banner { background:#1d302e; border-color:#334744; }
+.theme-dark .break-banner { background:var(--surface); border-color:var(--line); }
 .theme-dark .calm-breath-card { background:#145b59; }
 .theme-dark .calm-breath-card .breathing-copy p { color:#d1f5f1; }
 .theme-dark .breathing-ring { border-color:rgba(184,238,235,.72); }
@@ -101,3 +101,15 @@
 .theme-dark .sensory-mood-options button.selected,.theme-dark .sensory-chips button.selected,.theme-dark .sensory-status,.theme-dark .sensory-history-entry em.is-shared { background:#203b3c; }
 .theme-dark .sensory-demo-banner { border-color:#63583f; background:#332f24; color:#eee0b8; }
 @media (max-width:650px) { .sensory-heading { align-items:flex-start; flex-direction:column; } .sensory-heading-actions { align-items:flex-start; flex-direction:column; } .sensory-heading > span { font-size: calc((12px) * var(--text-scale, 1)); } .break-banner { align-items:flex-start; flex-direction:column; } .break-banner > button { width:100%; } .calm-tools { grid-template-columns:1fr; } .calm-breath-card { align-items:flex-start; } .sensory-card { padding:17px; } .sensory-mood-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .sensory-submit { width:100%; } }
+
+/* Mood donut: five coloured slices, the chosen one nudges outward. */
+.mood-donut { position:relative; width:min(340px,100%); margin:6px auto 4px; }
+.mood-donut svg { display:block; width:100%; height:auto; overflow:visible; }
+.mood-donut-slice { cursor:pointer; transition:transform .2s ease, opacity .2s ease; outline:none; }
+.mood-donut-slice text { font-family:inherit; font-size:calc(13px * var(--text-scale, 1)); font-weight:700; pointer-events:none; }
+.mood-donut-slice:hover path,.mood-donut-slice:focus-visible path { filter:brightness(1.08); }
+.mood-donut-slice:focus-visible path { stroke:var(--text); stroke-width:3; }
+.mood-donut-slice.is-selected path { stroke:var(--surface); stroke-width:3; }
+.mood-donut-slice.is-dimmed { opacity:.5; }
+.mood-donut-center { position:absolute; inset:0; display:grid; place-content:center; justify-items:center; gap:4px; padding:0 30%; color:var(--text); font-weight:700; text-align:center; font-size:calc(14px * var(--text-scale, 1)); line-height:1.25; pointer-events:none; }
+.reduced-motion .mood-donut-slice,.low-sensory-mode .mood-donut-slice { transition:none; }

@@ -14,11 +14,15 @@ import {
 import { MoodTrendChart } from "../shared/MoodTrendChart";
 import { formatLocalizedDate } from "../../../constants";
 import "./SensoryTrackerPage.css";
-import { SensorySessionSupport } from "./SensorySessionSupport";
+// SensorySessionSupport (the "Learn session" box) is hidden for now; re-import it to bring it back.
+import { MoodDonut } from "./MoodDonut";
 
 // One icon per moodLabels entry (Not at my peak -> Great), so the picture always matches the word.
 const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
 const moodColors = ["#d64545", "#e8833a", "#c9a227", "#5aa469", "#0c9a8a"];
+const moodTextColors = ["#ffffff", "#1f1a14", "#1f1a14", "#10231a", "#ffffff"];
+// The older row of five mood buttons is kept for later; the donut replaces it.
+const showMoodButtons = false;
 
 const labelsFor = (t, group, keys = []) => keys.map((key) => t(`${group}_${key}`));
 
@@ -233,7 +237,6 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
   return (
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
       <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
-      <SensorySessionSupport studentId={studentId} t={t} />
       <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
       {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
         <div className="student-calm-dialog">
@@ -256,7 +259,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
           {todayFullEntry && <p className="sensory-status" role="status">{t(todayFullEntry.shared_with_mentor ? "sn_fullDoneShared" : "sn_fullDonePrivate")}</p>}
           <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">{t("sn_quick")}</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button" disabled={fullLimitReached} title={fullLimitReached ? t("sn_fullLimit") : undefined}>{t("sn_full")}</button></div>
           <form onSubmit={(event) => submit(event, view === "quick")}>
-            <fieldset className="sensory-field"><legend>{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</legend><div className="sensory-mood-options">{[1, 2, 3, 4, 5].map((_, index) => <button type="button" key={index} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true" style={{ color: moodColors[index] }}>{React.createElement(moodIcons[index], { size: 28, strokeWidth: 1.9 })}</span>{t(`mood_${index + 1}`)}</button>)}</div></fieldset>
+            <fieldset className="sensory-field"><legend className="sr-only">{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</legend><MoodDonut value={form.mood} onChange={(mood) => updateForm("mood", mood)} labels={[1, 2, 3, 4, 5].map((mood) => t(`mood_${mood}`))} colors={moodColors} textColors={moodTextColors} icons={moodIcons} prompt={t(view === "quick" ? "sn_feelNow" : "sn_feelToday")} />{showMoodButtons && <div className="sensory-mood-options">{[1, 2, 3, 4, 5].map((_, index) => <button type="button" key={index} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true" style={{ color: moodColors[index] }}>{React.createElement(moodIcons[index], { size: 28, strokeWidth: 1.9 })}</span>{t(`mood_${index + 1}`)}</button>)}</div>}</fieldset>
             {view === "quick" ? (
               <label className="sensory-field">{t("sn_whyTell")}<textarea value={form.quickReason} maxLength={4000} onChange={(event) => updateForm("quickReason", event.target.value)} placeholder={t("sn_whyPlaceholder")} rows="3" /></label>
             ) : (

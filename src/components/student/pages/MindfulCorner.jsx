@@ -218,7 +218,7 @@ function GameScreen({ activity, settings, clueProgress, onCompleteClueLevel, onA
 function DrawingPad({ color, label }) {
   const [strokes, setStrokes] = useState([]);
   const point = (event) => { const rect = event.currentTarget.getBoundingClientRect(); return `${((event.clientX - rect.left) / rect.width * 360).toFixed(1)} ${((event.clientY - rect.top) / rect.height * 150).toFixed(1)}`; };
-  const start = (event) => { event.currentTarget.setPointerCapture(event.pointerId); setStrokes((items) => [...items, { color, path: `M ${point(event)}` }]); };
+  const start = (event) => { event.currentTarget.setPointerCapture(event.pointerId); const first = `M ${point(event)}`; setStrokes((items) => [...items, { color, path: first }]); };
   const move = (event) => { if (event.buttons !== 1) return; const next = `L ${point(event)}`; setStrokes((items) => items.map((stroke, index) => index === items.length - 1 ? { ...stroke, path: `${stroke.path} ${next}` } : stroke)); };
   return <div className="mc-drawing-wrap"><svg className="mc-drawing-pad" viewBox="0 0 360 150" role="img" aria-label={label} onPointerDown={start} onPointerMove={move}><rect width="360" height="150" rx="14" fill="#fbfdfb"/>{strokes.map((stroke, i) => <path key={i} d={stroke.path} fill="none" stroke={stroke.color} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>)}</svg><button type="button" onClick={() => setStrokes([])}>Clear drawing</button><span>Or use the large buttons above.</span></div>;
 }
