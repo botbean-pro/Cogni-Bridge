@@ -5,7 +5,7 @@ import { LogoImage } from "./Brand";
 import { typeLabel } from "../handwriting";
 import { supabase, supabaseConfigured } from "../supabaseClient";
 import { saveHandwriting } from "../studentHandwriting";
-import { analyzeHandwritingSample } from "../handwritingAnalysis";
+import { classifyHandwritingSample } from "../handwritingAnalysis";
 import "./StudentProfileFlow.css";
 
 const readImage = (file) => new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
     setStep("loading");
     let analysis;
     try {
-      analysis = await analyzeHandwritingSample(image);
+      analysis = await classifyHandwritingSample(image);
     } catch {
       analyzingRef.current = false;
       setError("handwritingAnalysisReadError");
