@@ -246,7 +246,13 @@ async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE
 // If that migration hasn't been run, everyone keeps the normal limit.
 async function hasActivePremium(userClient) {
   const { data, error } = await userClient.rpc("has_active_premium");
-  return !error && data === true;
+  if (!error) return data === true;
+  console.error("has_active_premium failed, reading the tables directly:", error.message);
+  // Both tables let a student read their own rows, so this still works if the function is missing or broken.
+  const now = new Date().toISOString();
+  const checks = await Promise.all(["premium_subscriptions", "cogni_entitlements"].map((table) =>
+    userClient.from(table).select("expires_at").gt("expires_at", now).limit(1)));
+  return checks.some(({ data: rows, error: tableError }) => !tableError && rows?.length > 0);
 }
 
 async function translateChatResult(result, language, usage) {

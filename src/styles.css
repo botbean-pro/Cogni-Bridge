@@ -156,9 +156,9 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .screen-time-day small:last-child { color:var(--text); font-weight:700; }
 .settings-details h3 { margin:0 0 10px; font-size:calc(19px * var(--text-scale, 1)); }
 .settings-details dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; border-top:1px solid var(--line); }
-.settings-details dl > div { display:flex; justify-content:space-between; gap:18px; min-width:0; padding:15px 12px; border-bottom:1px solid var(--line); }
+.settings-details dl > div { display:flex; flex-direction:column; gap:4px; min-width:0; padding:14px 16px 14px 0; border-bottom:1px solid var(--line); }
 .settings-details dt { color:var(--muted); }
-.settings-details dd { margin:0; overflow-wrap:anywhere; font-weight:700; text-align:right; }
+.settings-details dd { margin:0; overflow-wrap:anywhere; font-weight:700; }
 .settings-edit { margin-top:18px; }
 .settings-page .stats-section { margin-top:36px; }
 @media (max-width:620px) { .settings-details { padding:18px 16px; } .settings-details dl { grid-template-columns:1fr; } }
