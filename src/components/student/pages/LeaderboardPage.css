@@ -1,4 +1,5 @@
 .leaderboard-page { min-height: calc(100vh - 82px); background: var(--canvas); }
+.mindful-points-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;max-width:1040px;margin:0 auto 22px;padding:18px 22px;border:1px solid #c5ded6;border-radius:18px;background:linear-gradient(110deg,#e8f4ed,var(--surface));color:var(--text)}.mindful-points-medal{display:grid;width:44px;height:44px;place-items:center;border-radius:14px;background:#d2e9dc;color:#43785f;font-size:25px}.mindful-points-summary .eyebrow{margin:0;color:#43785f;font-size:11px;font-weight:800;letter-spacing:.1em}.mindful-points-summary h2{margin:2px 0 4px;font-size:18px}.mindful-points-summary>p:last-child{margin:0;color:var(--muted);font-size:13px}.mindful-points-total{color:#2f7159;font-size:30px}.mindful-points-total small{font-size:13px}.mindful-points-card ul{grid-column:2/4;display:grid;gap:6px;margin:0;padding:10px 0 0 18px;border-top:1px solid #ccdfd5;color:var(--muted);font-size:13px}
 .leaderboard-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; max-width:1040px; margin:0 auto 26px; }
 .leaderboard-heading h1 { margin:5px 0 8px; color:var(--text); font-size: calc((clamp(32px,4vw,48px)) * var(--text-scale, 1)); letter-spacing:-.05em; }
 .leaderboard-heading p:last-child { margin:0; color:var(--muted); font-size:calc(16px * var(--text-scale, 1)); }
@@ -19,7 +20,7 @@
 .podium-card-2 { order:1; }
 .podium-card-3 { order:3; }
 .podium-medal { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; color:var(--teal-dark); background:#d1ebe6; font-size: calc((12px) * var(--text-scale, 1)); font-weight:900; }
-.podium-card-1 .podium-medal { color:#fff; background:var(--teal); }
+.podium-card-1 .podium-medal { color:#fff; background:var(--teal-fill); }
 .podium-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:15px; color:var(--teal-dark); background:#dff4f0; font-size: calc((19px) * var(--text-scale, 1)); font-weight:900; }
 .podium-card strong { color:var(--charcoal-2); font-size:calc(16px * var(--text-scale, 1)); }
 .podium-score { color:var(--teal-dark); font-size:calc(16px * var(--text-scale, 1)); font-weight:900; }
@@ -82,7 +83,6 @@
 .leaderboard-student-details { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:3px; }
 .leaderboard-student-details .leaderboard-rank-title { font-size:9px; letter-spacing:.08em; }
 .podium-card-1 .podium-rank-title { color:#a46a07; }
-.podium-motivation { max-width:220px; margin:2px 0 0; color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); line-height:1.45; text-align:center; }
 .leaderboard-rank-2 .leaderboard-rank { color:#68727e; background:#edf0f4; }
 .leaderboard-rank-3 .leaderboard-rank { color:#a9663c; background:#fff0e7; }
 .theme-dark .podium-card-1 { background:linear-gradient(155deg,#493f29,#263738 70%); border-color:#927435; }
@@ -90,7 +90,6 @@
 .theme-dark .podium-rank-title { color:#75dfd1; }
 .theme-dark .leaderboard-student-details .leaderboard-rank-title { color:#75dfd1; }
 .theme-dark .podium-card-1 .podium-rank-title { color:#f3d477; }
-.theme-dark .podium-motivation { color:var(--muted); }
 .theme-dark .leaderboard-rank-2 .leaderboard-rank { color:#d5dce4; background:#354149; }
 .theme-dark .leaderboard-rank-3 .leaderboard-rank { color:#ffb68e; background:#49332c; }
 @media (prefers-reduced-motion: reduce) {

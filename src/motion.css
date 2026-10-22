@@ -1,0 +1,138 @@
+/* The site's motion system, shared by the student, mentor and parent spaces.
+   There are only two motions:
+   1. Enter  – content fades in while rising 8px (pages, cards, panels, dialogs, toasts, messages).
+   2. Slide  – the navigation rail widens, then its labels fade in (all three sidebars).
+   Hover feedback is colour and shadow only; nothing tilts, floats, orbits or sweeps.
+   This file is imported last, so the keyframes below replace the older one-off versions
+   that share their names. */
+
+:root {
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --motion-enter: 320ms;
+  --motion-slide: 300ms;
+  --motion-hover: 160ms;
+}
+
+/* 1. Enter ---------------------------------------------------------------- */
+@keyframes cbEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes routeEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes depthReveal { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes aboutRise { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes testimonialCardEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes learningPathReveal { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes learningPathVisualEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes heroSceneEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes heroCopyEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes heroObjectEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes heroCardEnter { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes heroOrbitEnter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes parentRise { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes accessibilityPanelIn { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes toastIn { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes messageSlide { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@keyframes analysisBurst { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+
+.route-transition,
+[data-reveal="shown"],
+.parent-rise,
+.ai-message,
+.parent-thread-messages > p {
+  animation-duration: var(--motion-enter);
+  animation-timing-function: var(--motion-ease);
+}
+
+/* Dialogs and modals use the same entrance. */
+.auth-modal,
+.student-calm-dialog,
+.student-settings-dialog,
+.premium-checkout-card {
+  animation: cbEnter var(--motion-enter) var(--motion-ease) both;
+}
+
+/* Decorative loops (floating, orbiting, twinkling, glowing, sweeping) are switched off.
+   Functional loops – spinners, typing dots, the mic pulse, loading shimmer – are kept. */
+@keyframes heroCardFloat { to { translate: 0 0; } }
+@keyframes orbitTurn { to { translate: 0 0; } }
+@keyframes floatLift { to { translate: 0 0; } }
+@keyframes heroOrbitDriftOne { to { translate: 0 0; } }
+@keyframes heroOrbitDriftTwo { to { translate: 0 0; } }
+@keyframes heroFloatCoral { to { translate: 0 0; } }
+@keyframes heroFloatGold { to { translate: 0 0; } }
+@keyframes heroFloatMint { to { translate: 0 0; } }
+@keyframes heroGlowBreathe { to { translate: 0 0; } }
+@keyframes heroAtmosphere { to { translate: 0 0; } }
+@keyframes gapGlint { to { translate: 0 0; } }
+@keyframes testimonialFloat { to { translate: 0 0; } }
+@keyframes learningPathFloat { to { translate: 0 0; } }
+@keyframes learningPathTwinkle { to { translate: 0 0; } }
+@keyframes sharedGentleFloat { to { translate: 0 0; } }
+@keyframes relaxFloat { to { translate: 0 0; } }
+@keyframes waveRise { to { transform: translate(-50%, 0); } }
+
+/* Hover: colour and shadow only. */
+[data-depth-surface="true"],
+[data-depth-surface="true"]:hover,
+[data-depth-surface="true"]:focus-within {
+  rotate: none;
+  translate: none;
+  transform-style: flat;
+  transition: box-shadow var(--motion-hover) ease, border-color var(--motion-hover) ease, background-color var(--motion-hover) ease;
+}
+[data-depth-surface="true"]::after { display: none; }
+
+/* 2. Slide ---------------------------------------------------------------- */
+/* Icons keep the exact same position while the rail opens, so only the width moves.
+   Labels wait until there is room for them, then fade in; on close they fade out at once. */
+.student-rail,
+.mentor-nav {
+  transition: width var(--motion-slide) var(--motion-ease), box-shadow var(--motion-slide) ease;
+}
+
+.student-rail-link > span:not(.avatar-small),
+.student-rail-brand-copy,
+.mentor-nav-label,
+.mentor-rail-brand-copy {
+  translate: -6px 0;
+  transition: opacity 120ms ease, translate 120ms ease;
+}
+
+.student-rail:is(:hover, :focus-within, :has(.pinned-open)) :is(.student-rail-link > span:not(.avatar-small), .student-rail-brand-copy),
+.mentor-nav:is(:hover, :focus-within) :is(.mentor-nav-label, .mentor-rail-brand-copy) {
+  translate: 0 0;
+  transition: opacity 200ms ease 110ms, translate var(--motion-slide) var(--motion-ease) 110ms;
+}
+
+.student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-link,
+.mentor-nav:is(:hover, :focus-within) button {
+  padding: 0 18px;
+}
+.student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-brand,
+.mentor-nav:is(:hover, :focus-within) .mentor-rail-brand {
+  padding: 0 7px;
+}
+
+@media (max-width: 760px) {
+  .student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-link { padding: 0 16px; }
+}
+
+.student-rail-link,
+.student-rail-link:hover,
+.mentor-nav button,
+.mentor-nav button:hover {
+  transform: none;
+}
+.student-rail-link,
+.mentor-nav button {
+  transition: background-color var(--motion-hover) ease, color var(--motion-hover) ease;
+}
+
+/* Everyone who asked for less motion gets none of the above
+   (entrances are already switched off for them in the files that define them). */
+html[data-motion="off"] :is(.student-rail, .mentor-nav, .student-rail *, .mentor-nav *),
+html[data-low-sensory="true"] :is(.student-rail, .mentor-nav, .student-rail *, .mentor-nav *) {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }
+  .student-rail, .mentor-nav, .student-rail *, .mentor-nav * { transition: none !important; }
+}

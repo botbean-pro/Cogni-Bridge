@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient";
+import { loadScreenTime } from "./screenTime";
 
 const throwIfError = ({ data, error }) => {
   if (error) throw error;
@@ -30,11 +31,12 @@ export async function loadParentPortal(parentId) {
   const links = throwIfError(await supabase.from("parent_student_links")
     .select("student_id, created_at").eq("parent_id", parentId));
   const studentIds = links.map((link) => link.student_id);
-  if (!studentIds.length) return { children: [], messages: [] };
-  const [profiles, assignments, messages] = await Promise.all([
+  if (!studentIds.length) return { children: [], messages: [], screenTime: [] };
+  const [profiles, assignments, messages, screenTime] = await Promise.all([
     supabase.from("profiles").select("id, display_name").in("id", studentIds).order("display_name"),
     supabase.from("mentor_student_assignments").select("student_id, mentor_id").in("student_id", studentIds),
     supabase.from("parent_teacher_messages").select("id, student_id, mentor_id, sender_id, sender_role, message, created_at").eq("parent_id", parentId).order("created_at", { ascending: true }),
+    loadScreenTime(studentIds).catch(() => []),
   ]);
   const children = throwIfError(profiles).map((student) => ({ ...student, mentors: [] }));
   const teacherAssignments = throwIfError(assignments);
@@ -48,7 +50,7 @@ export async function loadParentPortal(parentId) {
         .filter(Boolean);
     });
   }
-  return { children, messages: throwIfError(messages) };
+  return { children, messages: throwIfError(messages), screenTime };
 }
 
 // Ratings, emotions and causes only; the child's written notes are never returned.
@@ -71,6 +73,12 @@ export async function loadChildSessions(studentId) {
     good: row.mentor_good,
     attention: row.attention_level,
   }));
+}
+
+export async function loadParentMessages(parentId) {
+  return throwIfError(await supabase.from("parent_teacher_messages")
+    .select("id, student_id, mentor_id, sender_id, sender_role, message, created_at")
+    .eq("parent_id", parentId).order("created_at", { ascending: true }));
 }
 
 export async function sendParentTeacherMessage({ parentId, studentId, mentorId, message }) {
@@ -101,19 +109,14 @@ export async function sendMentorParentReply({ mentorId, studentId, parentId, mes
   }));
 }
 
-// One thread per (parent, child) pair for the calling mentor; contacts come from
-// mentor_parent_contacts() in 20261022000100_mentor_parent_chat.sql.
-export async function loadMentorParentChats(mentorId) {
-  const [contacts, messages] = await Promise.all([
-    supabase.rpc("mentor_parent_contacts"),
-    loadMentorParentMessages(mentorId),
-  ]);
-  return throwIfError(contacts).map((contact) => ({
+// Parents linked to the calling mentor's students, including ones who haven't written yet.
+// Needs mentor_parent_contacts() from 20261022000100_mentor_parent_chat.sql.
+export async function loadMentorParentContacts() {
+  return throwIfError(await supabase.rpc("mentor_parent_contacts")).map((contact) => ({
     key: `${contact.parent_id}:${contact.student_id}`,
     parentId: contact.parent_id,
     parentName: contact.parent_name,
     studentId: contact.student_id,
     studentName: contact.student_name,
-    messages: messages.filter((message) => message.parent_id === contact.parent_id && message.student_id === contact.student_id),
   }));
 }

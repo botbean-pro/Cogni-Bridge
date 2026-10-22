@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   Award,
@@ -22,26 +22,29 @@ import {
   Trophy,
 } from "lucide-react";
 import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
+import { loadMentorParentMessages } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
-import { LogoImage } from "../../Brand";
+import { LogoImage, MouseTrail } from "../../Brand";
+import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
+import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
 import { MentorParentChat } from "../MentorParentChat";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
-import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, setMyStudent } from "../../../mentorContent";
+import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
   respondToMentorRequest,
 } from "../../../studentSensory";
 
-function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
+function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCount, unreadParentCount, accessibilityOpen, onToggleAccessibility, onBack, t }) {
   const items = [
     ["overview", Home, t("onlyUpcomingSessions")],
     ["performance", TrendingUp, t("md_perfNav")],
     ["leaderboard", Trophy, t("md_lbNav")],
     ["schedule", CalendarDays, t("mentorScheduleNav")],
     ["notes", FileText, t("mentorNotesNav")],
-    ...(mentorId ? [["sensory", Heart, t("sensoryRequests")], ["parents", MessageCircle, t("md_parentsNav")]] : []),
+    ...(mentorId ? [["sensory", Heart, t("sensoryRequests")], ["messages", MessageCircle, t("md_parentNav")]] : []),
     ["settings", Settings, t("settings")],
   ];
 
@@ -59,19 +62,35 @@ function MentorNavigation({ tab, setTab, mentorId, unreadSupportCount, accessibi
           title={label}
           onClick={() => setTab(key)}
         >
-          <Icon size={19} /><span className="mentor-nav-label">{label}</span>{key === "sensory" && unreadSupportCount > 0 && <span className="mentor-notification-count">{unreadSupportCount}</span>}
+          <Icon size={19} /><span className="mentor-nav-label">{label}</span>{key === "sensory" && unreadSupportCount > 0 && <span className="mentor-notification-count">{unreadSupportCount}</span>}{key === "messages" && unreadParentCount > 0 && <span className="mentor-notification-count">{unreadParentCount}</span>}
         </button>
       ))}
       <div className="mentor-rail-footer">
-        <button type="button" aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")} onClick={onToggleAccessibility}>
+        <button type="button" data-accessibility-toggle aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")} onClick={onToggleAccessibility}>
           <Accessibility size={19} /><span className="mentor-nav-label">{t("accessibility")}</span>
         </button>
         <button type="button" className="mentor-rail-logout" aria-label={t("mentorLogout")} title={t("mentorLogout")} onClick={onBack}>
-          <span className="mentor-avatar-small">P</span><span className="mentor-nav-label">Priya Sharma</span><LogOut size={16} className="mentor-logout-icon" />
+          <span className="mentor-avatar-small">{(mentorName || "Priya Sharma").charAt(0).toUpperCase()}</span><span className="mentor-nav-label">{mentorName || "Priya Sharma"}</span><LogOut size={16} className="mentor-logout-icon" />
         </button>
       </div>
     </aside>
   );
+}
+
+// The signed-in mentor's name; empty in demo mode, where the rail keeps the demo mentor's name.
+function useMentorName(mentorId) {
+  const [name, setName] = useState("");
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let isCurrent = true;
+    loadMentorName(mentorId)
+      .then((value) => { if (isCurrent) setName(value); })
+      .catch((loadError) => console.error("Loading the mentor's name failed:", loadError));
+    return () => {
+      isCurrent = false;
+    };
+  }, [mentorId]);
+  return name;
 }
 
 // Loads shared check-ins for the mentor's assigned students; refreshes every 30s
@@ -156,8 +175,12 @@ function SensorySupportPage({ support, t }) {
   const { checkins, notifications, students, error, markAllViewed, respond } = support;
   const notificationFor = (entry) => notifications.find((item) => item.checkin_id === entry.id);
   const needsSupport = (entry) => entry.mentor_help !== "none" && !notificationFor(entry)?.addressed_at;
-  const sortedEntries = [...checkins]
-    .sort((a, b) => Number(needsSupport(b)) - Number(needsSupport(a)) || b.created_at.localeCompare(a.created_at));
+  // Order is fixed when check-ins load, so a card stays in place (showing "Addressed")
+  // after the mentor clicks it instead of jumping away under the cursor.
+  const order = useMemo(() => [...checkins]
+    .sort((a, b) => Number(needsSupport(b)) - Number(needsSupport(a)) || b.created_at.localeCompare(a.created_at))
+    .map((entry) => entry.id), [checkins]);
+  const sortedEntries = order.map((id) => checkins.find((entry) => entry.id === id)).filter(Boolean);
 
   useEffect(() => {
     markAllViewed();
@@ -194,7 +217,7 @@ function SensorySupportPage({ support, t }) {
   );
 }
 
-function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
+function OverviewPage({ sessions, notes, mentorId, mentorName, setTab, onEditSession, t }) {
   const [openStudentsId, setOpenStudentsId] = useState(null);
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -209,7 +232,7 @@ function OverviewPage({ sessions, notes, mentorId, setTab, onEditSession, t }) {
       <div className="mentor-hero">
         <div>
           <p className="mentor-kicker">{t("mentorDashboard")}</p>
-          <h1>{t("goodMorningPriya")}</h1>
+          <h1>{mentorName ? t("md_greeting", { name: mentorName.split(" ")[0] }) : t("goodMorningPriya")}</h1>
           <span>{t("onlyUpcomingMaths")}</span>
         </div>
         <button className="mentor-primary" onClick={() => setTab("schedule")}>
@@ -476,6 +499,26 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
   const [localStudents, setLocalStudents] = useState([]);
   const [loading, setLoading] = useState(Boolean(mentorId));
   const [error, setError] = useState("");
+  const [screenTimeRows, setScreenTimeRows] = useState([]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const refresh = async () => {
+      if (mentorId) {
+        try {
+          const rows = await loadScreenTime(assignedStudents.map((student) => student.id));
+          if (isCurrent) setScreenTimeRows(rows);
+        } catch { if (isCurrent) setScreenTimeRows([]); }
+      } else {
+        const localRows = readStudents().filter((student) => (student.role || "Student").toLowerCase() === "student")
+          .flatMap((student) => readLocalScreenTime(student.email).map((row) => ({ ...row, student_id: student.email.toLowerCase() })));
+        if (isCurrent) setScreenTimeRows(localRows);
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 30_000);
+    return () => { isCurrent = false; window.clearInterval(interval); };
+  }, [mentorId, assignedStudents]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -540,6 +583,7 @@ function StudentPerformancePage({ mentorId, assignedStudents, t }) {
           return <article className="performance-card" key={student.id}>
             <div className="performance-card-heading"><span className="performance-avatar">{student.name?.charAt(0)?.toUpperCase() || "S"}</span><div><h2>{student.name}</h2><small>{student.latest ? t("md_lastActivity", { date: new Date(`${student.latest.activityDate}T00:00:00`).toLocaleDateString() }) : t("md_noSessionsYet")}</small></div></div>
             <div className="performance-metrics"><div><strong>{student.stats.sessionsAttended}</strong><span>{t("sessions")}</span></div><div><strong>{student.stats.learningTime}</strong><span>{t("md_learningTime")}</span></div><div><strong>{student.stats.learningStreak}</strong><span>{t("md_dayStreak")}</span></div></div>
+            <ScreenTimeSummary rows={screenTimeRows} studentId={student.id} t={t} />
             <div className="performance-subjects"><strong>{t("md_subjectsLabel")}</strong>{subjects.length ? <div>{subjects.map((subject) => <span key={subject}>{subject}</span>)}</div> : <small>{t("md_noSubjects")}</small>}</div>
           </article>;
         })}</div>}
@@ -578,6 +622,68 @@ function MentorLeaderboardPage({ mentorId, t }) {
   </>;
 }
 
+const PARENT_POLL_MS = 5000;
+const parentSeenKey = (mentorId) => `cognibridge_mentor_parent_seen:${mentorId}`;
+
+// Parent-teacher messages for this mentor, re-read every 5 seconds while the tab is visible so a
+// parent's message shows up within seconds. Parent messages newer than the last visit to the
+// Parent messages tab count as unread.
+function useParentMessages(mentorId, viewing) {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(Boolean(mentorId));
+  const [error, setError] = useState(false);
+  const [seenAt, setSeenAt] = useState(() => {
+    try {
+      return mentorId ? localStorage.getItem(parentSeenKey(mentorId)) || "" : "";
+    } catch {
+      return "";
+    }
+  });
+
+  const reload = async () => {
+    const rows = await loadMentorParentMessages(mentorId);
+    setMessages(rows);
+    setError(false);
+  };
+
+  useEffect(() => {
+    if (!mentorId) return undefined;
+    let current = true;
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return;
+      loadMentorParentMessages(mentorId)
+        .then((rows) => { if (current) { setMessages(rows); setError(false); } })
+        .catch((loadError) => {
+          console.error("Loading parent messages failed:", loadError);
+          if (current) setError(true);
+        })
+        .finally(() => { if (current) setLoading(false); });
+    };
+    refresh();
+    const interval = window.setInterval(refresh, PARENT_POLL_MS);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      current = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [mentorId]);
+
+  const latest = messages.length ? messages[messages.length - 1].created_at : "";
+  useEffect(() => {
+    if (!viewing || !latest || latest <= seenAt) return;
+    setSeenAt(latest);
+    try {
+      localStorage.setItem(parentSeenKey(mentorId), latest);
+    } catch {
+      // The badge just resets on reload if browser storage is unavailable.
+    }
+  }, [viewing, latest]);
+
+  const unreadCount = viewing ? 0 : messages.filter((message) => message.sender_role === "parent" && message.created_at > seenAt).length;
+  return { messages, loading, error, reload, unreadCount };
+}
+
 export function MentorDashboard({
   sessions,
   mentorId,
@@ -604,20 +710,23 @@ export function MentorDashboard({
   t,
 }) {
   const support = useMentorSupport(mentorId, t);
+  const mentorName = useMentorName(mentorId);
+  const parentMessages = useParentMessages(mentorId, tab === "messages");
   return (
     <main className="mentor-page">
+      <MouseTrail />
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} unreadSupportCount={support.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
-        <section className={`mentor-content${tab === "parents" ? " is-chat" : ""}`}>
+        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
+        <section className={`mentor-content route-transition${tab === "messages" ? " is-chat" : ""}`} key={tab}>
           {actionError && <p className="error-popup">{actionError}</p>}
-          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
           {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
           {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
           {tab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
-          {tab === "parents" && mentorId && <MentorParentChat mentorId={mentorId} t={t} />}
+          {tab === "messages" && mentorId && <MentorParentChat mentorId={mentorId} parentMessages={parentMessages} students={support.students} t={t} />}
         </section>
       </div>
     </main>

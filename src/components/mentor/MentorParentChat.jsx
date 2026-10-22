@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, CheckCheck, MessageCircle, Search, SendHorizontal } from "lucide-react";
-import { loadMentorParentChats, sendMentorParentReply } from "../../parentPortal";
+import { loadMentorParentContacts, sendMentorParentReply } from "../../parentPortal";
 import "./MentorParentChat.css";
 
-const REFRESH_MS = 15000;
 const seenKey = (mentorId) => `cognibridge_mentor_chat_seen:${mentorId}`;
 
 // When the mentor last opened each thread, per browser. Only used for unread badges.
@@ -45,9 +44,9 @@ function Avatar({ name }) {
 function ChatList({ threads, activeKey, seen, query, onQuery, onOpen, t }) {
   const visible = threads.filter((thread) => `${thread.parentName} ${thread.studentName}`.toLowerCase().includes(query.trim().toLowerCase()));
   return (
-    <aside className="wa-sidebar" aria-label={t("md_parentsNav")}>
+    <aside className="wa-sidebar" aria-label={t("md_parentNav")}>
       <header className="wa-sidebar-header">
-        <h2>{t("md_parentsNav")}</h2>
+        <h2>{t("md_parentNav")}</h2>
       </header>
       <label className="wa-search">
         <Search size={16} aria-hidden="true" />
@@ -167,50 +166,59 @@ function Thread({ thread, onBack, onSend, t }) {
   );
 }
 
-export function MentorParentChat({ mentorId, t }) {
-  const [threads, setThreads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+// parentMessages comes from useParentMessages in MentorDashboard, which polls and drives the rail badge.
+export function MentorParentChat({ mentorId, parentMessages, students = [], t }) {
+  const { messages, loading, error, reload } = parentMessages;
+  const [contacts, setContacts] = useState([]);
   const [activeKey, setActiveKey] = useState(null);
   const [query, setQuery] = useState("");
   const [seen, setSeen] = useState(() => readSeen(mentorId));
 
-  const reload = async () => {
-    try {
-      const rows = await loadMentorParentChats(mentorId);
-      // Most recent conversation first, like a messaging app.
-      rows.sort((first, second) => (second.messages.at(-1)?.created_at || "").localeCompare(first.messages.at(-1)?.created_at || "") || first.parentName.localeCompare(second.parentName));
-      setThreads(rows);
-      setLoadError("");
-    } catch {
-      setLoadError(t("md_chatLoadFail"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    reload();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") reload();
-    }, REFRESH_MS);
-    return () => window.clearInterval(timer);
+    let current = true;
+    loadMentorParentContacts()
+      .then((rows) => { if (current) setContacts(rows); })
+      // Without the contacts migration the list falls back to parents who have already written.
+      .catch(() => {});
+    return () => { current = false; };
   }, [mentorId]);
 
-  const activeThread = useMemo(() => threads.find((thread) => thread.key === activeKey) || null, [threads, activeKey]);
+  // One thread per parent and child: every linked parent, plus any thread that only exists in messages.
+  const threads = useMemo(() => {
+    const byKey = new Map(contacts.map((contact) => [contact.key, { ...contact, messages: [] }]));
+    messages.forEach((message) => {
+      const key = `${message.parent_id}:${message.student_id}`;
+      if (!byKey.has(key)) {
+        const student = students.find((item) => item.id === message.student_id);
+        byKey.set(key, {
+          key,
+          parentId: message.parent_id,
+          parentName: t("md_parentWord"),
+          studentId: message.student_id,
+          studentName: student?.display_name || t("md_student"),
+          messages: [],
+        });
+      }
+      byKey.get(key).messages.push(message);
+    });
+    // Most recent conversation first, like a messaging app.
+    return [...byKey.values()].sort((first, second) => (second.messages.at(-1)?.created_at || "").localeCompare(first.messages.at(-1)?.created_at || "") || first.parentName.localeCompare(second.parentName));
+  }, [contacts, messages, students, t]);
+
+  const activeThread = threads.find((thread) => thread.key === activeKey) || null;
+  const latestInThread = activeThread?.messages.at(-1)?.created_at;
 
   // Opening a thread (or new messages arriving in the open one) marks it read.
   useEffect(() => {
-    const latest = activeThread?.messages.at(-1)?.created_at;
-    if (!latest || seen[activeThread.key] >= latest) return;
-    const next = { ...seen, [activeThread.key]: latest };
+    if (!activeKey || !latestInThread || seen[activeKey] >= latestInThread) return;
+    const next = { ...seen, [activeKey]: latestInThread };
     setSeen(next);
     try {
       localStorage.setItem(seenKey(mentorId), JSON.stringify(next));
     } catch {
       // Unread badges just reset on reload when storage is unavailable.
     }
-  }, [activeThread, mentorId]);
+  }, [activeKey, latestInThread, mentorId]);
 
   const send = async (thread, message) => {
     await sendMentorParentReply({ mentorId, studentId: thread.studentId, parentId: thread.parentId, message });
@@ -227,8 +235,8 @@ export function MentorParentChat({ mentorId, t }) {
       ) : (
         <div className="wa-placeholder">
           <MessageCircle size={56} aria-hidden="true" />
-          <h3>{t("md_parentsNav")}</h3>
-          <p>{loadError || (threads.length ? t("md_chatSelect") : t("md_noParents"))}</p>
+          <h3>{t("md_parentNav")}</h3>
+          <p>{error ? t("md_chatLoadFail") : threads.length ? t("md_chatSelect") : t("md_noParents")}</p>
         </div>
       )}
     </section>

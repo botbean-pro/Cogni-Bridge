@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Accessibility, LogOut } from "lucide-react";
 import { MouseTrail } from "../Brand";
-import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
+import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentMessages, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
 import { ParentSidebar } from "./ParentSidebar";
 import { useRouteTab } from "../../routes";
 import { ConnectChildCard } from "./shared/ConnectChildCard";
@@ -9,6 +9,8 @@ import { ParentMoodsPage } from "./pages/ParentMoodsPage";
 import { ParentOverviewPage } from "./pages/ParentOverviewPage";
 import { ParentSessionsPage } from "./pages/ParentSessionsPage";
 import { ParentTeachersPage } from "./pages/ParentTeachersPage";
+import { ScreenTimeSummary } from "../shared/ScreenTimeSummary";
+import { loadScreenTime } from "../../screenTime";
 import "./ParentPortal.css";
 
 function ParentLoading({ t }) {
@@ -25,7 +27,9 @@ function ParentLoading({ t }) {
   );
 }
 
-const parentTabs = ["overview", "moods", "sessions", "teachers"];
+const parentTabs = ["overview", "moods", "sessions", "teachers", "settings"];
+
+const connectHiddenKey = (parentId) => `cognibridge_parent_connect_hidden:${parentId}`;
 
 const pickChild = (children, currentId) => (
   children.some((child) => child.id === currentId) ? currentId : children[0]?.id ?? null
@@ -38,6 +42,23 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   const [childData, setChildData] = useState(null);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  // The overview's "Connect another child" card can be crossed out; it stays available under Settings.
+  const [connectHidden, setConnectHidden] = useState(() => {
+    try {
+      return localStorage.getItem(connectHiddenKey(parentId)) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  const hideConnectCard = () => {
+    setConnectHidden(true);
+    try {
+      localStorage.setItem(connectHiddenKey(parentId), "1");
+    } catch {
+      // Hidden for this session only if browser storage is unavailable.
+    }
+  };
 
   useEffect(() => {
     let isCurrent = true;
@@ -73,6 +94,42 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     };
   }, [childId, retry]);
 
+  // While the teachers tab is open, re-read the portal every 5 seconds so mentor replies and newly
+  // assigned mentors show up without a reload.
+  useEffect(() => {
+    if (tab !== "teachers" || !portal) return undefined;
+    let isCurrent = true;
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return;
+      loadParentPortal(parentId)
+        .then((next) => { if (isCurrent) setPortal(next); })
+        .catch(() => { /* keep the last messages; the next poll tries again */ });
+    };
+    const interval = window.setInterval(refresh, 5000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      isCurrent = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [tab, parentId, Boolean(portal)]);
+
+  // Screen time keeps counting while the child uses the app, so re-read it every 30 seconds.
+  useEffect(() => {
+    const studentIds = portal?.children.map((item) => item.id) || [];
+    if (!studentIds.length) return undefined;
+    let isCurrent = true;
+    const interval = window.setInterval(() => {
+      loadScreenTime(studentIds)
+        .then((screenTime) => { if (isCurrent) setPortal((current) => current && { ...current, screenTime }); })
+        .catch(() => {});
+    }, 30_000);
+    return () => {
+      isCurrent = false;
+      window.clearInterval(interval);
+    };
+  }, [portal?.children]);
+
   const refreshPortal = async () => {
     const next = await loadParentPortal(parentId);
     setPortal(next);
@@ -88,7 +145,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
 
   const sendMessage = async (mentorId, message) => {
     await sendParentTeacherMessage({ parentId, studentId: childId, mentorId, message });
-    await refreshPortal();
+    const messages = await loadParentMessages(parentId);
+    setPortal((current) => current && { ...current, messages });
   };
 
   const children = portal?.children || [];
@@ -99,6 +157,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     moods: [t("parentMoods"), ""],
     sessions: [t("childSessionsHeading"), t("attentionRatedBy")],
     teachers: [t("consultTeachers"), child ? t("consultTeachersCopy", { child: childName }) : ""],
+    settings: [t("settings"), ""],
   }[tab];
 
   let body;
@@ -113,6 +172,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     body = <ParentLoading t={t} />;
   } else if (!child) {
     body = <ConnectChildCard title={t("connectChild")} intro={t("noChildLinked")} onConnect={connectChild} t={t} />;
+  } else if (tab === "settings") {
+    body = <ConnectChildCard title={t("connectAnotherChild")} onConnect={connectChild} t={t} />;
   } else if (tab === "teachers") {
     body = <ParentTeachersPage key={child.id} child={child} messages={portal.messages.filter((message) => message.student_id === child.id)} onSend={sendMessage} t={t} />;
   } else if (!childData) {
@@ -122,7 +183,10 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   } else if (tab === "sessions") {
     body = <ParentSessionsPage child={child} sessions={childData.sessions} t={t} />;
   } else {
-    body = <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} t={t} />;
+    body = <>
+      <ParentOverviewPage child={child} checkins={childData.checkins} sessions={childData.sessions} onOpenTab={setTab} onConnect={connectChild} showConnect={!connectHidden} onDismissConnect={hideConnectCard} t={t} />
+      <ScreenTimeSummary rows={portal.screenTime || []} studentId={child.id} t={t} />
+    </>;
   }
 
   return (
@@ -132,7 +196,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
         <aside className="student-rail">
           <ParentSidebar activeTab={tab} onNavigate={setTab} t={t} />
           <div className="student-rail-footer">
-            <button type="button" className="student-rail-link" onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
+            <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
               <Accessibility size={19} /><span>{t("accessibility")}</span>
             </button>
             <div className="student-rail-account">
@@ -145,7 +209,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
           </div>
         </aside>
         <main className="main">
-          <section className="content parent-page" key={tab}>
+          <section className="content parent-page route-transition" key={tab}>
             <header className="parent-heading parent-rise">
               <div>
                 <p className="eyebrow">{t("parentSpace")}</p>

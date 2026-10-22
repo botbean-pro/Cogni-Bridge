@@ -7,7 +7,7 @@ import { MoodBadge } from "../shared/MoodBadge";
 
 const weekMs = 7 * 24 * 60 * 60 * 1000;
 
-export function ParentOverviewPage({ child, checkins, sessions, onOpenTab, onConnect, t }) {
+export function ParentOverviewPage({ child, checkins, sessions, onOpenTab, onConnect, showConnect, onDismissConnect, t }) {
   const attended = sessions.filter((session) => session.attended).length;
   const rated = sessions.filter((session) => session.attention != null);
   const averageAttention = rated.length ? rated.reduce((sum, session) => sum + session.attention, 0) / rated.length : null;
@@ -67,7 +67,7 @@ export function ParentOverviewPage({ child, checkins, sessions, onOpenTab, onCon
         </section>
       </div>
 
-      <ConnectChildCard title={t("connectAnotherChild")} onConnect={onConnect} delay={480} t={t} />
+      {showConnect && <ConnectChildCard title={t("connectAnotherChild")} onConnect={onConnect} onDismiss={onDismissConnect} delay={480} t={t} />}
     </>
   );
 }

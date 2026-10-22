@@ -88,6 +88,9 @@
 
 /* Connect a child */
 .parent-connect-card { display:flex; align-items:center; justify-content:space-between; gap:24px; }
+.parent-connect-card.is-dismissible { position:relative; padding-right:58px; }
+.parent-connect-card .parent-connect-dismiss { position:absolute; top:12px; right:12px; display:grid; width:34px; height:34px; place-items:center; padding:0; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--muted); }
+.parent-connect-card .parent-connect-dismiss:hover { border-color:var(--teal); background:var(--surface-2); color:var(--text); transform:none; }
 .parent-connect-copy { display:flex; align-items:flex-start; gap:14px; }
 .parent-connect-copy h2 { margin:0; font-size:calc(19px * var(--text-scale, 1)); }
 .parent-connect-copy p { max-width:520px; margin:6px 0 0; color:var(--muted); line-height:1.5; }
@@ -95,7 +98,7 @@
 .parent-connect-card form label { display:block; margin-bottom:6px; color:var(--muted); font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; }
 .parent-connect-card form > div { display:flex; gap:8px; }
 .parent-connect-card input,.parent-teacher-thread input { flex:1; min-width:0; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:inherit; letter-spacing:.04em; }
-.parent-connect-card button,.parent-teacher-thread form button { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 15px; border:0; border-radius:10px; background:var(--teal); color:#fff; font:inherit; font-weight:800; cursor:pointer; transition:background .18s ease, transform .18s ease; }
+.parent-connect-card button,.parent-teacher-thread form button { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 15px; border:0; border-radius:10px; background:var(--teal-fill); color:#fff; font:inherit; font-weight:800; cursor:pointer; transition:background .18s ease, transform .18s ease; }
 .parent-connect-card button:hover,.parent-teacher-thread form button:hover { background:var(--teal-dark); transform:translateY(-1px); }
 .parent-connect-card button:disabled,.parent-teacher-thread button:disabled { opacity:.6; cursor:wait; transform:none; }
 .parent-message { margin:10px 0 0; padding:10px 13px; border-radius:10px; font-size: calc((13px) * var(--text-scale, 1)); }
@@ -144,3 +147,9 @@
   .parent-connect-card form > div { flex-direction:column; }
   .parent-connect-card button { min-height:42px; }
 }
+.theme-dark .parent-mood-1 { background:#3d2523; color:#f3b4ab; }
+.theme-dark .parent-mood-2 { background:#3b2e1f; color:#e7b07a; }
+.theme-dark .parent-mood-4 { background:#203b3c; color:#7fdccf; }
+.theme-dark .parent-mood-5 { background:#1d4038; color:#8fe6d4; }
+.theme-dark .parent-session:hover { border-color:#3f6e69; }
+.theme-dark .parent-link-error { color:#f3b4ab !important; }

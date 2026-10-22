@@ -11,6 +11,8 @@ export const studentTabPaths = {
   leaderboard: "/cogni-board",
   sensory: "/journal",
   calm: "/calm-corner",
+  mindful: "/mindful-corner",
+  relax: "/quiet-space",
   careers: "/careers",
   premium: "/premium-flow",
   settings: "/settings",

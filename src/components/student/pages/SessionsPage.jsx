@@ -76,7 +76,7 @@ function SessionList({ sessions, onSelect, t, activeSubject }) {
   );
 }
 
-export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, preferredSubjects = [], registeredSessionIds, attendedSessionIds, onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
+export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, preferredSubjects = [], registeredSessionIds, attendedSessionIds, privateSessions = [], onSelect, onBack, onSignIn, onRegister, onMarkAttended, t }) {
   const [section, setSection] = useState("sessions");
   const [activeSubject, setActiveSubject] = useState("all");
   const [downloadError, setDownloadError] = useState("");
@@ -158,7 +158,10 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
           t={t}
         />
       ) : (
-        <SessionList sessions={availableSessions} onSelect={onSelect} t={t} activeSubject={activeSubject} />
+        <>
+          {privateSessions.length > 0 && <section className="private-student-sessions"><h3>Your one-to-one sessions</h3>{privateSessions.map((session) => <article key={session.id}><div><span className="subject-pill">{session.subject}</span><strong>{session.title}</strong><small>{session.mentorName} · {session.date} · {session.time}–{session.endTime}</small></div><a href={session.meetLink} target="_blank" rel="noopener noreferrer">Join meeting <ChevronRight size={15} /></a></article>)}</section>}
+          <SessionList sessions={availableSessions} onSelect={onSelect} t={t} activeSubject={activeSubject} />
+        </>
       )}
     </section>
   );

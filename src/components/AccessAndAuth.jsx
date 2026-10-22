@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronRight,
@@ -21,6 +21,7 @@ import {
   readStudents,
 } from "../constants";
 import { supabase, supabaseConfigured } from "../supabaseClient";
+import { supportsReadAloud } from "./student/flow/readAloud";
 
 export const LanguagePicker = ({ value, onChange, t, compact = false }) => (
   <label className={`language-picker${compact ? " language-picker-compact" : ""}`}>
@@ -313,6 +314,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             {t("email")}
             <input
               type="email"
+              name={tab === "student" || tab === "mentor" ? "username" : "email"}
+              autoComplete={tab === "parent" && parentSignUp ? "email" : "username"}
               className="auth-input"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -326,6 +329,8 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
             <div className="password-input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete={tab === "parent" && parentSignUp ? "new-password" : "current-password"}
                 className="auth-input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -421,6 +426,10 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 const AccessibilityPanel = ({
   textScale,
   setTextScale,
+  motionSetting = "full",
+  setMotionSetting = () => {},
+  lowSensory = false,
+  setLowSensory = () => {},
   appearance,
   setAppearance,
   language,
@@ -431,8 +440,22 @@ const AccessibilityPanel = ({
   onClose,
   className = "",
   t,
-}) => (
-  <aside className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
+}) => {
+  const panelRef = useRef(null);
+
+  // Clicking or tapping anywhere outside the panel closes it. The toggle buttons are skipped
+  // (they carry data-accessibility-toggle) so they can still close it themselves.
+  useEffect(() => {
+    const closeOnOutsidePress = (event) => {
+      if (panelRef.current?.contains(event.target) || event.target.closest?.("[data-accessibility-toggle]")) return;
+      onClose();
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [onClose]);
+
+  return (
+  <aside ref={panelRef} className={`accessibility-panel ${className}`} aria-label={t("accessibilityOptions")}>
     <div className="panel-heading">
       <div className="accessibility-panel-title">
         <span className="accessibility-panel-icon"><Sparkles size={18} /></span>
@@ -461,6 +484,28 @@ const AccessibilityPanel = ({
       />
     </label>
 
+    <label className="appearance-row motion-row">
+      <strong>Animation</strong>
+      <select value={motionSetting} onChange={(event) => setMotionSetting(event.target.value)} aria-label="Animation level">
+        <option value="full">Full</option>
+        <option value="reduced">Reduced</option>
+        <option value="off">Off</option>
+      </select>
+    </label>
+
+    <label className="low-sensory-row">
+      <span>
+        <strong>{t("Low sensory mode")}</strong>
+        <small>{t("lowSensoryDescription")}</small>
+      </span>
+      <input
+        type="checkbox"
+        checked={lowSensory}
+        onChange={(event) => setLowSensory(event.target.checked)}
+        aria-label={t("Low sensory mode")}
+      />
+    </label>
+
     {showLanguage && <LanguagePicker value={language} onChange={setLanguage} t={t} />}
 
     {readAloud && (
@@ -471,10 +516,12 @@ const AccessibilityPanel = ({
             type="checkbox"
             role="switch"
             className="read-aloud-switch"
-            checked={readAloud.enabled}
+            checked={readAloud.enabled && supportsReadAloud(language)}
+            disabled={!supportsReadAloud(language)}
             onChange={(event) => setReadAloud((current) => ({ ...current, enabled: event.target.checked }))}
           />
         </label>
+        {!supportsReadAloud(language) && <p className="read-aloud-note">{t("readAloudLanguageNote")}</p>}
         <label className="range-row">
           <span>{t("readAloudVolume")}</span>
           <input
@@ -483,7 +530,7 @@ const AccessibilityPanel = ({
             max="1"
             step=".05"
             value={readAloud.volume}
-            disabled={!readAloud.enabled}
+            disabled={!readAloud.enabled || !supportsReadAloud(language)}
             onChange={(event) => setReadAloud((current) => ({ ...current, volume: Number(event.target.value) }))}
           />
         </label>
@@ -505,7 +552,8 @@ const AccessibilityPanel = ({
       {t("resetTextSize")}
     </button>
   </aside>
-);
+  );
+};
 
 const SignupPage = ({ email, onBack, onComplete, t }) => {
   const [form, setForm] = useState({ name: "", studentClass: "", age: "" });

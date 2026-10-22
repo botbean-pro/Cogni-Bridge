@@ -44,8 +44,10 @@ const chatInstructions =
   "Use short paragraphs and markdown headings, bullets, or numbered steps only when they make the answer easier to scan. " +
   "Understand student messages written in any language. Translate the latest user message into the selected response language, " +
   "and return that translation as translatedQuestion so the student can see their question in that language. " +
-  "Return only valid JSON with this exact shape: {\"translatedQuestion\": string, \"answer\": string, \"relatedQuestions\": [string, string, string, string]}. " +
+  "Return only valid JSON with this exact shape: {\"translatedQuestion\": string, \"answer\": string, \"relatedQuestions\": [string, string, string, string], \"practice\": boolean}. " +
   "The relatedQuestions must contain four short, useful follow-up questions directly related to the student's latest question. " +
+  "Set practice to true only when the student asked for practice or a quiz, or is learning a school topic or concept that a multiple-choice question would help check; " +
+  "set it to false for greetings, small talk, feelings, questions about the app or their sessions, or when the student says they don't want a quiz. " +
   "Do not include the follow-up questions in the answer text. Write translatedQuestion, answer, and relatedQuestions in the selected response language.";
 
 const audioInstructions =
@@ -103,11 +105,12 @@ const appActionInstructions = (context) =>
   "You can act inside the app: in addition to the other fields, include \"actions\" in the JSON object, an array that is empty unless the student asks for something. Allowed actions: " +
   "{\"type\": \"open\", \"page\": one of \"study\" (dashboard), \"sessions\", \"sensory\" (daily mood check-in / sensory tracker), \"leaderboard\" (Cogni Board), \"premium\", \"careers\", \"messages\", \"settings\"}; " +
   "{\"type\": \"openSession\", \"sessionId\": string}; " +
-  "{\"type\": \"register\", \"sessionId\": string}, only when the student asks to register for or join a session they are not registered for; " +
+  "{\"type\": \"register\", \"sessionId\": string}, registers the student immediately, so use it only when the student clearly asks to register for or join one specific session they are not registered for; " +
+  "if more than one session could match (for example several maths sessions), list them with dates and times and ask which one instead of registering; " +
   "{\"type\": \"setting\", \"name\": \"textSize\", \"value\": \"larger\" | \"smaller\" | \"reset\"}; {\"type\": \"setting\", \"name\": \"appearance\", \"value\": \"light\" | \"dark\"}; " +
   "{\"type\": \"setting\", \"name\": \"readAloud\", \"value\": \"on\" | \"off\"}. " +
   "Only use session IDs from the context. If checkInAvailable is false, explain that the check-in needs a student sign-in instead of opening it. " +
-  "When you add an action, say briefly in the answer what you did; for register, say they can tap the button to confirm.";
+  "When you add an action, say briefly in the answer what you did; for register, say plainly that you have registered them and repeat the session title, date, and time.";
 
 function sanitizeActions(actions, context) {
   if (!Array.isArray(actions) || !context) return [];
@@ -125,7 +128,7 @@ function sanitizeActions(actions, context) {
 }
 
 const supportedLanguages = new Set([
-  "English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Kannada", "Malayalam", "Punjabi", "French", "German",
+  "English", "Hindi", "Bengali", "Telugu", "Marathi", "Tamil", "Gujarati", "Kannada", "Malayalam", "Punjabi", "French", "German", "Spanish",
 ]);
 
 const MAX_DOCUMENT_CHARS = 8000;
@@ -345,6 +348,7 @@ export default async function handler(request, response) {
           relatedQuestions: Array.isArray(parsed.relatedQuestions)
           ? parsed.relatedQuestions.filter((question) => typeof question === "string").slice(0, 4)
             : [],
+          practice: parsed.practice === true,
         };
         actions = sanitizeActions(parsed.actions, appContext);
       } catch {
@@ -352,16 +356,24 @@ export default async function handler(request, response) {
           answer: content,
           translatedQuestion: latestUserMessage?.content || "",
           relatedQuestions: [],
+          practice: false,
         };
       }
 
-      const localizedResult = responseLanguage === "English"
-        ? chatResult
-        : await translateChatResult(chatResult, responseLanguage, usage);
+      let localizedResult = chatResult;
+      if (responseLanguage !== "English") {
+        // The answer was already asked for in this language, so a failed re-localization keeps it rather than erroring.
+        try {
+          localizedResult = await translateChatResult(chatResult, responseLanguage, usage);
+        } catch (translationError) {
+          console.error("Cogni-Flow translation failed; using the untranslated answer:", translationError);
+        }
+      }
       return reply(response, 200, {
         content: localizedResult.answer,
         translatedQuestion: localizedResult.translatedQuestion,
         relatedQuestions: localizedResult.relatedQuestions,
+        practice: chatResult.practice,
         actions,
       });
     }
@@ -410,6 +422,7 @@ export default async function handler(request, response) {
     }
     return reply(response, 200, { quiz });
   } catch (error) {
+    console.error("Cogni-Flow request failed:", error);
     const configurationError = error.message.startsWith("Cogni-Flow is not configured.");
     return reply(response, configurationError ? 503 : 502, {
       error: configurationError

@@ -14,8 +14,9 @@ import {
 import { MoodTrendChart } from "../shared/MoodTrendChart";
 import { formatLocalizedDate } from "../../../constants";
 import "./SensoryTrackerPage.css";
+import { SensorySessionSupport } from "./SensorySessionSupport";
 
-// One icon per moodLabels entry (Very bad -> Great), so the picture always matches the word.
+// One icon per moodLabels entry (Not at my peak -> Great), so the picture always matches the word.
 const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
 const moodColors = ["#d64545", "#e8833a", "#c9a227", "#5aa469", "#0c9a8a"];
 
@@ -86,7 +87,7 @@ export function CalmCorner({ onClose, startBreathing = false, t }) {
 
 const MAX_FULL_CHECKINS_PER_DAY = 3;
 
-export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
+export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory = false, onToggleLowSensory = () => {} }) {
   const [entries, setEntries] = useState([]);
   const [mentors, setMentors] = useState([]);
   const [parents, setParents] = useState([]);
@@ -97,7 +98,6 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
   const [status, setStatus] = useState("");
   const [formStatus, setFormStatus] = useState("");
   const [saving, setSaving] = useState(false);
-  const [lowSensory, setLowSensory] = useState(false);
   const [showCalmCorner, setShowCalmCorner] = useState(false);
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
   const todayFullEntries = sortedEntries.filter((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
@@ -232,7 +232,8 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t }) {
 
   return (
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
-      <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={() => setLowSensory((value) => !value)}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
+      <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
+      <SensorySessionSupport studentId={studentId} t={t} />
       <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
       {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
         <div className="student-calm-dialog">

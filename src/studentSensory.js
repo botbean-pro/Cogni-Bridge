@@ -1,12 +1,12 @@
 import { supabase } from "./supabaseClient";
 
-export const moodLabels = ["Very bad", "Bad", "Okay", "Good", "Great"];
+export const moodLabels = ["Not at my peak", "A little off", "Okay", "Good", "Great"];
 
 export const emotionOptions = [
-  ["happy", "Happy"], ["sad", "Sad"], ["angry", "Angry"], ["anxious", "Anxious"],
-  ["stressed", "Stressed"], ["tired", "Tired"], ["lonely", "Lonely"],
-  ["confused", "Confused"], ["excited", "Excited"], ["overwhelmed", "Overwhelmed"],
-  ["calm", "Calm"], ["frustrated", "Frustrated"], ["other", "Other"],
+  ["happy", "Happy"], ["sad", "Feeling low"], ["angry", "Grumpy"], ["anxious", "Uneasy"],
+  ["stressed", "A bit tense"], ["tired", "Sleepy"], ["lonely", "Missing company"],
+  ["confused", "Puzzled"], ["excited", "Excited"], ["overwhelmed", "A lot on my plate"],
+  ["calm", "Calm"], ["frustrated", "Stuck"], ["other", "Other"],
 ];
 
 export const causeOptions = [

@@ -4,6 +4,7 @@ import { LogoImage } from "../../Brand";
 import { PracticeQuestion } from "./PracticeQuestion";
 import { AudioPlayer } from "./AudioNotes";
 import { StudyPack } from "./StudyPack";
+import { supportsReadAloud } from "./readAloud";
 
 function renderInline(text) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, index) => {
@@ -82,7 +83,7 @@ function Message({ message, language, readAloudEnabled, speaking, onToggleSpeaki
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
         {message.studyPack && <StudyPack pack={message.studyPack} fileName={message.fileName} truncated={message.truncated} t={t} />}
-        {isAssistant && readAloudEnabled && (
+        {isAssistant && readAloudEnabled && supportsReadAloud(language) && (
           <button type="button" className="ai-listen-button" onClick={() => onToggleSpeaking(message)} aria-pressed={speaking}>
             {speaking ? <><Square size={14} /> {t("audioStop")}</> : <><Volume2 size={16} /> {t("listen")}</>}
           </button>
@@ -113,16 +114,20 @@ export function RelatedQuestionCards({ questions, onAsk, disabled, t }) {
       <div className="related-question-cards" aria-label={t("relatedTopics")}>
         {visible.slice(0, 4).map((question) => (
           <div key={question} className="related-question-card">
-            <button type="button" onClick={() => onAsk(question)} disabled={disabled}>
-              <span>{question}</span><ArrowUpRight size={16} />
+            <button type="button" className="related-question-text" onClick={() => onAsk(question)} disabled={disabled}>
+              <span>{question}</span>
+            </button>
+            <button type="button" className="related-question-ask" onClick={() => onAsk(question)} disabled={disabled} aria-label={question} title={question}>
+              <ArrowUpRight size={18} />
             </button>
             <button
               type="button"
               className="related-question-dismiss"
               onClick={() => setDismissed((prev) => [...prev, question])}
               aria-label={t("dismiss")}
+              title={t("dismiss")}
             >
-              <X size={11} />
+              <X size={16} />
             </button>
           </div>
         ))}

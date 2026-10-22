@@ -1,9 +1,14 @@
 import React, { useRef } from "react";
-import { ChevronRight, Paperclip } from "lucide-react";
+import { ChevronRight, Loader2, Mic, Paperclip, Square } from "lucide-react";
 import { acceptedDocumentTypes } from "./documentText";
+import { useVoiceInput, voiceInputSupported } from "./useVoiceInput";
 
-export function ChatComposer({ input, isLoading, disabled = false, onChange, onSubmit, onAttach, t }) {
+export function ChatComposer({ input, isLoading, disabled = false, language, onChange, onSubmit, onAttach, onVoiceText, t }) {
   const fileRef = useRef(null);
+  const voice = useVoiceInput({ language, onText: onVoiceText });
+  const recording = voice.status === "recording";
+  const voiceBusy = voice.status === "starting" || voice.status === "transcribing";
+  const voiceStatus = recording ? t("voiceInputListening") : voice.status === "transcribing" ? t("voiceInputTranscribing") : "";
   const chooseFile = (event) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -28,6 +33,19 @@ export function ChatComposer({ input, isLoading, disabled = false, onChange, onS
             </button>
           </>
         )}
+        {voiceInputSupported && (
+          <button
+            type="button"
+            className={`ai-mic-btn${recording ? " recording" : ""}`}
+            onClick={voice.toggle}
+            disabled={voiceBusy || ((isLoading || disabled) && !recording)}
+            aria-pressed={recording}
+            aria-label={recording ? t("voiceInputStop") : t("voiceInputStart")}
+            title={recording ? t("voiceInputStop") : t("voiceInputStart")}
+          >
+            {voiceBusy ? <Loader2 size={20} className="spin" /> : recording ? <Square size={18} /> : <Mic size={20} />}
+          </button>
+        )}
         <input
           type="text"
           className="ai-chat-input"
@@ -46,6 +64,11 @@ export function ChatComposer({ input, isLoading, disabled = false, onChange, onS
           <ChevronRight size={20} />
         </button>
       </div>
+      {(voiceStatus || voice.error) && (
+        <p className={`ai-voice-status${voice.error ? " error" : ""}`} role={voice.error ? "alert" : "status"}>
+          {voice.error ? t(voice.error) : voiceStatus}
+        </p>
+      )}
       <p className="ai-disclaimer">{t("aiDisclaimer")}</p>
     </form>
   );

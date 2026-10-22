@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Coffee, Heart, X } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { classNames, demoStudents, getSessionTitle, initialSessions, readStudents, subjects } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
 import { StudentProfileFlow } from "./components/StudentProfileFlow";
@@ -10,6 +11,7 @@ import { LeaderboardPage } from "./components/student/pages/LeaderboardPage";
 import { SettingsPage } from "./components/student/pages/SettingsPage";
 import { SensoryTrackerPage } from "./components/student/pages/SensoryTrackerPage";
 import { clearDemoStudentCheckins } from "./studentSensory";
+import { loadStudentPrivateSessions } from "./privateSessions";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { fetchSessions, fetchStudentNotes } from "./mentorContent";
 import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
@@ -21,6 +23,13 @@ import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
 import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
+import { useHoverReadAloud } from "./components/student/flow/useHoverReadAloud";
+import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
+import { MindfulCorner } from "./components/student/pages/MindfulCorner";
+import { RelaxationRoom } from "./components/RelaxationRoom";
+import { readMindfulBoard } from "./mindfulPoints";
+import { useImmersiveEffects } from "./immersiveEffects";
+import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
 
 const readPreferredSubjects = (email) => {
   if (!email) return [];
@@ -33,13 +42,22 @@ const readPreferredSubjects = (email) => {
 };
 
 const App = () => {
+  useImmersiveEffects();
   const [sessions, setSessions] = useState(initialSessions);
   const [learningNotes, setLearningNotes] = useState([]);
   const [signedIn, setSignedIn] = useState(false);
   const [registeredSessionIds, setRegisteredSessionIds] = useState([]);
-  const [activeTab, setActiveTab] = useState("home");
+  const location = useLocation();
+  const navigate = useNavigate();
+  // The URL decides which student page (and open session) shows; App state decides who may see it.
+  const route = parseStudentPath(location.pathname);
+  const activeTab = route.tab || "home";
+  const setActiveTab = (next) => {
+    const tab = typeof next === "function" ? next(activeTab) : next;
+    const path = studentTabPaths[tab];
+    if (path && normalizePath(location.pathname) !== path) navigate(path);
+  };
   const [scrollToAboutOnHome, setScrollToAboutOnHome] = useState(false);
-  const [selectedSession, setSelectedSession] = useState(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mentorOpen, setMentorOpen] = useState(false);
   const [parentOpen, setParentOpen] = useState(false);
@@ -51,6 +69,17 @@ const App = () => {
       return "light";
     }
   });
+  const [motionSetting, setMotionSetting] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cognibridge_motion");
+      return ["full", "reduced", "off"].includes(saved) ? saved : "full";
+    } catch { return "full"; }
+  });
+  const [lowSensory, setLowSensory] = useState(() => {
+    try { return localStorage.getItem("cognibridge_low_sensory") === "true"; }
+    catch { return false; }
+  });
+  const [restReminderOpen, setRestReminderOpen] = useState(false);
   const [textScale, setTextScale] = useState(1);
   const [studentLanguage, setStudentLanguage] = useState(() => {
     try {
@@ -59,7 +88,14 @@ const App = () => {
       return "English";
     }
   });
-  const [readAloud, setReadAloud] = useState({ enabled: false, volume: 0.8 });
+  const [readAloud, setReadAloud] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("cognibridge_read_aloud") || "null");
+      return { enabled: saved?.enabled === true, volume: typeof saved?.volume === "number" ? saved.volume : 0.8 };
+    } catch {
+      return { enabled: false, volume: 0.8 };
+    }
+  });
   const [introExiting, setIntroExiting] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [signupEmail, setSignupEmail] = useState("");
@@ -74,8 +110,12 @@ const App = () => {
   const [authSession, setAuthSession] = useState(null);
   const [authReady, setAuthReady] = useState(!supabaseConfigured);
   const [activityVersion, setActivityVersion] = useState(0);
+  const [mindfulVersion, setMindfulVersion] = useState(0);
+  const [screenTimeVersion, setScreenTimeVersion] = useState(0);
   const [attendedSessionIds, setAttendedSessionIds] = useState(new Set());
+  const [privateSessions, setPrivateSessions] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [handwritingPromptOpen, setHandwritingPromptOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [premiumCartPlan, setPremiumCartPlan] = useState(null);
@@ -86,9 +126,78 @@ const App = () => {
     () => (key, values) => translate(studentLanguage, key, values),
     [studentLanguage],
   );
+  const selectedSession = route.sessionId
+    ? sessions.find((session) => String(session.id) === route.sessionId) || null
+    : null;
+  const openSession = (session) => navigate(sessionPath(session.id));
+  const closeSession = () => navigate(studentTabPaths.sessions);
+
+  useEffect(() => {
+    if (!signedIn || !studentEmail || profileOpen || signupEmail || (authRole && authRole !== "student")) return undefined;
+    // Any saved sample counts, including older "Type N" results, so the prompt only appears once.
+    if (studentProfile?.handwritingType) return undefined;
+    let current = true;
+    const checkSample = async () => {
+      if (supabaseConfigured && authUserId) {
+        try {
+          const saved = await loadLatestHandwriting(authUserId);
+          if (!current) return;
+          if (saved?.handwritingType) {
+            setStudentProfile((profile) => ({ ...profile, ...saved }));
+            return;
+          }
+        } catch {
+          // Don't nag on a failed lookup; the student can still update it from Settings.
+          return;
+        }
+      }
+      if (current) setHandwritingPromptOpen(true);
+    };
+    checkSample();
+    return () => { current = false; };
+  }, [signedIn, studentEmail, authRole, authUserId, studentProfile?.handwritingType, profileOpen, signupEmail]);
+  useEffect(() => {
+    if (!lowSensory || restReminderOpen) return undefined;
+    const reminderId = window.setTimeout(() => setRestReminderOpen(true), 3 * 60 * 1000);
+    return () => window.clearTimeout(reminderId);
+  }, [lowSensory, restReminderOpen]);
+
+  useEffect(() => {
+    if (!lowSensory) setRestReminderOpen(false);
+  }, [lowSensory]);
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
+  useEffect(() => {
+    if (!signedIn || !studentEmail || (authRole && authRole !== "student")) return undefined;
+    let lastInteraction = Date.now();
+    let lastTick = Date.now();
+    const interact = () => { lastInteraction = Date.now(); };
+    const persist = async (elapsed) => {
+      if (supabaseConfigured && authUserId) {
+        try { await recordScreenTime(elapsed, localDateKey()); }
+        catch { return; }
+      } else {
+        addLocalScreenTime(studentEmail, elapsed);
+      }
+      setScreenTimeVersion((version) => version + 1);
+    };
+    const tick = () => {
+      const now = Date.now();
+      const elapsed = Math.min(30, Math.floor((now - lastTick) / 1000));
+      lastTick = now;
+      if (document.visibilityState === "visible" && now - lastInteraction <= 60_000 && elapsed > 0) void persist(elapsed);
+    };
+    const interval = window.setInterval(tick, 15_000);
+    const visibility = () => { lastTick = Date.now(); if (document.visibilityState === "visible") interact(); };
+    ["pointerdown", "keydown", "touchstart", "scroll", "mousemove"].forEach((event) => window.addEventListener(event, interact, { passive: true }));
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      window.clearInterval(interval);
+      ["pointerdown", "keydown", "touchstart", "scroll", "mousemove"].forEach((event) => window.removeEventListener(event, interact));
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [signedIn, studentEmail, authRole, authUserId]);
   const sensoryTrackerDemoMode = Boolean(signedIn && !supabaseConfigured && studentEmail);
   const sensoryTrackerEnabled = Boolean(
     signedIn && (sensoryTrackerDemoMode || (supabaseConfigured && authUserId && authRole === "student")),
@@ -233,6 +342,7 @@ const App = () => {
       setAuthRole(null);
       setSignedIn(false);
       setStudentProfile(null);
+      setHandwritingPromptOpen(false);
       setStudentEmail("");
       setPreferredSubjects([]);
       setSubjectSelectionPending(false);
@@ -240,7 +350,6 @@ const App = () => {
       setMentorOpen(false);
       setParentOpen(false);
       setLearningNotes([]);
-      if (activeTab === "sensory") setActiveTab("home");
       return undefined;
     }
 
@@ -289,20 +398,18 @@ const App = () => {
           setMentorOpen(false);
           setSignedIn(true);
           setStudentEmail(user.email || "");
-          setStudentProfile({ id: user.id, email: user.email, name: profile.display_name, studentClass: user.user_metadata?.student_class || "", preferredSubjects: savedSubjects });
+          setStudentProfile({
+            id: user.id,
+            email: user.email,
+            name: profile.display_name,
+            studentClass: user.user_metadata?.student_class || "",
+            age: user.user_metadata?.age || "",
+            section: user.user_metadata?.section || "",
+            school: user.user_metadata?.school || "",
+            preferredSubjects: savedSubjects,
+          });
           loadLatestHandwriting(user.id).then((handwriting) => {
-            if (!isCurrent) return;
-            if (handwriting) {
-              setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
-              return;
-            }
-            // New accounts get the handwriting analysis once; after that it lives in Settings.
-            const promptKey = `cognibridge_handwriting_prompted:${user.id}`;
-            try {
-              if (window.localStorage.getItem(promptKey)) return;
-              window.localStorage.setItem(promptKey, "1");
-            } catch { /* storage unavailable: still show it this once */ }
-            setProfileOpen(true);
+            if (isCurrent && handwriting) setStudentProfile((current) => current && current.id === user.id ? { ...current, ...handwriting } : current);
           }).catch(() => { /* the handwriting section just shows "not analyzed" */ });
           setActiveTab((currentTab) => currentTab === "home" ? "study" : currentTab);
         } else if (profile.role === "mentor") {
@@ -357,9 +464,23 @@ const App = () => {
     setScrollToAboutOnHome(false);
   }, [activeTab, scrollToAboutOnHome]);
 
+  // Auth is settled once Supabase has answered and, for a signed-in user, the profile role has loaded.
+  const authSettled = authReady && (!authSession?.user || authRole !== null);
+
+  // Gated or unknown URLs fall back to home, but only once auth has settled so a reload keeps its page.
   useEffect(() => {
-    if (!sensoryTrackerEnabled && activeTab === "sensory") setActiveTab("home");
-  }, [sensoryTrackerEnabled, activeTab]);
+    if (!authSettled || mentorOpen || parentOpen) return;
+    const path = normalizePath(location.pathname);
+    const gated = (activeTab === "sensory" && !sensoryTrackerEnabled) || (activeTab === "careers" && !(signedIn && isGrade12));
+    const unknown = !route.tab && path !== "/";
+    if (gated || unknown) navigate("/", { replace: true });
+  }, [authSettled, mentorOpen, parentOpen, location.pathname, sensoryTrackerEnabled, signedIn, isGrade12]);
+
+  // Portals keep their own tab in the URL under /mentor and /parent.
+  useEffect(() => {
+    if (mentorOpen && !isPortalPath(location.pathname, "mentor")) navigate("/mentor", { replace: true });
+    else if (parentOpen && !isPortalPath(location.pathname, "parent")) navigate("/parent", { replace: true });
+  }, [mentorOpen, parentOpen, location.pathname]);
 
   useEffect(() => {
     if (supabaseConfigured) {
@@ -395,6 +516,17 @@ const App = () => {
     return undefined;
   }, [signedIn, studentEmail, authUserId, activityVersion]);
 
+  // One-to-one sessions a mentor scheduled for this student, listed on the Sessions page.
+  useEffect(() => {
+    if (!supabaseConfigured || !signedIn || authRole !== "student" || !authUserId) { setPrivateSessions([]); return undefined; }
+    let current = true;
+    loadStudentPrivateSessions(authUserId).then((rows) => {
+      if (!current) return;
+      setPrivateSessions(rows);
+    }).catch(() => {});
+    return () => { current = false; };
+  }, [signedIn, authRole, authUserId]);
+
   useEffect(() => {
     document.documentElement.style.setProperty("--text-scale", textScale);
   }, [textScale]);
@@ -406,6 +538,22 @@ const App = () => {
   useEffect(() => {
     setSpeakingVolume(readAloud.volume);
   }, [readAloud.volume]);
+
+  useEffect(() => {
+    try { localStorage.setItem("cognibridge_read_aloud", JSON.stringify(readAloud)); } catch { /* Session choice remains active. */ }
+  }, [readAloud]);
+
+  useHoverReadAloud({ enabled: readAloud.enabled, language: studentLanguage, volume: readAloud.volume });
+
+  useEffect(() => {
+    document.documentElement.dataset.motion = motionSetting;
+    try { localStorage.setItem("cognibridge_motion", motionSetting); } catch { /* Session choice remains active. */ }
+  }, [motionSetting]);
+
+  useEffect(() => {
+    document.documentElement.dataset.lowSensory = String(lowSensory);
+    try { localStorage.setItem("cognibridge_low_sensory", String(lowSensory)); } catch { /* Session choice remains active. */ }
+  }, [lowSensory]);
 
   useEffect(() => {
     try {
@@ -519,6 +667,7 @@ const App = () => {
     setAuthRole(null);
     setActiveTab("home");
     setStudentProfile(null);
+    setHandwritingPromptOpen(false);
     setStudentEmail("");
     setPreferredSubjects([]);
     setSubjectSelectionPending(false);
@@ -532,7 +681,6 @@ const App = () => {
     if (tab === "careers" && (!signedIn || !isGrade12)) return;
     if (tab === "about") {
       setActiveTab("about");
-      setSelectedSession(null);
       scrollToAbout();
       return;
     }
@@ -542,7 +690,6 @@ const App = () => {
     }
 
     setActiveTab(tab);
-    if (tab !== "sessions") setSelectedSession(null);
   };
 
   // Actions requested by Cogni-Flow; api/chat.js has already checked them against the context it was sent.
@@ -551,10 +698,7 @@ const App = () => {
       goToTab(action.page);
     } else if (action.type === "openSession") {
       const session = sessions.find((item) => item.id === action.sessionId);
-      if (session) {
-        setSelectedSession(session);
-        setActiveTab("sessions");
-      }
+      if (session) openSession(session);
     } else if (action.type === "register") {
       if (signedIn) registerForSession(action.sessionId);
       else setLoginOpen(true);
@@ -601,15 +745,22 @@ const App = () => {
             className="accessibility-panel-left"
             textScale={textScale}
             setTextScale={setTextScale}
+            motionSetting={motionSetting}
+            setMotionSetting={setMotionSetting}
+            lowSensory={lowSensory}
+            setLowSensory={setLowSensory}
             appearance={appearance}
             setAppearance={setAppearance}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
             showLanguage
+            readAloud={readAloud}
+            setReadAloud={setReadAloud}
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
         )}
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -631,17 +782,24 @@ const App = () => {
             <AccessibilityPanel
               textScale={textScale}
               setTextScale={setTextScale}
+              motionSetting={motionSetting}
+              setMotionSetting={setMotionSetting}
+              lowSensory={lowSensory}
+              setLowSensory={setLowSensory}
               appearance={appearance}
               setAppearance={setAppearance}
               language={studentLanguage}
               setLanguage={setStudentLanguage}
               showLanguage
+              readAloud={readAloud}
+              setReadAloud={setReadAloud}
               t={t}
               onClose={() => setAccessibilityOpen(false)}
             />
           )}
           t={t}
         />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -650,6 +808,7 @@ const App = () => {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -658,6 +817,24 @@ const App = () => {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
+      </div>
+    );
+  }
+
+  if (handwritingPromptOpen && signedIn) {
+    return (
+      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
+        <StudentProfileFlow
+          email={studentEmail}
+          studentId={authUserId}
+          existingProfile={studentProfile || { email: studentEmail, name: studentName }}
+          handwritingPrompt
+          t={t}
+          onBack={() => setHandwritingPromptOpen(false)}
+          onComplete={(profile) => { setStudentProfile(profile); setHandwritingPromptOpen(false); }}
+        />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -667,6 +844,7 @@ const App = () => {
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentProfileFlow
           email={signupEmail}
+          studentId={authUserId}
           initialClass={signupStudentClass}
           t={t}
           onBack={() => { setSignupEmail(""); setSignupStudentClass(""); }}
@@ -683,6 +861,7 @@ const App = () => {
             setPendingPremiumLogin(false);
           }}
         />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -692,6 +871,7 @@ const App = () => {
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentProfileFlow
           email={studentProfile?.email || studentEmail}
+          studentId={authUserId}
           existingProfile={studentProfile}
           t={t}
           onBack={() => setProfileOpen(false)}
@@ -701,6 +881,7 @@ const App = () => {
             setProfileOpen(false);
           }}
         />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -735,6 +916,7 @@ const App = () => {
             }
           }}
         />
+        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -761,6 +943,10 @@ const App = () => {
           <AccessibilityPanel
             textScale={textScale}
             setTextScale={setTextScale}
+            motionSetting={motionSetting}
+            setMotionSetting={setMotionSetting}
+            lowSensory={lowSensory}
+            setLowSensory={setLowSensory}
             appearance={appearance}
             setAppearance={setAppearance}
             language={studentLanguage}
@@ -780,16 +966,18 @@ const App = () => {
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
+              screenTimeVersion={screenTimeVersion}
+              screenTimeStudentKey={supabaseConfigured ? authUserId : studentEmail}
+              screenTimeDemoMode={!supabaseConfigured}
               onSignIn={() => setLoginOpen(true)}
               onExploreSessions={() => goToTab("sessions")}
               onScrollToAbout={scrollToAbout}
-              onOpenSession={(session) => {
-                setSelectedSession(session);
-                setActiveTab("sessions");
-              }}
+              onOpenSession={openSession}
             />
           ),
-          leaderboard: <LeaderboardPage signedIn={signedIn} t={t} />,
+          leaderboard: <LeaderboardPage signedIn={signedIn} studentName={studentName} mindfulBoard={readMindfulBoard(studentEmail)} t={t} />,
+          mindful: <MindfulCorner studentId={studentEmail} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} />,
+          relax: <RelaxationRoom onBack={() => goToTab("home")} t={t} />,
           sessions: (
             <SessionsPage
               sessions={studentSessions}
@@ -800,8 +988,9 @@ const App = () => {
               t={t}
               registeredSessionIds={registeredSessionIds}
               attendedSessionIds={attendedSessionIds}
-              onSelect={setSelectedSession}
-              onBack={() => setSelectedSession(null)}
+              privateSessions={privateSessions}
+              onSelect={openSession}
+              onBack={closeSession}
               onSignIn={() => setLoginOpen(true)}
               onRegister={registerForSession}
               onMarkAttended={markSessionAttended}
@@ -815,10 +1004,7 @@ const App = () => {
               studentName={studentName}
               activityVersion={activityVersion}
               t={t}
-              onOpenSession={(session) => {
-                setSelectedSession(session);
-                setActiveTab("sessions");
-              }}
+              onOpenSession={openSession}
             />
           ),
           careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
@@ -872,6 +1058,8 @@ const App = () => {
               studentId={supabaseConfigured ? authUserId : studentEmail}
               demoMode={sensoryTrackerDemoMode}
               t={t}
+              lowSensory={lowSensory}
+              onToggleLowSensory={() => setLowSensory((value) => !value)}
             />
           ) : null,
         }}
@@ -918,8 +1106,24 @@ const App = () => {
         />
       )}
       {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}</div>}
+      <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
     </div>
   );
 };
+
+const RestReminder = ({ open, onClose, t }) => open ? (
+  <div className="rest-reminder-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="rest-reminder" role="dialog" aria-modal="true" aria-labelledby="rest-reminder-title" aria-describedby="rest-reminder-copy">
+      <button type="button" className="rest-reminder-close" onClick={onClose} aria-label={t("close")}><X size={20} /></button>
+      <div className="rest-reminder-icon" aria-hidden="true"><Coffee size={25} /></div>
+      <p className="rest-reminder-eyebrow">{t("restPauseEyebrow")}</p>
+      <h2 id="rest-reminder-title">{t("restReminderTitle")}</h2>
+      <p id="rest-reminder-copy" className="rest-reminder-motivation">{t("restReminderMotivation")}</p>
+      <p className="rest-reminder-tip"><Heart size={16} aria-hidden="true" /> {t("restReminderTip")}</p>
+      <button type="button" className="rest-reminder-action" onClick={onClose}>{t("takeRest")}</button>
+      <button type="button" className="rest-reminder-later" onClick={onClose}>{t("remindInThree")}</button>
+    </section>
+  </div>
+) : null;
 
 export default App;
