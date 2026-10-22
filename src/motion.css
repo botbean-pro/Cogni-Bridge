@@ -1,10 +1,8 @@
-/* The site's motion system, shared by the student, mentor and parent spaces.
-   There are only two motions:
+/* Shared timings for route entrances and navigation transitions.
+   Route and navigation transitions:
    1. Enter  – content fades in while rising 8px (pages, cards, panels, dialogs, toasts, messages).
    2. Slide  – the navigation rail widens, then its labels fade in (all three sidebars).
-   Hover feedback is colour and shadow only; nothing tilts, floats, orbits or sweeps.
-   This file is imported last, so the keyframes below replace the older one-off versions
-   that share their names. */
+   Immersive 3D animation and hover feedback remain active from design-system.css. */
 
 :root {
   --motion-ease: cubic-bezier(.22, 1, .36, 1);
@@ -49,37 +47,9 @@
   animation: cbEnter var(--motion-enter) var(--motion-ease) both;
 }
 
-/* Decorative loops (floating, orbiting, twinkling, glowing, sweeping) are switched off.
+/* Decorative loops are defined alongside their rendered effects in design-system.css.
    Functional loops – spinners, typing dots, the mic pulse, loading shimmer – are kept. */
-@keyframes heroCardFloat { to { translate: 0 0; } }
-@keyframes orbitTurn { to { translate: 0 0; } }
-@keyframes floatLift { to { translate: 0 0; } }
-@keyframes heroOrbitDriftOne { to { translate: 0 0; } }
-@keyframes heroOrbitDriftTwo { to { translate: 0 0; } }
-@keyframes heroFloatCoral { to { translate: 0 0; } }
-@keyframes heroFloatGold { to { translate: 0 0; } }
-@keyframes heroFloatMint { to { translate: 0 0; } }
-@keyframes heroGlowBreathe { to { translate: 0 0; } }
-@keyframes heroAtmosphere { to { translate: 0 0; } }
-@keyframes gapGlint { to { translate: 0 0; } }
-@keyframes testimonialFloat { to { translate: 0 0; } }
-@keyframes learningPathFloat { to { translate: 0 0; } }
-@keyframes learningPathTwinkle { to { translate: 0 0; } }
-@keyframes sharedGentleFloat { to { translate: 0 0; } }
-@keyframes relaxFloat { to { translate: 0 0; } }
-@keyframes waveRise { to { transform: translate(-50%, 0); } }
-
-/* Hover: colour and shadow only. */
-[data-depth-surface="true"],
-[data-depth-surface="true"]:hover,
-[data-depth-surface="true"]:focus-within {
-  rotate: none;
-  translate: none;
-  transform-style: flat;
-  transition: box-shadow var(--motion-hover) ease, border-color var(--motion-hover) ease, background-color var(--motion-hover) ease;
-}
-[data-depth-surface="true"]::after { display: none; }
-
+/* Immersive hover effects are defined in design-system.css. */
 /* 2. Slide ---------------------------------------------------------------- */
 /* Icons keep the exact same position while the rail opens, so only the width moves.
    Labels wait until there is room for them, then fade in; on close they fade out at once. */

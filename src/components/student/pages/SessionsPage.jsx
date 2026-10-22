@@ -8,7 +8,7 @@ import { StudentStats } from "../shared/StudentStats";
 import "./SessionsPage.css";
 
 function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended, t }) {
-  const canMarkAttended = signedIn && isSessionComplete(session) && !attended;
+  const canMarkAttended = signedIn && registered && isSessionComplete(session) && !attended;
   const title = getSessionTitle(session, t);
   const description = session.descriptionKey ? t(session.descriptionKey) : session.description;
   const learnItems = session.learnKeys ? session.learnKeys.map((key) => t(key)) : session.learn;

@@ -14,12 +14,16 @@ const surfaceSelector = [
   '.mentor-rankings article',
   '.quick-prompt-row', '.related-question-row', '.career-opportunity-card',
   '.about-approach-card', '.about-value-card', '.home-feature-card', '.feature-card',
+  '.learning-path-preview-card', '.testimonial-card', '.learning-path-choice',
 ].join(', ');
+const floatSelector = '.hero-orb-book, .hero-float-coral, .hero-float-yellow, .hero-float-mint, .hero-art-label, .learning-path-node, .learning-path-spark-one, .learning-path-spark-two';
+const floatTimings = [[6.1, -1.4], [7.3, -2.7], [5.6, -0.8], [8.2, -3.1], [6.8, -2.1], [7.7, -0.6], [5.9, -2.4], [8.5, -1.7]];
 
 export function useImmersiveEffects() {
   useEffect(() => {
     const systemReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const tracked = new Set();
+    const floating = new Set();
     let revealObserver;
 
     if (!systemReducedMotion && document.documentElement.dataset.motion !== 'off' && 'IntersectionObserver' in window) {
@@ -42,6 +46,27 @@ export function useImmersiveEffects() {
       surface.dataset.reveal = systemReducedMotion || document.documentElement.dataset.motion === 'off' || !revealObserver ? 'shown' : 'pending';
       surface.style.setProperty('--depth-delay', `${(tracked.size - 1) % 5 * 45}ms`);
       if (revealObserver) revealObserver.observe(surface);
+      const tiltAtPointer = (event) => {
+        if (event.pointerType === 'touch' || systemReducedMotion
+          || ['off', 'reduced'].includes(document.documentElement.dataset.motion)
+          || document.documentElement.dataset.lowSensory === 'true') return;
+        const bounds = surface.getBoundingClientRect();
+        const x = Math.max(-0.5, Math.min(0.5, (event.clientX - bounds.left) / bounds.width - 0.5));
+        const y = Math.max(-0.5, Math.min(0.5, (event.clientY - bounds.top) / bounds.height - 0.5));
+        const angle = Math.hypot(x, y) * 9;
+        surface.style.setProperty('--depth-rotation', angle < 0.1 ? '0 0 1 0deg' : `${(-y).toFixed(3)} ${x.toFixed(3)} 0 ${angle.toFixed(2)}deg`);
+        surface.style.setProperty('--depth-glow-x', `${((x + 0.5) * 100).toFixed(1)}%`);
+        surface.style.setProperty('--depth-glow-y', `${((y + 0.5) * 100).toFixed(1)}%`);
+      };
+      const resetPointer = (event) => {
+        if (event.pointerType === 'touch') return;
+        surface.style.removeProperty('--depth-rotation');
+        surface.style.removeProperty('--depth-glow-x');
+        surface.style.removeProperty('--depth-glow-y');
+      };
+      surface.addEventListener('pointermove', tiltAtPointer, { passive: true });
+      surface.addEventListener('pointerleave', resetPointer, { passive: true });
+      surface.__cogniDepthHandlers = [tiltAtPointer, resetPointer];
     };
 
     const unregister = (surface) => {
@@ -51,12 +76,35 @@ export function useImmersiveEffects() {
       delete surface.dataset.reveal;
       delete surface.dataset.visible;
       surface.style.removeProperty('--depth-delay');
+      surface.__cogniDepthHandlers?.forEach((handler, index) => surface.removeEventListener(index === 0 ? 'pointermove' : 'pointerleave', handler));
+      delete surface.__cogniDepthHandlers;
+      surface.style.removeProperty('--depth-rotation');
+      surface.style.removeProperty('--depth-glow-x');
+      surface.style.removeProperty('--depth-glow-y');
+    };
+
+    const registerFloat = (element) => {
+      if (floating.has(element)) return;
+      floating.add(element);
+      element.dataset.floatSurface = 'true';
+      const [duration, delay] = floatTimings[(floating.size - 1) % floatTimings.length];
+      element.style.setProperty('--float-duration', `${duration}s`);
+      element.style.setProperty('--float-delay', `${delay}s`);
+    };
+
+    const unregisterFloat = (element) => {
+      if (!floating.delete(element)) return;
+      delete element.dataset.floatSurface;
+      element.style.removeProperty('--float-duration');
+      element.style.removeProperty('--float-delay');
     };
 
     const scan = (node) => {
       if (!(node instanceof Element)) return;
       if (node.matches(surfaceSelector)) register(node);
       node.querySelectorAll(surfaceSelector).forEach(register);
+      if (node.matches(floatSelector)) registerFloat(node);
+      node.querySelectorAll(floatSelector).forEach(registerFloat);
     };
 
     scan(document.body);
@@ -67,6 +115,8 @@ export function useImmersiveEffects() {
         if (!(node instanceof Element)) return;
         if (node.matches(surfaceSelector)) unregister(node);
         node.querySelectorAll(surfaceSelector).forEach(unregister);
+        if (node.matches(floatSelector)) unregisterFloat(node);
+        node.querySelectorAll(floatSelector).forEach(unregisterFloat);
       });
       addedNodes.forEach(scan);
     });
@@ -86,6 +136,16 @@ export function useImmersiveEffects() {
         delete surface.dataset.reveal;
         delete surface.dataset.visible;
         surface.style.removeProperty('--depth-delay');
+        surface.__cogniDepthHandlers?.forEach((handler, index) => surface.removeEventListener(index === 0 ? 'pointermove' : 'pointerleave', handler));
+        delete surface.__cogniDepthHandlers;
+        surface.style.removeProperty('--depth-rotation');
+        surface.style.removeProperty('--depth-glow-x');
+        surface.style.removeProperty('--depth-glow-y');
+      });
+      floating.forEach((element) => {
+        delete element.dataset.floatSurface;
+        element.style.removeProperty('--float-duration');
+        element.style.removeProperty('--float-delay');
       });
     };
   }, []);

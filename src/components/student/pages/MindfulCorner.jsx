@@ -202,7 +202,7 @@ function GameScreen({ activity, settings, clueProgress, onCompleteClueLevel, onA
         }
       }}><strong>{option}</strong></button>)}</div>
       <p className="mc-clue-feedback" role="status">{status || 'Take your time. You can try again whenever you like.'}</p>
-      {clueSolved && <button type="button" className="mc-clue-next" onClick={() => {
+      <button type="button" className="mc-clue-next" disabled={!clueSolved} onClick={() => {
         if (clueRound === clueQuestions.length - 1) {
           onCompleteClueLevel(activeClueLevel);
           setClueLevelComplete(true);
@@ -213,7 +213,7 @@ function GameScreen({ activity, settings, clueProgress, onCompleteClueLevel, onA
           setClueHintOpen(false);
           setStatus('');
         }
-      }}>{clueRound === clueQuestions.length - 1 ? 'Complete level' : 'Next puzzle'} <ArrowRight size={16} aria-hidden="true" /></button>}
+      }}>{clueRound === clueQuestions.length - 1 ? 'Complete level' : 'Next clue'} <ArrowRight size={16} aria-hidden="true" /></button>
     </div>)}
     {activity.id === 'puzzle' && <div><p>Choose a piece, then choose where it goes. Hint: the picture is a little flower.</p><div className="mc-puzzle">{puzzle.map((n, i) => <button key={i} type="button" aria-pressed={puzzleSelection === i} aria-label={`Puzzle piece ${n}, position ${i+1}`} onClick={() => { if (puzzleSelection == null) setPuzzleSelection(i); else { const copy = [...puzzle]; [copy[puzzleSelection], copy[i]] = [copy[i], copy[puzzleSelection]]; setPuzzle(copy); setPuzzleSelection(null); if (copy.every((x, j) => x === j + 1)) finishActivity(true); else setStatus('Piece moved. Keep exploring.'); } }}>{n === 1 ? '🌼' : n === 2 ? '🌿' : n === 3 ? '🟩' : '☀️'}</button>)}</div><p aria-live="polite">{puzzleSelection != null ? 'Choose where to place the selected piece.' : status}</p><button type="button" onClick={() => { setPuzzle(shuffledPuzzle()); setPuzzleSelection(null); }}>Mix pieces</button><button type="button" onClick={() => { setPuzzle([1,2,3,4]); setPuzzleSelection(null); setStatus('Picture preview: flower, leaf, grass, sun.'); }}>Show hint</button></div>}
     {activity.id === 'sounds' && <div><p>Optional soft tones. Turn on sound in Access settings first. You can also enjoy the quiet visual garden.</p><div className="mc-sounds">{['Rain','Birds','Ocean','Soft tone'].map((s) => <button type="button" key={s} aria-pressed={!!soundOn[s]} onClick={() => toggleSound(s)}>{soundOn[s] ? <Volume2/> : <VolumeX/>}{s}</button>)}</div><div className="mc-volume">{Object.keys(soundOn).filter((s) => soundOn[s]).map((s) => <label key={s}>{s} volume <input id={`volume-${s}`} type="range" min="1" max="30" defaultValue="12" aria-label={`${s} volume`} onChange={(e) => { const node = soundNodes.current[s]; if (node) node.gain.gain.value = Number(e.target.value) / 1000; }} /></label>)}</div><button type="button" onClick={() => { stopSounds(); setStatus('All sounds stopped.'); }}>Stop all</button><div className="mc-visual-alternative" aria-label="Quiet visual alternative">☁　✿　☼　✧</div><p aria-live="polite">{status}</p></div>}

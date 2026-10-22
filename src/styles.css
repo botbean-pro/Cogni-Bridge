@@ -775,7 +775,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail-toggle { display:none; width:26px; height:22px; flex:none; place-items:center; border:1px solid rgba(255,255,255,.18); border-radius:8px; background:#263b3d; color:#d8e6e6; cursor:pointer; }
 .student-rail-nav { display:grid; width:100%; align-content:start; justify-items:center; gap:6px; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; }
 .student-rail-nav::-webkit-scrollbar { display:none; }
-.student-rail-link { display:flex; width:56px; min-width:0; min-height:45px; align-items:center; justify-content:center; gap:0; margin:0 auto; padding:0; border:0; border-radius:12px; background:transparent; color:#bfd0d1; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; text-align:left; white-space:nowrap; cursor:pointer; transition:background .18s ease,color .18s ease,transform .18s ease; }
+.student-rail-link { display:flex; width:56px; min-width:0; min-height:45px; align-items:center; justify-content:center; gap:0; margin:0 auto; padding:0; border:0; border-radius:12px; background:transparent; color:#bfd0d1; font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; text-align:left; text-decoration:none; white-space:nowrap; cursor:pointer; transition:background .18s ease,color .18s ease,transform .18s ease; }
 .student-rail-link > svg,.student-rail-link > .avatar-small { flex:none; }
 .student-rail-link.locked { position:relative; cursor:not-allowed; opacity:.62; }
 .student-rail-link .rail-lock-icon { position:absolute; top:4px; right:4px; width:13px; height:13px; padding:2px; border-radius:50%; background:#1e292b; color:#dce8e8; }
@@ -794,7 +794,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail:hover .student-rail-footer,.student-rail:focus-within .student-rail-footer,.student-rail:has(.pinned-open) .student-rail-footer,.student-rail:hover .student-rail-account,.student-rail:focus-within .student-rail-account,.student-rail:has(.pinned-open) .student-rail-account { justify-items:stretch; }
 .student-rail:hover .student-rail-link,.student-rail:focus-within .student-rail-link,.student-rail:has(.pinned-open) .student-rail-link { width:100%; justify-content:flex-start; gap:13px; margin:0; padding:0 13px; }
 .student-rail:hover .student-rail-link > span:not(.avatar-small),.student-rail:focus-within .student-rail-link > span:not(.avatar-small),.student-rail:has(.pinned-open) .student-rail-link > span:not(.avatar-small) { width:auto; opacity:1; }
-.student-rail-footer { display:grid; width:100%; justify-items:center; gap:6px; margin-top:auto; padding-top:12px; border-top:1px solid rgba(255,255,255,.1); }
+.student-rail-footer { display:grid; width:100%; justify-items:center; gap:6px; margin-top:auto; padding-top:12px; border-top:0; }
 .student-rail-account { display:grid; width:100%; justify-items:center; gap:6px; }
 .student-rail-account .student-rail-link,.student-rail-account .student-rail-logout { width:56px; }
 .student-rail-account-split { position:relative; }
