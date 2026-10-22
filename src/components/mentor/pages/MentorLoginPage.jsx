@@ -2,6 +2,7 @@ import React from "react";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { MENTOR_EMAIL, MENTOR_PASSWORD } from "../../../constants";
 import { LogoImage } from "../../Brand";
+import { usePageTitle } from "../../../pageTitle";
 
 export function MentorLoginPage({
   email,
@@ -13,6 +14,7 @@ export function MentorLoginPage({
   onBack,
   t,
 }) {
+  usePageTitle(t("pt_mentor"));
   return (
     <main className="mentor-login-page">
       <header className="sidebar mentor-login-topbar">

@@ -108,3 +108,15 @@ export async function sendMentorParentReply({ mentorId, studentId, parentId, mes
     message: message.trim(),
   }));
 }
+
+// Parents linked to the calling mentor's students, including ones who haven't written yet.
+// Needs mentor_parent_contacts() from 20261022000100_mentor_parent_chat.sql.
+export async function loadMentorParentContacts() {
+  return throwIfError(await supabase.rpc("mentor_parent_contacts")).map((contact) => ({
+    key: `${contact.parent_id}:${contact.student_id}`,
+    parentId: contact.parent_id,
+    parentName: contact.parent_name,
+    studentId: contact.student_id,
+    studentName: contact.student_name,
+  }));
+}

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { navigation, classNames } from "../../constants";
 import { LogoImage } from "../Brand";
 import { BookOpen, Compass, Crown, Headphones, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
+import { studentTabPaths } from "../../routes";
+import { usePageTitle } from "../../pageTitle";
 
 const navigationLabels = {
   home: "home",
@@ -16,6 +19,7 @@ const navigationLabels = {
 };
 
 export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, t }) => {
+  usePageTitle(t("pt_student"), activeTab === "mindful" ? t("mcTitle") : activeTab === "settings" ? t("settings") : t(navigationLabels[activeTab] || activeTab));
   const [pinnedOpen, setPinnedOpen] = useState(false);
   const items = signedIn
     ? [
@@ -42,9 +46,17 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
         {items.map(([Icon, tab]) => {
           const careerLocked = tab === "careers" && !isGrade12;
           const label = t(tab === "mindful" ? "mcTitle" : navigationLabels[tab] || tab);
-          return <button key={tab} type="button" className={classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked")} aria-current={activeTab === tab ? "page" : undefined} aria-disabled={careerLocked} onClick={() => !careerLocked && onNavigate(tab)} title={careerLocked ? t("career_locked") : label}>
-            <Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{label}</span>
-          </button>
+          const linkProps = {
+            key: tab,
+            className: classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked"),
+            "aria-current": activeTab === tab ? "page" : undefined,
+            "aria-disabled": careerLocked,
+            title: careerLocked ? t("career_locked") : label,
+          };
+          const content = <><Icon size={20} />{careerLocked && <LockKeyhole className="rail-lock-icon" size={11} />}<span>{label}</span></>;
+          return careerLocked
+            ? <button {...linkProps} type="button" onClick={() => onNavigate(tab)}>{content}</button>
+            : <Link {...linkProps} to={studentTabPaths[tab]}>{content}</Link>;
         })}
       </nav>
     </div>

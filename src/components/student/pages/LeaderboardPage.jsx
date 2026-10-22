@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Award, CheckCircle2, Flame, Info, MinusCircle, PlusCircle, Trophy } from "lucide-react";
 import { fetchLeaderboard } from "../../../sessionRegistrations";
 import { supabaseConfigured } from "../../../supabaseClient";
+import { CogniWallet } from "../shared/CogniWallet";
 import "./LeaderboardPage.css";
 
 // Demo-mode sample data; with Supabase the leaderboard comes from public.leaderboard().
@@ -28,7 +29,7 @@ const scoreStudent = (student) => {
   };
 };
 
-export function LeaderboardPage({ signedIn, t }) {
+export function LeaderboardPage({ signedIn, studentName, t }) {
   const [rows, setRows] = useState(() => (supabaseConfigured ? null : leaderboardStudents.map(scoreStudent)));
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -63,6 +64,8 @@ export function LeaderboardPage({ signedIn, t }) {
         </div>
         <div className="leaderboard-trophy" aria-hidden="true"><Trophy size={34} /></div>
       </div>
+
+      <CogniWallet signedIn={signedIn} studentName={studentName} />
 
       <aside className="points-info-box" aria-label={t("howPointsWork")}>
         <div className="points-info-icon"><Info size={20} /></div>

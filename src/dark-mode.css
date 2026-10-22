@@ -1,0 +1,212 @@
+/* Dark-mode fixes for components that hardcode light pastel backgrounds.
+   In dark mode --teal-dark and --text turn light, so these need dark backgrounds to stay readable.
+   Loaded last so it wins over the light rules in the other stylesheets. */
+
+body.theme-dark { background:var(--canvas); color:var(--text); }
+
+/* Teal chips: subject pills, filters, the Cogni-Flow status badge */
+.theme-dark .subject-pill,
+.theme-dark .mentor-subject,
+.theme-dark .ai-status { background:#173b38; color:#7fe3d4; }
+.theme-dark .ai-status { box-shadow:none; }
+.theme-dark .filter-bar button:hover,
+.theme-dark .filter-bar button.selected { background:#173b38; border-color:#2f6d66; color:#7fe3d4; }
+
+/* Parent portal mood badges */
+.theme-dark .parent-mood-1 { background:#45231f; color:#f6a99f; }
+.theme-dark .parent-mood-2 { background:#43301c; color:#f3c08b; }
+.theme-dark .parent-mood-4 { background:#173b36; color:#7fdcca; }
+.theme-dark .parent-mood-5 { background:#11443d; color:#8ff0df; }
+.theme-dark .parent-link-error { color:#f8b4b4 !important; }
+
+/* Pastel icon tiles on the Sessions and About pages */
+.theme-dark .sessions-value-icon.mint,
+.theme-dark .about-value-icon { color:#6fdccb; background:#173b38; }
+.theme-dark .sessions-value-icon.cream,
+.theme-dark .about-value-2 .about-value-icon { color:#f0c27e; background:#3d301b; }
+.theme-dark .sessions-value-icon.blue,
+.theme-dark .about-value-3 .about-value-icon { color:#9db8ef; background:#1f2c48; }
+.theme-dark .sessions-value-icon.peach,
+.theme-dark .about-value-4 .about-value-icon { color:#f1a88d; background:#43271f; }
+.theme-dark .about-principle > span { background:#173b38; color:#7fe3d4; }
+
+/* Buttons and controls with white fills */
+.theme-dark .calm-breath-card .calm-action { background:var(--surface); color:#7fe3d4; }
+.theme-dark .accessibility-close { border-color:var(--line); background:var(--surface-2); color:var(--text); }
+.theme-dark .accessibility-close:hover { background:#173b38; }
+.theme-dark .premium-demo-pay-button:disabled { background:var(--surface-2); color:var(--muted); }
+.theme-dark .auth-the-divider::before { background:var(--line); }
+
+/* Error text that was tuned for white backgrounds */
+.theme-dark .profile-flow-error { color:#ff9f94; }
+.theme-dark .audio-notes-error,
+.theme-dark .student-notify-error { color:#ff9f94; }
+.theme-dark .practice-feedback.is-correct { color:#7fe0b0; }
+.theme-dark .practice-feedback.is-incorrect { color:#f3c08b; }
+
+/* Cogni Board: Mindful Corner points card */
+.theme-dark .mindful-points-card { border-color:#2c5247; background:linear-gradient(110deg,#173830,var(--surface)); box-shadow:none; }
+.theme-dark .mindful-points-medal { background:#1f4a3c; color:#8fdcb8; }
+.theme-dark .mindful-points-summary .eyebrow { color:#8fdcb8; }
+.theme-dark .mindful-points-total { color:#7fe0b0; }
+.theme-dark .mindful-points-card ul { border-top-color:var(--line); }
+
+/* Mindful Corner: dark versions of its own tokens (high contrast stays as the student chose it) */
+.theme-dark .mindful-corner:not(.theme-high-contrast) { --mc-bg:#111b1f; --mc-surface:#1a292d; --mc-ink:#e8f2f2; --mc-muted:#a6b9bb; --mc-accent:#5cc7b0; --mc-soft:#22363a; --mc-line:#34484c; }
+.theme-dark .mindful-corner.theme-colorful { --mc-bg:#1a1622; --mc-surface:#241e2f; --mc-ink:#eee8f6; --mc-muted:#b9aecb; --mc-accent:#b48ee0; --mc-soft:#30283e; --mc-line:#43395a; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) :is(.mc-primary, .mc-filters button.active, .mc-clue-next) { color:#0d1a1c !important; }
+.theme-dark .mc-bubble-row button { border-color:#3f6d66; background:#1c3a36; color:#7fd4c4; }
+.theme-dark .mc-breath-orb,
+.theme-dark .mc-breath-orb.shrink { border-color:#2d4a44; background:#1c3530; color:#8cc7a3; }
+.theme-dark .mc-breath-orb.grow { background:#1b2f3d; }
+.theme-dark .mc-breath-orb.color-cycle { animation-name:mc-color-drift-dark; }
+@keyframes mc-color-drift-dark { 0% { background:#1c3530; } 100% { background:#1b2f3d; } }
+.theme-dark .mc-garden-board { background:#1c3026; }
+.theme-dark .mc-garden-board.scene-beach { background:#352d1c; }
+.theme-dark .mc-garden-board.scene-sky { background:#1b2e3a; }
+.theme-dark .mc-garden-board > button:hover { background:#ffffff14; }
+.theme-dark .mc-color-art button { border-color:#2c3e42 !important; background:#1f3034; }
+.theme-dark .mc-match-grid button:disabled { border-color:#3f7a62; background:#1c3a2e; }
+.theme-dark .mc-puzzle button { background:#1c3026 !important; }
+.theme-dark .mc-feeling-canvas { background:#16252a; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-clue-hint { border-color:#c99a3a; background:#33291a; color:#f1dcae !important; }
+.theme-dark .mc-palette button { border-color:#4b5d58 !important; }
+
+/* Relaxation Room */
+.theme-dark .relax-room { background:radial-gradient(ellipse at 82% 7%,#173a35 0,transparent 34%),linear-gradient(145deg,#0f1b1e,#12241f 55%,#101b1d); color:var(--text); }
+.theme-dark .relax-room-glow { border-color:#2f6a5f66; }
+.theme-dark .relax-room-glow-one,.theme-dark .relax-room-glow-two { box-shadow:0 0 0 30px #2f6a5f1a,0 0 0 70px #2f6a5f10; }
+.theme-dark .relax-room-header > span { color:#8cc9bc; }
+.theme-dark .relax-back { border-color:var(--line); background:#1a292dd9; color:var(--text); }
+.theme-dark .relax-room-orb { border-color:#2f5a50; background:linear-gradient(145deg,#1f3a35,#16302a); box-shadow:none; color:#7fd4c4; }
+.theme-dark .relax-kicker { color:#6fd6c4; }
+.theme-dark .relax-room-intro h1,
+.theme-dark .relax-sound-card h2 { color:var(--text); }
+.theme-dark .relax-room-intro > p:last-child,
+.theme-dark .relax-sound-card p,
+.theme-dark .relax-kind-note { color:var(--muted); }
+.theme-dark .relax-sound-card { border-color:var(--line); background:linear-gradient(150deg,#1a292df2,#172427e6); box-shadow:none; }
+.theme-dark .relax-sound-card:hover,.theme-dark .relax-sound-card:focus-within,.theme-dark .relax-sound-card.is-playing { border-color:#3f8f80; }
+.theme-dark .relax-sound-icon { background:#1c3a36; color:#7fd4c4; }
+.theme-dark .relax-controls { border-color:var(--line); background:#1a292dd9; }
+.theme-dark .relax-controls label { color:var(--muted); }
+.theme-dark .relax-controls label strong,
+.theme-dark .relax-status { color:#6fd6c4; }
+
+/* Session support panel */
+.theme-dark .session-settings summary,
+.theme-dark .session-summary-stats strong,
+.theme-dark .session-timeline time { color:#6fd6c4; }
+.theme-dark .sensory-session-panel :is(.session-secondary, .session-chip) { border-color:var(--line); background:var(--surface-2); color:var(--text); }
+.theme-dark .sensory-session-panel :is(.session-secondary, .session-chip):hover { border-color:#3f8f80; background:#22403f; }
+.theme-dark .sensory-session-panel .session-chip.selected { border-color:#3f8f80; background:#173b38; color:#7fe3d4; }
+.theme-dark .session-text-button { color:var(--muted); }
+
+/* Rest reminder */
+.theme-dark .rest-reminder-icon { background:#22363a; color:#9fc7b8; }
+
+/* Home page: learning-path preview */
+.theme-dark .learning-path-section { border-color:var(--line); background:radial-gradient(ellipse at 82% 48%,rgba(85,213,195,.08),transparent 43%),linear-gradient(135deg,#16262a 0%,#132125 100%); box-shadow:none; }
+.theme-dark .learning-path-copy > .eyebrow,
+.theme-dark .learning-path-link { color:#6fd6c4; }
+.theme-dark .learning-path-copy h2,
+.theme-dark .learning-path-story h3 { color:var(--text); }
+.theme-dark .learning-path-intro,
+.theme-dark .learning-path-story p { color:var(--muted); }
+.theme-dark .learning-path-choice { border-color:var(--line); background:#ffffff0d; color:var(--text); }
+.theme-dark .learning-path-choice.is-active { border-color:#19bea9; background:#19bea9; color:#0d1a1c; }
+.theme-dark .learning-path-preview-card { border-color:var(--line); background:linear-gradient(150deg,#1f3236,#1a292d); box-shadow:0 30px 60px rgba(0,0,0,.35); }
+.theme-dark .learning-path-section:hover .learning-path-preview-card { box-shadow:0 36px 70px rgba(0,0,0,.4); }
+.theme-dark .learning-path-main-icon { border-color:transparent; background:#173b38; color:#6fd6c4; }
+.theme-dark .learning-path-visual-parent .learning-path-main-icon { background:#1f2c48; color:#9db8ef; }
+.theme-dark .learning-path-visual-educator .learning-path-main-icon { background:#3d301b; color:#f0c27e; }
+.theme-dark .learning-path-status { background:#173b38; color:#9fd3c8; }
+.theme-dark .learning-path-card-heading span { background:#2c4246; }
+.theme-dark .learning-path-card-heading span:first-child { background:#3f5d5a; }
+.theme-dark .learning-path-card-progress { background:#22363a; }
+.theme-dark .learning-path-chip-list span { border-color:var(--line); background:#22363a; color:var(--muted); }
+.theme-dark .learning-path-card-footer > span:not(.learning-path-avatar) { background:#2c4246; }
+.theme-dark .learning-path-avatar { background:#173b38; color:#6fd6c4; }
+.theme-dark .learning-path-node { border-color:var(--line); background:#1f3236e6; box-shadow:0 15px 29px rgba(0,0,0,.3); }
+
+/* Voice input error text */
+.theme-dark .ai-voice-status.error { color:#ff9f94; }
+
+/* My Little Journal: its low-sensory switch hardcodes a near-white --surface-2.
+   In dark mode use a calm dark tone derived from the current theme instead. */
+.theme-dark .low-sensory-mode { --surface-2:color-mix(in srgb, var(--surface) 70%, var(--canvas)); }
+.theme-dark .low-sensory-mode .sensory-card { border-color:var(--line); }
+.theme-dark .sensory-history-entry em.is-shared { color:#7fe3d4; }
+
+/* Dark minimalist palette and shared page surfaces. */
+.theme-dark {
+  --canvas:#101415;
+  --surface:#171c1d;
+  --surface-2:#1d2425;
+  --text:#edf2f1;
+  --muted:#a8b2b1;
+  --line:#303839;
+  --teal:#36b8a7;
+  --teal-fill:#117b70;
+  --teal-fill-hover:#0e6b62;
+  --teal-dark:#79d9cd;
+  --shadow:0 8px 22px rgba(0,0,0,.18);
+  --depth-shadow:0 10px 24px rgba(0,0,0,.2);
+  --depth-highlight:rgba(112,219,204,.1);
+}
+.theme-dark .app,
+.theme-dark .main,
+.theme-dark .content { background-color:var(--canvas); color:var(--text); }
+.theme-dark .home-hero { border-radius:0 0 18px 18px; background:linear-gradient(118deg,#111819,#152021 68%,#172526); }
+.theme-dark .home-hero::before { border-color:rgba(145,190,184,.08); }
+.theme-dark .home-hero-art-wrap::before { opacity:.3; filter:blur(24px); }
+.theme-dark .home-hero-art-wrap::after { opacity:.25; }
+.theme-dark .learning-path-section,
+.theme-dark .sessions-values,
+.theme-dark .sessions-listing,
+.theme-dark .about-values-section,
+.theme-dark .about-approach-section { background:var(--canvas); color:var(--text); }
+.theme-dark .learning-path-copy h2,
+.theme-dark .learning-path-story h3,
+.theme-dark .sessions-values h1,
+.theme-dark .sessions-listing .section-title h2,
+.theme-dark .about-heading-text,
+.theme-dark .about-approach-copy h2 { color:var(--text); }
+.theme-dark .learning-path-copy > p,
+.theme-dark .learning-path-story p,
+.theme-dark .sessions-values p,
+.theme-dark .about-approach-copy > p:last-child { color:var(--muted); }
+.theme-dark .learning-path-preview-card,
+.theme-dark .learning-path-choice,
+.theme-dark .learning-path-story,
+.theme-dark .sessions-value-card,
+.theme-dark .sessions-values-grid article { border-color:var(--line); background:var(--surface); color:var(--text); box-shadow:none; }
+.theme-dark .learning-path-section::before { opacity:.45; }
+.theme-dark .sessions-values-grid p { color:var(--muted); }
+.theme-dark .relax-room { background:#101516; color:var(--text); }
+.theme-dark .relax-room-glow { display:none; }
+.theme-dark .relax-room-intro h1,
+.theme-dark .relax-sound-card h2,
+.theme-dark .relax-voice h2 { color:var(--text); }
+.theme-dark .relax-room-intro > p:last-child,
+.theme-dark .relax-sound-card p,
+.theme-dark .relax-voice-copy div > p:last-child,
+.theme-dark .relax-kind-note { color:var(--muted); }
+.theme-dark .relax-back,
+.theme-dark .relax-sound-card,
+.theme-dark .relax-voice,
+.theme-dark .relax-controls { border-color:var(--line); background:var(--surface); color:var(--text); box-shadow:none; }
+.theme-dark .relax-sound-card:hover,
+.theme-dark .relax-sound-card:focus-within { border-color:#3c8178; box-shadow:0 8px 20px rgba(0,0,0,.2); }
+.theme-dark .relax-sound-icon,
+.theme-dark .relax-voice-icon { border-color:var(--line); background:#1d302e; color:#79d9cd; box-shadow:none; }
+.theme-dark .relax-voice-actions .relax-voice-stop { border:1px solid var(--line); background:var(--surface-2); color:var(--text); }
+.theme-dark .relax-voice-picker,
+.theme-dark .relax-controls label { color:var(--muted); }
+.theme-dark .relax-voice-picker select { border-color:var(--line); background:var(--surface-2); color:var(--text); }
+.theme-dark .mindful-corner.theme-calm { --mc-bg:#101516; --mc-surface:#171c1d; --mc-ink:#edf2f1; --mc-muted:#a8b2b1; --mc-accent:#79d9cd; --mc-soft:#1d2928; --mc-line:#303839; }
+.theme-dark .mindful-corner.theme-calm .mc-card:hover { background:var(--mc-soft); }
+.theme-dark :is(.feature-hero,.empty-feature,.feature-grid article,.stats-error,.profile-chip,.leaderboard-card,.sensory-card,.career-card,.career-question-card,.settings-card,.session-card,.session-detail,.my-session-row,.student-note-card,.cogni-wallet-card) { border-color:var(--line); background:var(--surface); color:var(--text); box-shadow:none; }
+.theme-dark :is(.feature-hero p,.empty-feature p,.feature-grid article p,.leaderboard-card p,.sensory-card p,.career-card p,.settings-card p,.student-note-card p) { color:var(--muted); }
+.theme-dark :is(.student-rail,.student-topbar,.student-rail-footer) { box-shadow:none; }
+.theme-dark :is(.student-rail-link:hover,.student-rail-link.active) { box-shadow:none; }

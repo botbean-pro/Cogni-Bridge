@@ -34,7 +34,9 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
     setActive((current) => current.filter((key) => key !== id));
   };
 
-  const stopAll = () => Object.keys(nodes.current).forEach(stopOne);
+  const stopAll = () => {
+    Object.keys(nodes.current).forEach(stopOne);
+  };
 
   useEffect(() => () => {
     Object.values(nodes.current).forEach(({ sources, context }) => {
@@ -119,7 +121,7 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
         <button type="button" aria-pressed={active.includes(id)} onClick={() => play(id)}>{active.includes(id) ? t("pauseSound") : t("playSound")}</button>
       </article>)}
     </section>
-    <section className="relax-controls"><label htmlFor="relax-volume">{t("soundLevel")} <strong>{volume}%</strong></label><input id="relax-volume" type="range" min="0" max="30" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /><button type="button" onClick={stopAll} disabled={!active.length}>{t("stopAllSounds")}</button></section>
+    <section className="relax-controls"><label htmlFor="relax-volume">{t("soundLevel")} <strong>{volume}%</strong></label><input id="relax-volume" type="range" min="0" max="200" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /><button type="button" onClick={stopAll} disabled={!active.length}>{t("stopAllSounds")}</button></section>
     <p className="relax-kind-note">{t("quietSpaceNote")}</p><p className="relax-status" role="status" aria-live="polite">{message}</p>
   </div>;
 }

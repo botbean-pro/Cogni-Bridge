@@ -151,7 +151,6 @@ body {
   box-shadow: 0 10px 26px rgba(21, 67, 67, .07);
 }
 
-.about-value::before,
 .session-card::before,
 .mentor-session-card::before,
 .performance-card::before,
@@ -1106,14 +1105,14 @@ html[data-motion="off"] .testimonial-carousel-track .testimonial-card { animatio
 .home-scroll-logo-mark,
 .home-scroll-logo-orbit { animation: none !important; transform: none !important; }
 
-/* Content surfaces get tactile feedback without pointer tilt or a glossy overlay. */
+/* Shared surface base: keep the 3D and reflection layers enabled for the live pointer effect. */
 [data-depth-surface="true"] {
-  rotate: none;
-  transform-style: flat;
-  transition: box-shadow 180ms ease, border-color 180ms ease;
+  rotate: var(--depth-rotation, 0 0 1 0deg);
+  transform-style: preserve-3d;
+  transition: rotate 320ms cubic-bezier(.2,.75,.25,1), translate 320ms cubic-bezier(.2,.75,.25,1), box-shadow 320ms ease, border-color 320ms ease;
 }
 
-[data-depth-surface="true"]::after { content: none; }
+[data-depth-surface="true"]::after { content: ""; }
 [data-depth-surface="true"]:hover { will-change: auto; }
 [data-reveal="pending"] { translate: 0 8px; }
 [data-reveal="shown"] { animation-duration: 420ms; }
@@ -1150,8 +1149,15 @@ html[data-motion="off"] .testimonial-carousel-track .testimonial-card { animatio
 }
 .home-hero-copy { position: relative; z-index: 1; max-width: 740px; }
 .hero-eyebrow { margin: 0 0 22px; color: #7be0d1; font-size: calc(12px * var(--text-scale, 1)); font-weight: 800; letter-spacing: .17em; }
+.home-brand-mark { position: relative; width: fit-content; margin: 0 0 16px; perspective: 700px; transform-style: preserve-3d; animation: brandMarkFloat 6s ease-in-out infinite; }
+.home-brand-mark .home-brand-wordmark { position: relative; display: inline-block; color: #f5fffd; font-family: "Segoe UI", Arial, sans-serif; font-size: calc(clamp(46px, 6vw, 78px) * var(--text-scale, 1)); font-weight: 700; line-height: 1.02; letter-spacing: -.045em; text-shadow: 0 3px 14px rgba(3, 31, 39, .22), 0 0 24px rgba(132, 255, 235, .16); transform: perspective(900px) rotateY(-3deg) translateZ(8px); transform-origin: left center; transition: transform .35s ease-out, filter .35s ease; }
+.home-brand-mark .home-brand-wordmark::after { display: none; }
+.home-brand-mark .home-brand-bridge { color: #80e4d6; }
+.home-brand-mark:hover .home-brand-wordmark { filter: brightness(1.06) drop-shadow(0 8px 14px rgba(3, 31, 39, .2)); transform: perspective(900px) rotateY(-1deg) translate3d(2px, -2px, 14px); }
 .home-hero h1 { margin: 0; font-family: "Space Grotesk", var(--font-body); font-size: calc(clamp(48px, 5.4vw, 78px) * var(--text-scale, 1)); font-weight: 700; line-height: 1.03; letter-spacing: -.065em; text-wrap: balance; }
 .home-hero h1 span { color: #80e4d6; }
+.home-hero-tagline .tagline-hindi { color: #80e4d6; font-family: "Noto Sans Devanagari", "Nirmala UI", var(--font-body); letter-spacing: -.035em; }
+.home-hero-tagline > span:last-child { color: #f5fffd; }
 .hero-description { max-width: 620px; margin: 26px 0 28px; color: rgba(244, 255, 253, .84); font-size: calc(clamp(17px, 1.45vw, 20px) * var(--text-scale, 1)); line-height: 1.7; }
 .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; }
 .hero-primary { min-height: 54px; padding: 0 22px; border-radius: 12px; }
@@ -1192,11 +1198,13 @@ html[data-motion="off"] .testimonial-carousel-track .testimonial-card { animatio
 .hero-float-mint { top: auto; bottom: 7%; left: calc(50% - 27px); width: 54px; height: 58px; border-radius: 19px; background: linear-gradient(145deg, #319c98, #207f83); animation-delay: -4s; }
 .hero-art-label { position: absolute; right: 2%; bottom: 7%; padding: 11px 16px; border: 1px solid rgba(220, 255, 249, .22); border-radius: 999px; color: #fff; background: rgba(17, 74, 81, .72); font-size: calc(12px * var(--text-scale, 1)); font-weight: 800; }
 .home-about-scroll { position: absolute; z-index: 2; bottom: 30px; left: 50%; display: grid; width: 52px; height: 52px; place-items: center; border: 1px solid rgba(228, 255, 251, .48); border-radius: 50%; color: #f6fffd; background: rgba(255, 255, 255, .04); transform: translateX(-50%); cursor: pointer; }
+@keyframes brandMarkFloat { 0%,100% { transform: translate3d(0,0,0) rotate(-.4deg); } 50% { transform: translate3d(0,-4px,0) rotate(.4deg); } }
 
 @media (max-width: 900px) {
   .home-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 8px; padding: 54px clamp(24px, 6vw, 64px) 82px; }
   .home-hero-copy { width: min(100%, 720px); margin: 0 auto; }
   .home-hero h1 { font-size: calc(clamp(46px, 7vw, 68px) * var(--text-scale, 1)); }
+  .home-brand-mark .home-brand-wordmark { font-size: calc(clamp(48px, 9vw, 76px) * var(--text-scale, 1)); }
   .hero-description { max-width: 700px; }
   .home-hero-art-wrap { width: min(100%, 540px); min-height: 460px; margin: 0 auto; }
   .home-hero-art { width: min(100%, 500px); }
@@ -1205,6 +1213,8 @@ html[data-motion="off"] .testimonial-carousel-track .testimonial-card { animatio
   .home-hero { gap: 10px; padding: 48px 23px 72px; border-radius: 0 0 24px 24px; }
   .hero-eyebrow { margin-bottom: 16px; font-size: calc(10px * var(--text-scale, 1)); }
   .home-hero h1 { font-size: calc(clamp(42px, 11vw, 58px) * var(--text-scale, 1)); }
+  .home-brand-mark { margin-bottom: 13px; }
+  .home-brand-mark .home-brand-wordmark { font-size: calc(clamp(46px, 12vw, 66px) * var(--text-scale, 1)); }
   .hero-description { margin: 19px 0 22px; font-size: calc(16px * var(--text-scale, 1)); }
   .hero-actions { gap: 18px; }
   .hero-footnote { margin-top: 24px; font-size: calc(12px * var(--text-scale, 1)); }
@@ -1228,6 +1238,9 @@ html[data-motion="off"] .testimonial-carousel-track .testimonial-card { animatio
   .hero-float-yellow { right: 9%; }
   .hero-art-label { right: 0; bottom: 2%; padding: 8px 11px; font-size: calc(10px * var(--text-scale, 1)); }
   .home-about-scroll { bottom: 14px; width: 42px; height: 42px; }
+}
+@media (max-width: 420px) {
+  .home-hero h1 { font-size: calc(clamp(36px, 10vw, 42px) * var(--text-scale, 1)); }
 }
 
 /* Give the hero artwork distinct depth planes so pointer tilt reads as a floating object. */
@@ -1287,6 +1300,7 @@ html[data-motion="off"] .testimonial-carousel-track .testimonial-card { animatio
 
 html[data-motion="reduced"] .home-hero-art,
 html[data-motion="reduced"] .home-hero-copy,
+html[data-motion="reduced"] .home-brand-mark,
 html[data-motion="reduced"] .hero-orbit,
 html[data-motion="reduced"] .hero-orbit-words,
 html[data-motion="reduced"] .hero-float,
@@ -1294,6 +1308,7 @@ html[data-motion="reduced"] .hero-orb-book,
 html[data-motion="reduced"] .hero-art-label,
 html[data-motion="off"] .home-hero-art,
 html[data-motion="off"] .home-hero-copy,
+html[data-motion="off"] .home-brand-mark,
 html[data-motion="off"] .hero-orbit,
 html[data-motion="off"] .hero-orbit-words,
 html[data-motion="off"] .hero-float,
@@ -1309,7 +1324,7 @@ html[data-motion="reduced"] .hero-art-label,
 html[data-motion="off"] .hero-art-label { transition: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-hero-art, .home-hero-copy, .hero-orbit, .hero-orbit-words, .hero-float, .hero-orb-book, .hero-art-label, .hero-gap-glint,
+  .home-hero-art, .home-hero-copy, .home-brand-mark, .hero-orbit, .hero-orbit-words, .hero-float, .hero-orb-book, .hero-art-label, .hero-gap-glint,
   .home-hero-art-wrap::before, .home-hero-art-wrap::after { animation: none !important; }
   .hero-art-label { transition: none; }
 }
@@ -1517,6 +1532,7 @@ html[data-motion="off"] .learning-path-visual { animation:none; }
   .learning-path-preview-card,.learning-path-choice,.learning-path-link svg { transition:none !important; }
 }
 html[data-low-sensory="true"] .text-path-track { animation:none !important; }
+html[data-low-sensory="true"] .home-brand-mark,
 html[data-low-sensory="true"] .home-hero-art,
 html[data-low-sensory="true"] .home-hero-copy,
 html[data-low-sensory="true"] .hero-orbit,
@@ -1538,14 +1554,17 @@ html[data-low-sensory="true"] .home-hero-art-wrap::after { animation:none !impor
   transition:rotate 320ms cubic-bezier(.2,.75,.25,1),translate 320ms cubic-bezier(.2,.75,.25,1),box-shadow 320ms ease,border-color 320ms ease;
 }
 [data-depth-surface="true"]::after {
+  position:absolute;
+  inset:0;
+  z-index:0;
   content:"";
-  z-index:-1;
   opacity:0;
   border-radius:inherit;
   background:radial-gradient(ellipse at var(--depth-glow-x,50%) var(--depth-glow-y,0%),rgba(55,198,177,.2),transparent 48%);
   transition:opacity 320ms ease;
   pointer-events:none;
 }
+[data-depth-surface="true"] > * { position:relative; z-index:1; }
 @media (hover:hover) and (pointer:fine) {
   [data-depth-surface="true"]:hover { translate:0 -4px; }
   [data-depth-surface="true"]:hover::after { opacity:.8; }
@@ -1553,6 +1572,10 @@ html[data-low-sensory="true"] .home-hero-art-wrap::after { animation:none !impor
 }
 .app button:not(:disabled),.mentor-page button:not(:disabled),.parent-portal button:not(:disabled) {
   transition:transform 240ms cubic-bezier(.2,.75,.25,1),box-shadow 240ms ease,filter 240ms ease,background-color 200ms ease,border-color 200ms ease,color 200ms ease;
+}
+.hero-primary,.login-button,.primary-btn,.mentor-primary,.cognibridge-button,.about-approach-cta {
+  translate:var(--magnetic-x,0px) var(--magnetic-y,0px);
+  transition:translate 260ms cubic-bezier(.2,.75,.25,1),transform 240ms cubic-bezier(.2,.75,.25,1),box-shadow 240ms ease,filter 240ms ease;
 }
 @media (hover:hover) and (pointer:fine) {
   .app button:not(:disabled):hover,.mentor-page button:not(:disabled):hover,.parent-portal button:not(:disabled):hover { filter:saturate(1.04); }
@@ -1562,12 +1585,33 @@ html[data-low-sensory="true"] .home-hero-art-wrap::after { animation:none !impor
 .feature-grid article:nth-child(2n) .feature-icon { animation-delay:-2.1s; }
 @keyframes sharedGentleFloat { 0%,100% { translate:0 0; } 50% { translate:0 -4px; } }
 
+[data-float-surface="true"] {
+  animation:surfaceFloat var(--float-duration,6s) ease-in-out var(--float-delay,0s) infinite;
+  transform-style:preserve-3d;
+}
+[data-float-surface="true"][data-reveal="shown"] {
+  animation-name:surfaceFloat;
+  animation-duration:var(--float-duration,6s);
+  animation-timing-function:ease-in-out;
+  animation-delay:var(--float-delay,0s);
+  animation-iteration-count:infinite;
+}
+[data-float-surface="true"][data-visible="false"],
+[data-float-surface="true"]:hover { animation-play-state:paused; }
+@keyframes surfaceFloat {
+  0%,100% { translate:0 0 0; rotate:0 1 0 0deg; }
+  50% { translate:0 -10px 8px; rotate:.5 1 0 .8deg; }
+}
+
 html[data-motion="reduced"] [data-depth-surface="true"],
 html[data-motion="off"] [data-depth-surface="true"],
 html[data-low-sensory="true"] [data-depth-surface="true"] { rotate:none!important; translate:none!important; transform:none!important; }
 html[data-motion="reduced"] [data-depth-surface="true"]::after,
 html[data-motion="off"] [data-depth-surface="true"]::after,
 html[data-low-sensory="true"] [data-depth-surface="true"]::after { display:none!important; }
+html[data-motion="reduced"] [data-float-surface="true"],
+html[data-motion="off"] [data-float-surface="true"],
+html[data-low-sensory="true"] [data-float-surface="true"] { animation:none!important; }
 html[data-motion="reduced"] .mc-spark,html[data-motion="off"] .mc-spark,
 html[data-motion="reduced"] .mc-card-icon,html[data-motion="off"] .mc-card-icon,
 html[data-motion="reduced"] .hero-art-label,html[data-motion="off"] .hero-art-label,
@@ -1576,6 +1620,9 @@ html[data-motion="reduced"] .app button:not(:disabled),html[data-motion="off"] .
 html[data-low-sensory="true"] .app button:not(:disabled),
 html[data-low-sensory="true"] .mentor-page button:not(:disabled),
 html[data-low-sensory="true"] .parent-portal button:not(:disabled) { transition:none!important; }
+html[data-motion="reduced"] :is(.hero-primary,.login-button,.primary-btn,.mentor-primary,.cognibridge-button,.about-approach-cta),
+html[data-motion="off"] :is(.hero-primary,.login-button,.primary-btn,.mentor-primary,.cognibridge-button,.about-approach-cta),
+html[data-low-sensory="true"] :is(.hero-primary,.login-button,.primary-btn,.mentor-primary,.cognibridge-button,.about-approach-cta) { translate:none!important; transition:none!important; }
 html[data-motion="reduced"] .app button:not(:disabled):active,html[data-motion="off"] .app button:not(:disabled):active,
 html[data-low-sensory="true"] .app button:not(:disabled):active,
 html[data-low-sensory="true"] .mentor-page button:not(:disabled):active,
@@ -1583,7 +1630,9 @@ html[data-low-sensory="true"] .parent-portal button:not(:disabled):active { tran
 @media (prefers-reduced-motion:reduce) {
   [data-depth-surface="true"] { rotate:none!important; translate:none!important; transform:none!important; transition:none!important; }
   [data-depth-surface="true"]::after { display:none!important; }
+  [data-float-surface="true"] { animation:none!important; }
   .mc-spark,.mc-card-icon,.hero-art-label { animation:none!important; }
   .app button:not(:disabled),.mentor-page button:not(:disabled),.parent-portal button:not(:disabled) { transition:none!important; }
+  :is(.hero-primary,.login-button,.primary-btn,.mentor-primary,.cognibridge-button,.about-approach-cta) { translate:none!important; transition:none!important; }
   .app button:not(:disabled):active,.mentor-page button:not(:disabled):active,.parent-portal button:not(:disabled):active { transform:none!important; }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { classNames, demoStudents, getSessionTitle, initialSessions, readStudents, subjects } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
@@ -14,8 +14,10 @@ import { clearDemoStudentCheckins } from "./studentSensory";
 import { loadStudentPrivateSessions } from "./privateSessions";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { fetchSessions, fetchStudentNotes } from "./mentorContent";
-import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
+import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration, unregisterFromSession as removeRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
+import { activateDemoPremium, loadPremiumSubscription } from "./premiumFlow";
+import { loadCogniWallet } from "./cogniRewards";
 import { loadLatestHandwriting } from "./studentHandwriting";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
@@ -29,6 +31,8 @@ import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabP
 import { MindfulCorner } from "./components/student/pages/MindfulCorner";
 import { RelaxationRoom } from "./components/RelaxationRoom";
 import { useImmersiveEffects } from "./immersiveEffects";
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import { loadStudentCheckins } from "./studentSensory";
 import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
 
 const readPreferredSubjects = (email) => {
@@ -64,9 +68,12 @@ const App = () => {
   const [accessibilityOpen, setAccessibilityOpen] = useState(false);
   const [appearance, setAppearance] = useState(() => {
     try {
-      return localStorage.getItem("cognibridge_appearance") || "light";
+      const saved = localStorage.getItem("cognibridge_appearance");
+      const themeMigration = localStorage.getItem("cognibridge_dark_default_v1");
+      if (!themeMigration) return "dark";
+      return saved || "dark";
     } catch {
-      return "light";
+      return "dark";
     }
   });
   const [textScale, setTextScale] = useState(1);
@@ -95,6 +102,7 @@ const App = () => {
   const subjectSelectionUser = useRef(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [authUserId, setAuthUserId] = useState(null);
+  const [latestMood, setLatestMood] = useState(null);
   const [authRole, setAuthRole] = useState(null);
   const [authSession, setAuthSession] = useState(null);
   const [authReady, setAuthReady] = useState(!supabaseConfigured);
@@ -197,6 +205,7 @@ const App = () => {
   const assistantContext = {
     today,
     signedIn,
+    mood: latestMood,
     checkInAvailable: sensoryTrackerEnabled,
     subjects: preferredSubjects,
     sessions: assistantSessions.map((session) => ({
@@ -209,6 +218,25 @@ const App = () => {
       registered: registeredSessionIds.includes(session.id),
     })),
   };
+
+  // Cogni-Flow adapts its tone to the student's latest check-in from the last day.
+  // Only the 1-5 mood and emotion tags are used; written notes stay private.
+  useEffect(() => {
+    const checkinStudentId = supabaseConfigured ? authUserId : studentEmail;
+    if (activeTab !== "flow" || !sensoryTrackerEnabled || !checkinStudentId) return undefined;
+    let current = true;
+    loadStudentCheckins(checkinStudentId)
+      .then((entries) => {
+        if (!current) return;
+        const latest = entries[0];
+        const hoursAgo = latest ? (Date.now() - new Date(latest.created_at).getTime()) / 3600000 : Infinity;
+        setLatestMood(latest?.mood && hoursAgo <= 24
+          ? { rating: latest.mood, emotions: Array.isArray(latest.emotions) ? latest.emotions.slice(0, 6) : [], hoursAgo: Math.round(hoursAgo) }
+          : null);
+      })
+      .catch(() => { if (current) setLatestMood(null); });
+    return () => { current = false; };
+  }, [activeTab, sensoryTrackerEnabled, authUserId, studentEmail]);
 
   const savePreferredSubjects = async (selection) => {
     const selected = subjects.filter((subject) => selection.includes(subject));
@@ -246,18 +274,58 @@ const App = () => {
   useEffect(() => {
     if (!studentEmail) {
       setPremiumSubscription(null);
-      return;
+      return undefined;
+    }
+    // Supabase accounts keep the membership on the server, where /api/chat can see it.
+    if (supabaseConfigured) {
+      if (!authUserId) return undefined;
+      let current = true;
+      loadPremiumSubscription(authUserId)
+        .then((subscription) => { if (current) setPremiumSubscription(subscription); })
+        .catch(() => { if (current) setPremiumSubscription(null); });
+      return () => { current = false; };
     }
     try {
       setPremiumSubscription(JSON.parse(localStorage.getItem(`cognibridge_premium_${studentEmail.toLowerCase()}`) || "null"));
     } catch {
       setPremiumSubscription(null);
     }
-  }, [studentEmail]);
+    return undefined;
+  }, [studentEmail, authUserId]);
 
-  const completeDemoPurchase = (planId) => {
+  useEffect(() => {
+    if (!supabaseConfigured || authRole !== "student" || !authUserId) return undefined;
+    let current = true;
+    loadCogniWallet().then((wallet) => {
+      if (!current) return;
+      if (wallet.premium_expires_at) {
+        setPremiumSubscription({ planId: "cogni-points", purchasedAt: null, expiresAt: wallet.premium_expires_at, paymentType: "cogni-points" });
+      } else {
+        setPremiumSubscription((currentSubscription) => currentSubscription?.paymentType === "demo" ? currentSubscription : null);
+      }
+    }).catch(() => {});
+    return () => { current = false; };
+  }, [authRole, authUserId, activeTab]);
+
+  const finishPurchase = (purchase) => {
+    setPremiumSubscription(purchase);
+    setPremiumCheckoutOpen(false);
+    setPremiumCartPlan(null);
+    setActiveTab("settings");
+    setToast(t("pf_demoSuccessToast"));
+  };
+
+  const completeDemoPurchase = async (planId) => {
     const months = { monthly: 1, quarterly: 3, yearly: 12 }[planId];
     if (!signedIn || !studentEmail || !months) return;
+    if (supabaseConfigured) {
+      try {
+        finishPurchase(await activateDemoPremium(planId));
+      } catch {
+        notify(t("pf_purchaseFail"));
+      }
+      return;
+    }
     const purchasedAt = new Date();
     // A purchase made while premium is still active extends it instead of restarting it.
     const currentExpiry = premiumSubscription?.expiresAt ? new Date(premiumSubscription.expiresAt) : null;
@@ -273,11 +341,7 @@ const App = () => {
     } catch {
       // Keep the demo purchase visible for this session if browser storage is unavailable.
     }
-    setPremiumSubscription(purchase);
-    setPremiumCheckoutOpen(false);
-    setPremiumCartPlan(null);
-    setActiveTab("settings");
-    setToast(t("pf_demoSuccessToast"));
+    finishPurchase(purchase);
   };
 
   const scrollToAbout = () => {
@@ -532,10 +596,13 @@ const App = () => {
   useEffect(() => {
     try {
       localStorage.setItem("cognibridge_appearance", appearance);
+      localStorage.setItem("cognibridge_dark_default_v1", "true");
     } catch {
       // Keep the selected theme for this session if browser storage is unavailable.
     }
     document.documentElement.style.colorScheme = appearance;
+    // The page behind the app (overscroll, anything rendered outside .app) follows the theme too.
+    document.body.classList.toggle("theme-dark", appearance === "dark");
   }, [appearance]);
 
   useEffect(() => {
@@ -597,6 +664,31 @@ const App = () => {
       ids.includes(sessionId) ? ids : [...ids, sessionId]
     ));
     notify(t("registrationConfirmed", { title: session?.title || "Session" }));
+  };
+
+  // The Register button is a toggle: a second click cancels, unless attendance is already recorded.
+  const toggleRegistration = async (sessionId) => {
+    if (!registeredSessionIds.includes(sessionId)) {
+      await registerForSession(sessionId);
+      return;
+    }
+    if (attendedSessionIds.has(sessionId)) return;
+    const session = sessions.find((item) => item.id === sessionId);
+    if (supabaseConfigured) {
+      try {
+        const removed = await removeRegistration(sessionId);
+        if (removed) {
+          setSessions((items) => items.map((item) => (
+            item.id === sessionId ? { ...item, attendees: Math.max(0, item.attendees - 1) } : item
+          )));
+        }
+      } catch {
+        notify(t("unregisterError"));
+        return;
+      }
+    }
+    setRegisteredSessionIds((ids) => ids.filter((id) => id !== sessionId));
+    notify(t("registrationCancelled", { title: session?.title || "Session" }));
   };
 
   const markSessionAttended = async (session) => {
@@ -917,7 +1009,6 @@ const App = () => {
               sessions={studentSessions}
               studentEmail={studentEmail}
               studentName={studentName}
-              handwritingType={studentProfile?.handwritingType}
               activityVersion={activityVersion}
               screenTimeVersion={screenTimeVersion}
               screenTimeStudentKey={supabaseConfigured ? authUserId : studentEmail}
@@ -928,8 +1019,8 @@ const App = () => {
               onOpenSession={openSession}
             />
           ),
-          leaderboard: <LeaderboardPage signedIn={signedIn} t={t} />,
-          mindful: <MindfulCorner studentId={studentEmail} accountId={supabaseConfigured && authRole === "student" ? authUserId : null} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} />,
+          leaderboard: <LeaderboardPage signedIn={signedIn} studentName={studentName} t={t} />,
+          mindful: <ErrorBoundary name="Mindful Corner" t={t} onClose={() => goToTab("home")}><MindfulCorner studentId={studentEmail} accountId={supabaseConfigured && authRole === "student" ? authUserId : null} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} /></ErrorBoundary>,
           relax: <RelaxationRoom onBack={() => goToTab("home")} t={t} />,
           sessions: (
             <SessionsPage
@@ -945,7 +1036,7 @@ const App = () => {
               onSelect={openSession}
               onBack={closeSession}
               onSignIn={() => setLoginOpen(true)}
-              onRegister={registerForSession}
+              onRegister={toggleRegistration}
               onMarkAttended={markSessionAttended}
             />
           ),
@@ -956,7 +1047,6 @@ const App = () => {
               studentEmail={studentEmail}
               studentName={studentName}
               activityVersion={activityVersion}
-              onEditHandwriting={() => setProfileOpen(true)}
               t={t}
               onOpenSession={openSession}
             />
@@ -1057,7 +1147,7 @@ const App = () => {
           }}
         />
       )}
-      {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}</div>}
+      {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}<button type="button" className="toast-close" onClick={() => setToast("")} aria-label={t("close")}><X size={16} /></button></div>}
     </div>
   );
 };

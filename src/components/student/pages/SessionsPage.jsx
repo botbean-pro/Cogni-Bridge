@@ -1,14 +1,14 @@
 ﻿import React from "react";
 import { useState } from "react";
 import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Eye, FileText } from "lucide-react";
-import { formatSession, getSessionSubjectLabel, getSessionTitle, subjects } from "../../../constants";
+import { classNames, formatSession, getSessionSubjectLabel, getSessionTitle, subjects } from "../../../constants";
 import { downloadNote, getNotePreviewUrl } from "../../../mentorContent";
 import { isSessionComplete } from "../../../studentActivity";
 import { StudentStats } from "../shared/StudentStats";
 import "./SessionsPage.css";
 
 function SessionDetail({ session, signedIn, registered, attended, onBack, onSignIn, onRegister, onMarkAttended, t }) {
-  const canMarkAttended = signedIn && isSessionComplete(session) && !attended;
+  const canMarkAttended = signedIn && registered && isSessionComplete(session) && !attended;
   const title = getSessionTitle(session, t);
   const description = session.descriptionKey ? t(session.descriptionKey) : session.description;
   const learnItems = session.learnKeys ? session.learnKeys.map((key) => t(key)) : session.learn;
@@ -33,9 +33,16 @@ function SessionDetail({ session, signedIn, registered, attended, onBack, onSign
         <div className="detail-action">
           <strong>{t("readyToLearn")}</strong>
           <span>{session.attendees} {t("learnersSignedUp")}</span>
-          <button className="primary-btn" onClick={signedIn ? () => onRegister(session.id) : onSignIn}>
-            {registered ? t("registered") : signedIn ? t("registerForSession") : t("signInToRegister")}
+          <button
+            className={classNames("primary-btn", registered && "registered-button")}
+            onClick={signedIn ? () => onRegister(session.id) : onSignIn}
+            aria-pressed={signedIn ? Boolean(registered) : undefined}
+            disabled={Boolean(registered && attended)}
+            title={registered && !attended ? t("tapToUnregister") : undefined}
+          >
+            {registered ? <><CheckCircle2 size={17} /> {t("registered")}</> : signedIn ? t("registerForSession") : t("signInToRegister")}
           </button>
+          {registered && !attended && <small className="register-toggle-hint">{t("tapToUnregister")}</small>}
           {attended ? (
             <p className="attendance-recorded"><CheckCircle2 size={16} /> {t("attendanceRecorded")}</p>
           ) : canMarkAttended ? (
@@ -167,7 +174,7 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
   );
 }
 
-export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, studentName, handwritingType, activityVersion, onOpenSession, onEditHandwriting, eyebrow, heading, t }) {
+export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, studentName, activityVersion, onOpenSession, eyebrow, heading, t }) {
   const today = new Date().toISOString().slice(0, 10);
   const registeredIds = new Set(registeredSessionIds.map(String));
   const upcomingRegisteredSessions = sessions
@@ -192,23 +199,6 @@ export function StudyPage({ sessions, registeredSessionIds = [], studentEmail, s
             ))}
           </div>
         ) : <p className="study-empty">{t("noRegisteredSessions")}</p>}
-      </section>
-      <section className="study-profile-card">
-        <div className="study-profile-glow" aria-hidden="true" />
-        <div>
-          <p className="eyebrow">{t("yourLearningStyle")}</p>
-          <h3>{t("handwritingType")}</h3>
-          <p>{t("handwritingTypeStudyCopy")}</p>
-        </div>
-        <button type="button" onClick={onEditHandwriting} aria-label={t("updateHandwriting")}>{(() => {
-          try {
-            const profile = JSON.parse(localStorage.getItem("cognibridge_students") || "[]")
-              .find((student) => student.email?.toLowerCase() === studentEmail?.toLowerCase());
-            return handwritingType || profile?.handwritingType || t("notAnalyzed");
-          } catch {
-            return t("notAnalyzed");
-          }
-        })()}</button>
       </section>
       <StudentStats
         studentEmail={studentEmail}

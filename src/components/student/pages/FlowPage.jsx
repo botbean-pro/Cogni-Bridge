@@ -5,6 +5,7 @@ import { ChatMessages, RelatedQuestionCards } from "../flow/ChatMessages";
 import { ChatComposer } from "../flow/ChatComposer";
 import { QuickPrompts } from "../flow/QuickPrompts";
 import { askLearningAssistant, getLearningAssistantUsage } from "../flow/flowApi";
+import { readDocumentText } from "../flow/documentText";
 import { speak, stopSpeaking } from "../flow/readAloud";
 import "../flow/flow.css";
 
@@ -141,7 +142,7 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
       stopSpeaking();
       setSpeakingId(null);
     } else {
-      speakMessage(message.id, message.content);
+      speakMessage(message.id, message.studyPack?.summary || message.content);
     }
   };
 
@@ -220,6 +221,42 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
     }
   };
 
+  // Documents are read in the browser; only their text is sent to build the summary, mind map and flashcards.
+  const summarizeDocument = async (file) => {
+    if (isLoading) return;
+    const userMessage = {
+      id: `${Date.now()}-user`,
+      role: "user",
+      content: t("docUserMessage", { name: file.name }),
+      timestamp: new Date(),
+    };
+    setMessages((current) => [...current, userMessage]);
+    setIsLoading(true);
+    setError("");
+    try {
+      const { text, truncated } = await readDocumentText(file);
+      const studyPack = await askLearningAssistant([{ role: "user", content: text }], "document", language);
+      const answerId = `${Date.now()}-document`;
+      // The summary lives in the study pack; flowApi adds it to the history so follow-ups can use it.
+      const content = studyPack.title ? `## ${studyPack.title}\n\n${t("docReady")}` : t("docReady");
+      setMessages((current) => [...current, {
+        id: answerId,
+        role: "assistant",
+        content,
+        studyPack,
+        fileName: file.name,
+        truncated,
+        timestamp: new Date(),
+      }]);
+      if (readAloud.enabled) speakMessage(answerId, studyPack.summary);
+    } catch (requestError) {
+      setError(t(requestError.i18nKey || requestError.messageKey || "flowRequestError"));
+    } finally {
+      await refreshUsage();
+      setIsLoading(false);
+    }
+  };
+
   const askQuestion = async (question) => {
     if (!question || isLoading) return;
 
@@ -250,10 +287,14 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
     <section className="ai-chat-page">
       <div className="ai-chat-container">
         <ChatHeader t={t} onOpenHistory={() => setHistoryOpen((open) => !open)} />
-        <div className="ai-usage-meter" role="status" aria-label={t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}>
-          <span>{t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}</span>
-          <div className="ai-usage-track" aria-hidden="true"><span style={{ width: `${Math.min(100, (usage.used / usage.limit) * 100)}%` }} /></div>
-        </div>
+        {usage.unlimited ? (
+          <div className="ai-usage-meter" role="status"><span>{t("flowUnlimited")}</span></div>
+        ) : (
+          <div className="ai-usage-meter" role="status" aria-label={t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}>
+            <span>{t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}</span>
+            <div className="ai-usage-track" aria-hidden="true"><span style={{ width: `${Math.min(100, (usage.used / usage.limit) * 100)}%` }} /></div>
+          </div>
+        )}
         {historyOpen && <section className="ai-chat-history" aria-label={t("chatHistory")}>
           <div className="ai-chat-history-heading">
             <h3>{t("chatHistory")}</h3>
@@ -299,10 +340,11 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
         <ChatComposer
           input={input}
           isLoading={isLoading}
-          disabled={remainingTokens <= 0}
+          disabled={!usage.unlimited && remainingTokens <= 0}
           language={language}
           onChange={setInput}
           onSubmit={sendMessage}
+          onAttach={summarizeDocument}
           onVoiceText={askQuestion}
           t={t}
         />

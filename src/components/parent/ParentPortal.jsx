@@ -142,8 +142,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
     return linked?.student_name;
   };
 
-  const sendMessage = async (mentorId, message) => {
-    await sendParentTeacherMessage({ parentId, studentId: childId, mentorId, message });
+  const sendMessage = async (studentId, mentorId, message) => {
+    await sendParentTeacherMessage({ parentId, studentId, mentorId, message });
     const messages = await loadParentMessages(parentId);
     setPortal((current) => current && { ...current, messages });
   };
@@ -174,7 +174,7 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   } else if (tab === "settings") {
     body = <ConnectChildCard title={t("connectAnotherChild")} onConnect={connectChild} t={t} />;
   } else if (tab === "teachers") {
-    body = <ParentTeachersPage key={child.id} child={child} messages={portal.messages.filter((message) => message.student_id === child.id)} onSend={sendMessage} t={t} />;
+    body = <ParentTeachersPage parentId={parentId} children={children} messages={portal.messages} onSend={sendMessage} t={t} />;
   } else if (!childData) {
     body = <ParentLoading t={t} />;
   } else if (tab === "moods") {

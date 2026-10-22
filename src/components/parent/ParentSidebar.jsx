@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { CalendarDays, Heart, Home, MessageCircle, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { classNames } from "../../constants";
 import { LogoImage } from "../Brand";
+import { usePageTitle } from "../../pageTitle";
 
 const items = [
   [Home, "overview", "parentOverview"],
@@ -13,6 +14,7 @@ const items = [
 
 // Same collapsible rail as the student sidebar (shares its student-rail-* styles).
 export const ParentSidebar = ({ activeTab, onNavigate, t }) => {
+  usePageTitle(t("pt_parent"), t(items.find(([, tab]) => tab === activeTab)?.[2] || "parentOverview"));
   const [pinnedOpen, setPinnedOpen] = useState(false);
 
   return (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, LogIn, Pause, Play, RotateCcw, Settings2, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, LogIn, Pause, Play, RotateCcw, Settings2, X } from 'lucide-react';
 import { mergeMindfulProgress, mindfulNote, readCuriousCluesProgress, readMindfulBoard, recordCuriousCluesLevel, recordMindfulActivity } from '../../../mindfulPoints';
 import { loadMindfulProgress, saveMindfulProgress } from '../../../mindfulProgress';
 import { curiousClueLevels, shuffleClueQuestions } from '../../../curiousClues';
@@ -14,11 +14,10 @@ const activities = [
   { id: 'color', path: 'color-and-create', title: 'Color and Create', icon: '🎨', group: 'Create', note: 'Fill a simple picture with color.' },
   { id: 'match', path: 'match-the-pictures', title: 'Match the Pictures', icon: '🧩', group: 'Play', note: 'Find pairs. There is no timer.' },
   { id: 'clues', path: 'curious-clues', title: 'Curious Clues', icon: '🧠', group: 'Explore', note: 'Explore 12 original puzzle levels. No timer, no pressure.' },
-  { id: 'sounds', path: 'sound-explorer', title: 'Music and Sound Explorer', icon: '🎵', group: 'Relax', note: 'Optional gentle tones, always off until you choose.' },
 ];
-const activityTitleKeys = { bubbles: 'mcBubblesTitle', breathing: 'mcBreathingTitle', garden: 'mcGardenTitle', color: 'mcColorTitle', match: 'mcMatchTitle', clues: 'mcCluesTitle', sounds: 'mcSoundsTitle' };
-const activityNoteKeys = { bubbles: 'mcBubblesNote', breathing: 'mcBreathingNote', garden: 'mcGardenNote', color: 'mcColorNote', match: 'mcMatchNote', clues: 'mcCluesNote', sounds: 'mcSoundsNote' };
-const initialSettings = { text: 'Standard', motion: true, sound: false, theme: 'Calm', instructions: 'Text' };
+const activityTitleKeys = { bubbles: 'mcBubblesTitle', breathing: 'mcBreathingTitle', garden: 'mcGardenTitle', color: 'mcColorTitle', match: 'mcMatchTitle', clues: 'mcCluesTitle' };
+const activityNoteKeys = { bubbles: 'mcBubblesNote', breathing: 'mcBreathingNote', garden: 'mcGardenNote', color: 'mcColorNote', match: 'mcMatchNote', clues: 'mcCluesNote' };
+const initialSettings = { text: 'Standard', motion: true, theme: 'Calm', instructions: 'Text' };
 const readSettings = () => { try { const saved = JSON.parse(localStorage.getItem('mindful-corner-settings') || '{}'); return { ...initialSettings, motion: typeof saved.motion === 'boolean' ? saved.motion : !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, ...saved }; } catch { return initialSettings; } };
 const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
 // Match the Pictures grows one grid at a time (columns × rows). Odd grids keep one empty middle space.
@@ -80,7 +79,7 @@ export function MindfulCorner({ studentId = '', accountId = null, signedIn = fal
       </span>
       <button className="mc-settings-button" type="button" aria-expanded={settingsOpen} onClick={() => setSettingsOpen((v) => !v)}><Settings2 size={18}/> {t('mcAccessSettings')}</button>
     </header>
-    {settingsOpen && <section className="mc-settings" aria-label={t('mcAccessibilitySettings')}><div className="mc-settings-head"><h2>{t('mcMakeSpaceYours')}</h2><button type="button" onClick={() => setSettingsOpen(false)} aria-label={t('close')}><X size={18}/></button></div><label>{t('mcTextSize')}<select value={settings.text} onChange={(e) => update('text', e.target.value)}><option value="Standard">{t('mcStandard')}</option><option value="Large">{t('mcLarge')}</option><option value="Extra Large">{t('mcExtraLarge')}</option></select></label><label>{t('mcAnimation')}<select value={settings.motion ? 'On' : 'Reduced / off'} onChange={(e) => update('motion', e.target.value === 'On')}><option value="On">{t('mcOn')}</option><option value="Reduced / off">{t('mcReducedOff')}</option></select></label><label>{t('mcSound')}<select value={settings.sound ? 'Enabled' : 'Muted'} onChange={(e) => update('sound', e.target.value === 'Enabled')}><option value="Muted">{t('mcMuted')}</option><option value="Enabled">{t('mcEnabled')}</option></select></label><label>{t('mcVisualTheme')}<select value={settings.theme} onChange={(e) => update('theme', e.target.value)}><option value="Calm">{t('mcCalm')}</option><option value="High Contrast">{t('mcHighContrast')}</option><option value="Colorful">{t('mcColorful')}</option></select></label><label>{t('mcInstructions')}<select value={settings.instructions} onChange={(e) => update('instructions', e.target.value)}><option value="Text">{t('mcText')}</option><option value="Optional Audio">{t('mcOptionalAudio')}</option><option value="Both">{t('mcBoth')}</option></select></label><p>{t('mcAudioPrivacy')}</p></section>}
+    {settingsOpen && <section className="mc-settings" aria-label={t('mcAccessibilitySettings')}><div className="mc-settings-head"><h2>{t('mcMakeSpaceYours')}</h2><button type="button" onClick={() => setSettingsOpen(false)} aria-label={t('close')}><X size={18}/></button></div><label>{t('mcTextSize')}<select value={settings.text} onChange={(e) => update('text', e.target.value)}><option value="Standard">{t('mcStandard')}</option><option value="Large">{t('mcLarge')}</option><option value="Extra Large">{t('mcExtraLarge')}</option></select></label><label>{t('mcAnimation')}<select value={settings.motion ? 'On' : 'Reduced / off'} onChange={(e) => update('motion', e.target.value === 'On')}><option value="On">{t('mcOn')}</option><option value="Reduced / off">{t('mcReducedOff')}</option></select></label><label>{t('mcVisualTheme')}<select value={settings.theme} onChange={(e) => update('theme', e.target.value)}><option value="Calm">{t('mcCalm')}</option><option value="High Contrast">{t('mcHighContrast')}</option><option value="Colorful">{t('mcColorful')}</option></select></label><label>{t('mcInstructions')}<select value={settings.instructions} onChange={(e) => update('instructions', e.target.value)}><option value="Text">{t('mcText')}</option><option value="Optional Audio">{t('mcOptionalAudio')}</option><option value="Both">{t('mcBoth')}</option></select></label><p>{t('mcAudioPrivacy')}</p></section>}
     {!signedIn ? <section className="mc-intro mc-signin-gate">
       <h1>{t('mcSignInRequiredTitle')}</h1>
       <p>{t('mcSignInRequiredDescription')}</p>
@@ -128,7 +127,6 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
   const [clueSolved, setClueSolved] = useState(false);
   const [clueHintOpen, setClueHintOpen] = useState(false);
   const [clueLevelComplete, setClueLevelComplete] = useState(false);
-  const [soundOn, setSoundOn] = useState({});
   const [garden, setGarden] = useState('Garden');
   const matchPairs = cards.filter((c) => !c.gap).length / 2;
   const matchCount = cards.filter((c) => c.found).length / 2;
@@ -156,10 +154,7 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
   const exitActivity = () => { if (!resultSaved.current) finishActivity(false); onExit(); };
   useEffect(() => { if (activity.id === 'match' && matchDone) finishActivity(true); }, [activity.id, matchDone]);
   useEffect(() => { if (!breathing || paused || !settings.motion) return undefined; const id = window.setInterval(() => setPhase((p) => p === 'Breathe in' ? 'Breathe out' : 'Breathe in'), 5000); return () => window.clearInterval(id); }, [breathing, paused, settings.motion]);
-  useEffect(() => () => { window.clearTimeout(matchTimer.current); window.speechSynthesis?.cancel(); Object.values(soundNodes.current).forEach((node) => { try { node.stop(); } catch { /* Already stopped. */ } }); }, []);
-  useEffect(() => { if (!settings.sound) { Object.values(soundNodes.current).forEach((node) => { try { node.stop(); } catch { /* Already stopped. */ } }); soundNodes.current = {}; setSoundOn({}); } }, [settings.sound]);
-  const soundNodes = React.useRef({});
-  const stopSounds = () => { Object.values(soundNodes.current).forEach((node) => { try { node.stop(); } catch { /* Already stopped. */ } }); soundNodes.current = {}; setSoundOn({}); };
+  useEffect(() => () => { window.clearTimeout(matchTimer.current); window.speechSynthesis?.cancel(); }, []);
   const reset = () => {
     if (activity.id === 'clues' && activeClueLevel) {
       startClueLevel(activeClueLevel);
@@ -169,7 +164,6 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
     resultSaved.current = false;
     setResultNote('');
     setCardsLocked(false);
-    stopSounds();
     setStatus('');
     setPaused(false);
     setPopped([]);
@@ -188,7 +182,6 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
   };
   const pickCard = (card) => { if (card.open || card.found || paused || cardsLocked) return; if (first == null) { setFirst(card.id); setCards((cs) => cs.map((c) => c.id === card.id ? { ...c, open: true } : c)); return; } const a = cards.find((c) => c.id === first); const next = cards.map((c) => c.id === card.id || c.id === first ? { ...c, open: true } : c); if (a?.icon === card.icon) { next.forEach((c) => { if (c.id === card.id || c.id === first) c.found = true; }); setStatus(t('A pair! Great exploring.')); setCards(next); setFirst(null); } else { setStatus(t("Let's try another one!")); setCards(next); setFirst(null); setCardsLocked(true); matchTimer.current = window.setTimeout(() => { setCards((current) => current.map((c) => c.found ? c : { ...c, open: false })); setCardsLocked(false); }, 900); } };
   const speakInstructions = () => { if (!window.speechSynthesis) { setStatus(t('Audio instructions are not available in this browser. You can read the text instructions.')); return; } window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(`${activity.title}. ${activity.note}`); utterance.lang = document.documentElement.lang || 'en-IN'; utterance.rate = 0.82; utterance.volume = 0.55; window.speechSynthesis.speak(utterance); };
-  const toggleSound = (key) => { if (!settings.sound) { setStatus(t('Turn on Sound in Access settings before exploring optional tones.')); return; } if (soundNodes.current[key]) { try { soundNodes.current[key].stop(); } catch { /* Already stopped. */ } delete soundNodes.current[key]; setSoundOn((v) => ({ ...v, [key]: false })); return; } try { const AudioContextClass = window.AudioContext || window.webkitAudioContext; if (!AudioContextClass) { setStatus(t('Audio is not available in this browser. Enjoy the quiet visual garden.')); return; } const context = new AudioContextClass(); const oscillator = context.createOscillator(); const gain = context.createGain(); const volume = document.getElementById(`volume-${key}`); oscillator.type = key === 'Soft tone' ? 'sine' : 'triangle'; oscillator.frequency.value = key === 'Birds' ? 660 : key === 'Ocean' ? 180 : key === 'Rain' ? 310 : 440; gain.gain.value = (Number(volume?.value || 10) / 1000); oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); soundNodes.current[key] = { gain, stop: () => { oscillator.stop(); context.close(); } }; setSoundOn((v) => ({ ...v, [key]: true })); setStatus(t('{sound} gentle tone on. Use Stop all to pause.', { sound: t(key) })); } catch { setStatus(t('Audio could not start. You can keep exploring quietly.')); } };
   return <section className="mc-game"><div className="mc-game-heading"><div><p className="mc-game-group">{activity.group}</p><h1>{activity.title}</h1><p>{activity.note}</p>{settings.instructions !== 'Text' && <button type="button" onClick={speakInstructions}>{t('Hear instructions')}</button>}</div><button type="button" className="mc-exit" onClick={exitActivity}><ArrowLeft size={17}/> {t('Exit activity')}</button></div><div className="mc-play-area">
     {activity.id === 'bubbles' && <div className="mc-bubbles"><p>{t('Tap any bubble. No rush.')}</p><div className="mc-bubble-row">{Array.from({ length: 6 }, (_, i) => <button key={i} type="button" className={popped.includes(i) ? 'is-popped' : ''} aria-label={popped.includes(i) ? t('Bubble {n} popped', { n: i + 1 }) : t('Pop bubble {n}', { n: i + 1 })} aria-pressed={popped.includes(i)} disabled={popped.includes(i)} onClick={() => { const next = [...popped, i]; setPopped(next); setPopCount(next.length); if (next.length === 6) finishActivity(true); else setStatus(t('Pop! Nice exploring.')); }}>{['○','◯','◌','◉','◎','◦'][i]}</button>)}</div><p aria-live="polite">{status || t('{count} of 6 bubbles popped', { count: popCount })}</p></div>}
     {activity.id === 'breathing' && <div className="mc-breath"><p aria-live="polite">{breathing && !paused ? t(phase) : paused ? t('Paused') : t('Ready when you are')}</p><div className={`mc-breath-orb${breathing && !paused && settings.motion ? ` ${phase === 'Breathe in' ? 'grow' : 'shrink'}` : ''}`} aria-hidden="true">{breathing && !paused ? '☁' : '☼'}</div><div className="mc-controls"><button type="button" aria-pressed={breathing && !paused} onClick={() => { if (!breathing) { setBreathing(true); setPaused(false); setPhase('Breathe in'); return; } setPaused((p) => !p); }}>{breathing && !paused ? <Pause size={16}/> : <Play size={16}/>} {!breathing ? t('Begin gentle breathing') : paused ? t('Continue') : t('Pause')}</button></div></div>}
@@ -227,7 +220,7 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
         }
       }}><strong>{t(option)}</strong></button>)}</div>
       <p className="mc-clue-feedback" role="status">{status || t('Take your time. You can try again whenever you like.')}</p>
-      {clueSolved && <button type="button" className="mc-clue-next" onClick={() => {
+      <button type="button" className="mc-clue-next" disabled={!clueSolved} onClick={() => {
         if (clueRound === clueQuestions.length - 1) {
           onCompleteClueLevel(activeClueLevel);
           setClueLevelComplete(true);
@@ -238,9 +231,8 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
           setClueHintOpen(false);
           setStatus('');
         }
-      }}>{clueRound === clueQuestions.length - 1 ? t('Complete level') : t('Next puzzle')} <ArrowRight size={16} aria-hidden="true" /></button>}
+      }}>{clueRound === clueQuestions.length - 1 ? t('Complete level') : t('Next puzzle')} <ArrowRight size={16} aria-hidden="true" /></button>
     </div>)}
-    {activity.id === 'sounds' && <div><p>{t('Optional soft tones. Turn on sound in Access settings first. You can also enjoy the quiet visual garden.')}</p><div className="mc-sounds">{['Rain','Birds','Ocean','Soft tone'].map((s) => <button type="button" key={s} aria-pressed={!!soundOn[s]} onClick={() => toggleSound(s)}>{soundOn[s] ? <Volume2/> : <VolumeX/>}{t(s)}</button>)}</div><div className="mc-volume">{Object.keys(soundOn).filter((s) => soundOn[s]).map((s) => <label key={s}>{t('{sound} volume', { sound: t(s) })} <input id={`volume-${s}`} type="range" min="1" max="30" defaultValue="12" aria-label={t('{sound} volume', { sound: t(s) })} onChange={(e) => { const node = soundNodes.current[s]; if (node) node.gain.gain.value = Number(e.target.value) / 1000; }} /></label>)}</div><button type="button" onClick={() => { stopSounds(); setStatus(t('All sounds stopped.')); }}>{t('Stop all')}</button><div className="mc-visual-alternative" aria-label={t('Quiet visual alternative')}>☁　✿　☼　✧</div><p aria-live="polite">{status}</p></div>}
   </div><footer className="mc-game-footer"><span aria-live="polite">{paused ? t('Paused. Continue whenever you are ready.') : resultNote || status}</span><button type="button" onClick={reset}><RotateCcw size={16}/> {t('Start over')}</button><button type="button" onClick={exitActivity}>{t('Back to Activities')}</button><span className="mc-kind-note">{t('For fun and exploration. Mistakes do not take away points.')}</span></footer></section>;
 }
 

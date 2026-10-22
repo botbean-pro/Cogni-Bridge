@@ -76,7 +76,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     [t("age"), studentProfile?.age],
     [t("section"), studentProfile?.section],
     [t("school"), studentProfile?.school],
-    [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType)],
+    [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType) || t("notAnalyzed")],
   ];
   const planNameKeys = { monthly: "pf_planMonthly", quarterly: "pf_planQuarterly", yearly: "pf_planYearly" };
   const subscriptionActive = Boolean(premiumSubscription?.expiresAt && new Date(premiumSubscription.expiresAt) > new Date());
@@ -130,11 +130,12 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
       <section className="settings-details" aria-labelledby="premium-settings-heading">
         <h3 id="premium-settings-heading">{t("pf_membershipHeading")}</h3>
         <dl>
-          <div><dt>{t("pf_membershipPlan")}</dt><dd>{premiumSubscription?.planId && planNameKeys[premiumSubscription.planId] ? `${t("premiumFlow")} · ${t(planNameKeys[premiumSubscription.planId])}` : t("pf_freePlan")}</dd></div>
+          <div><dt>{t("pf_membershipPlan")}</dt><dd>{premiumSubscription?.planId === "cogni-points" ? "Premium Flow · Cogni Points reward" : premiumSubscription?.planId && planNameKeys[premiumSubscription.planId] ? `${t("premiumFlow")} · ${t(planNameKeys[premiumSubscription.planId])}` : t("pf_freePlan")}</dd></div>
           <div><dt>{t("pf_membershipStatus")}</dt><dd>{subscriptionActive ? t("pf_membershipActive") : premiumSubscription ? t("pf_membershipExpired") : t("pf_freePlan")}</dd></div>
           {premiumSubscription?.expiresAt && <div><dt>{t(subscriptionActive ? "pf_validUntil" : "pf_expiredOn")}</dt><dd>{new Date(premiumSubscription.expiresAt).toLocaleDateString()}</dd></div>}
           {premiumSubscription?.paymentType === "demo" && <div><dt>{t("pf_paymentType")}</dt><dd>{t("pf_demoPayment")}</dd></div>}
           {premiumSubscription?.purchasedAt && <div><dt>{t("pf_lastBought")}</dt><dd>{purchaseTime(premiumSubscription.purchasedAt)}</dd></div>}
+          {premiumSubscription?.paymentType === "cogni-points" && <div><dt>{t("pf_paymentType")}</dt><dd>Cogni Points redemption</dd></div>}
         </dl>
         {premiumPurchases.length > 0 && <>
           <h4 className="settings-purchase-heading">{t("pf_purchaseHistory")}</h4>

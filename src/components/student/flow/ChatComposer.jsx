@@ -1,16 +1,38 @@
-import React from "react";
-import { ChevronRight, Loader2, Mic, Square } from "lucide-react";
+import React, { useRef } from "react";
+import { ChevronRight, Loader2, Mic, Paperclip, Square } from "lucide-react";
+import { acceptedDocumentTypes } from "./documentText";
 import { useVoiceInput, voiceInputSupported } from "./useVoiceInput";
 
-export function ChatComposer({ input, isLoading, disabled = false, language, onChange, onSubmit, onVoiceText, t }) {
+export function ChatComposer({ input, isLoading, disabled = false, language, onChange, onSubmit, onAttach, onVoiceText, t }) {
+  const fileRef = useRef(null);
   const voice = useVoiceInput({ language, onText: onVoiceText });
   const recording = voice.status === "recording";
   const voiceBusy = voice.status === "starting" || voice.status === "transcribing";
   const voiceStatus = recording ? t("voiceInputListening") : voice.status === "transcribing" ? t("voiceInputTranscribing") : "";
+  const chooseFile = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) onAttach(file);
+  };
 
   return (
     <form className="ai-chat-input-form" onSubmit={onSubmit}>
       <div className="ai-input-wrapper">
+        {onAttach && (
+          <>
+            <input ref={fileRef} type="file" accept={acceptedDocumentTypes} onChange={chooseFile} hidden />
+            <button
+              type="button"
+              className="ai-attach-btn"
+              onClick={() => fileRef.current?.click()}
+              disabled={isLoading || disabled}
+              aria-label={t("docAttach")}
+              title={t("docAttach")}
+            >
+              <Paperclip size={18} />
+            </button>
+          </>
+        )}
         {voiceInputSupported && (
           <button
             type="button"

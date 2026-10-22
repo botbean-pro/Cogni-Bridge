@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   Award,
@@ -14,7 +14,6 @@ import {
   Heart,
   LogOut,
   MessageCircle,
-  Send,
   Plus,
   TrendingUp,
   Upload,
@@ -22,13 +21,15 @@ import {
   Users,
   Trophy,
 } from "lucide-react";
-import { formatLocalizedDate, formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
-import { loadMentorParentMessages, sendMentorParentReply } from "../../../parentPortal";
+import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
+import { loadMentorParentMessages } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
 import { LogoImage } from "../../Brand";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
+import { MentorParentChat } from "../MentorParentChat";
+import { usePageTitle } from "../../../pageTitle";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
@@ -47,6 +48,7 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
     ...(mentorId ? [["sensory", Heart, t("sensoryRequests")], ["messages", MessageCircle, t("md_parentNav")]] : []),
     ["settings", Settings, t("settings")],
   ];
+  usePageTitle(t("pt_mentor"), items.find(([key]) => key === tab)?.[2]);
 
   return (
     <aside className="mentor-nav">
@@ -684,78 +686,6 @@ function useParentMessages(mentorId, viewing) {
   return { messages, loading, error, reload, unreadCount };
 }
 
-// Keeps a thread scrolled to its newest message.
-function ThreadMessages({ thread, t }) {
-  const listRef = useRef(null);
-  useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [thread.length]);
-  return (
-    <div className="mentor-parent-thread-messages" ref={listRef}>
-      {thread.map((message) => (
-        <p className={message.sender_role === "mentor" ? "from-mentor" : "from-parent"} key={message.id}>
-          <strong>{message.sender_role === "mentor" ? t("youLabel") : t("md_parentWord")}</strong>
-          {message.message}
-          <small>{formatLocalizedDate(message.created_at, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</small>
-        </p>
-      ))}
-    </div>
-  );
-}
-
-function ParentMessagesPage({ mentorId, students, parentMessages, t }) {
-  const { messages, loading, error, reload } = parentMessages;
-  const [drafts, setDrafts] = useState({});
-  const [sendingKey, setSendingKey] = useState(null);
-  const [sendError, setSendError] = useState("");
-
-  // One thread per parent and child.
-  const threads = new Map();
-  messages.forEach((message) => {
-    const key = `${message.parent_id}:${message.student_id}`;
-    if (!threads.has(key)) threads.set(key, []);
-    threads.get(key).push(message);
-  });
-
-  const sendReply = async (event, key, thread) => {
-    event.preventDefault();
-    const message = drafts[key]?.trim();
-    if (!message) return;
-    setSendingKey(key);
-    setSendError("");
-    try {
-      await sendMentorParentReply({ mentorId, studentId: thread[0].student_id, parentId: thread[0].parent_id, message });
-      setDrafts((current) => ({ ...current, [key]: "" }));
-      await reload();
-    } catch {
-      setSendError(t("md_convoReplyFail"));
-    } finally {
-      setSendingKey(null);
-    }
-  };
-
-  return <>
-    <p className="mentor-kicker">{t("md_familyEyebrow")}</p>
-    <h1 className="mentor-title">{t("md_parentNav")}</h1>
-    <p className="mentor-subtitle">{t("md_parentSub")}</p>
-    {(error || sendError) && <p className="error-popup" role="alert">{sendError || t("md_convoLoadFail")}</p>}
-    {loading ? <p className="mentor-subtitle">{t("md_loadingConvo")}</p>
-      : !threads.size ? <div className="performance-empty"><MessageCircle size={24} /><h2>{t("md_noParentMsgs")}</h2><p>{t("md_noParentMsgsCopy")}</p></div>
-        : <div className="mentor-parent-threads">{[...threads.entries()].map(([key, thread]) => {
-          const student = students.find((item) => item.id === thread[0].student_id);
-          const name = student?.display_name || t("md_student");
-          return <article className="mentor-parent-thread" key={key}>
-            <header><div><strong>{name}</strong><small>{t("md_parentThread", { n: thread.length })}</small></div></header>
-            <ThreadMessages thread={thread} t={t} />
-            <form onSubmit={(event) => sendReply(event, key, thread)}>
-              <input aria-label={t("md_replyToParent", { name })} maxLength={4000} value={drafts[key] || ""} onChange={(event) => setDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder={t("md_writeReply")} required />
-              <button type="submit" disabled={sendingKey === key}><Send size={16} /> {t("md_reply")}</button>
-            </form>
-          </article>;
-        })}</div>}
-  </>;
-}
-
 export function MentorDashboard({
   sessions,
   mentorId,
@@ -788,7 +718,7 @@ export function MentorDashboard({
     <main className="mentor-page">
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
-        <section className="mentor-content route-transition" key={tab}>
+        <section className={`mentor-content route-transition${tab === "messages" ? " is-chat" : ""}`} key={tab}>
           {actionError && <p className="error-popup">{actionError}</p>}
           {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
           {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
@@ -797,7 +727,7 @@ export function MentorDashboard({
           {tab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
           {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
           {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
-          {tab === "messages" && mentorId && <ParentMessagesPage mentorId={mentorId} students={support.students} parentMessages={parentMessages} t={t} />}
+          {tab === "messages" && mentorId && <MentorParentChat mentorId={mentorId} parentMessages={parentMessages} students={support.students} t={t} />}
         </section>
       </div>
     </main>
