@@ -32,6 +32,7 @@ import { RelaxationRoom } from "./components/RelaxationRoom";
 import { readMindfulBoard } from "./mindfulPoints";
 import { useImmersiveEffects } from "./immersiveEffects";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import { loadStudentCheckins } from "./studentSensory";
 import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
 
 const readPreferredSubjects = (email) => {
@@ -112,6 +113,7 @@ const App = () => {
   const subjectSelectionUser = useRef(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [authUserId, setAuthUserId] = useState(null);
+  const [latestMood, setLatestMood] = useState(null);
   const [authRole, setAuthRole] = useState(null);
   const [authSession, setAuthSession] = useState(null);
   const [authReady, setAuthReady] = useState(!supabaseConfigured);
@@ -223,6 +225,7 @@ const App = () => {
   const assistantContext = {
     today,
     signedIn,
+    mood: latestMood,
     checkInAvailable: sensoryTrackerEnabled,
     subjects: preferredSubjects,
     sessions: assistantSessions.map((session) => ({
@@ -235,6 +238,25 @@ const App = () => {
       registered: registeredSessionIds.includes(session.id),
     })),
   };
+
+  // Cogni-Flow adapts its tone to the student's latest check-in from the last day.
+  // Only the 1-5 mood and emotion tags are used; written notes stay private.
+  useEffect(() => {
+    const checkinStudentId = supabaseConfigured ? authUserId : studentEmail;
+    if (activeTab !== "flow" || !sensoryTrackerEnabled || !checkinStudentId) return undefined;
+    let current = true;
+    loadStudentCheckins(checkinStudentId)
+      .then((entries) => {
+        if (!current) return;
+        const latest = entries[0];
+        const hoursAgo = latest ? (Date.now() - new Date(latest.created_at).getTime()) / 3600000 : Infinity;
+        setLatestMood(latest?.mood && hoursAgo <= 24
+          ? { rating: latest.mood, emotions: Array.isArray(latest.emotions) ? latest.emotions.slice(0, 6) : [], hoursAgo: Math.round(hoursAgo) }
+          : null);
+      })
+      .catch(() => { if (current) setLatestMood(null); });
+    return () => { current = false; };
+  }, [activeTab, sensoryTrackerEnabled, authUserId, studentEmail]);
 
   const savePreferredSubjects = async (selection) => {
     const selected = subjects.filter((subject) => selection.includes(subject));

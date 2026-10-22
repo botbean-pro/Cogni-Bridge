@@ -84,6 +84,13 @@ function sanitizeAppContext(context) {
     today: text(context.today, 10),
     signedIn: Boolean(context.signedIn),
     checkInAvailable: Boolean(context.checkInAvailable),
+    mood: Number.isInteger(context.mood?.rating) && context.mood.rating >= 1 && context.mood.rating <= 5
+      ? {
+        rating: context.mood.rating,
+        emotions: Array.isArray(context.mood.emotions) ? context.mood.emotions.slice(0, 6).map((emotion) => text(emotion, 30)).filter(Boolean) : [],
+        hoursAgo: Number.isFinite(context.mood.hoursAgo) ? Math.max(0, Math.min(24, Math.round(context.mood.hoursAgo))) : null,
+      }
+      : null,
     subjects: Array.isArray(context.subjects) ? context.subjects.slice(0, 12).map((subject) => text(subject, 40)).filter(Boolean) : [],
     sessions: Array.isArray(context.sessions)
       ? context.sessions.slice(0, 15).map((session) => ({
@@ -99,7 +106,23 @@ function sanitizeAppContext(context) {
   };
 }
 
+// Tone guidance from the student's latest self-reported check-in (1 = very low, 5 = great).
+const moodInstructions = (mood) => {
+  if (!mood) return "";
+  const feeling = `The student's latest check-in (${mood.hoursAgo ?? "a few"} hours ago) rated their mood ${mood.rating} out of 5` +
+    (mood.emotions.length ? ` and mentioned feeling: ${mood.emotions.join(", ")}. ` : ". ");
+  const tone = mood.rating <= 2
+    ? "Be especially warm, gentle and uplifting. Keep answers short and break work into tiny, doable steps. Celebrate small progress. " +
+      "If it fits, add one kind line of encouragement, and if they seem overwhelmed, gently suggest a short break or the Mindful Corner. " +
+      "Do not dwell on their feelings, lecture, or diagnose; never say they must feel better."
+    : mood.rating === 3
+      ? "Keep a calm, steady and encouraging tone, and keep explanations clear and not too long."
+      : "Match their good energy with an upbeat, friendly tone, and offer a slightly bigger challenge or an interesting extra fact when it fits.";
+  return `${feeling}${tone} Only mention the check-in itself if the student brings up how they feel. `;
+};
+
 const appActionInstructions = (context) =>
+  moodInstructions(context.mood) +
   `Student app context (the only source of truth about the student's sessions): ${JSON.stringify(context)}. ` +
   "When the student asks about sessions, answer only from this context with titles, dates, and times. Never invent sessions; say so if none match. " +
   "You can act inside the app: in addition to the other fields, include \"actions\" in the JSON object, an array that is empty unless the student asks for something. Allowed actions: " +
