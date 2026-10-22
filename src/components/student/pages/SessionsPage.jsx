@@ -1,7 +1,7 @@
 ﻿import React from "react";
 import { useState } from "react";
 import { ArrowDownToLine, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Eye, FileText } from "lucide-react";
-import { formatSession, getSessionSubjectLabel, getSessionTitle, subjects } from "../../../constants";
+import { classNames, formatSession, getSessionSubjectLabel, getSessionTitle, subjects } from "../../../constants";
 import { downloadNote, getNotePreviewUrl } from "../../../mentorContent";
 import { isSessionComplete } from "../../../studentActivity";
 import { StudentStats } from "../shared/StudentStats";
@@ -33,9 +33,16 @@ function SessionDetail({ session, signedIn, registered, attended, onBack, onSign
         <div className="detail-action">
           <strong>{t("readyToLearn")}</strong>
           <span>{session.attendees} {t("learnersSignedUp")}</span>
-          <button className="primary-btn" onClick={signedIn ? () => onRegister(session.id) : onSignIn}>
-            {registered ? t("registered") : signedIn ? t("registerForSession") : t("signInToRegister")}
+          <button
+            className={classNames("primary-btn", registered && "registered-button")}
+            onClick={signedIn ? () => onRegister(session.id) : onSignIn}
+            aria-pressed={signedIn ? Boolean(registered) : undefined}
+            disabled={Boolean(registered && attended)}
+            title={registered && !attended ? t("tapToUnregister") : undefined}
+          >
+            {registered ? <><CheckCircle2 size={17} /> {t("registered")}</> : signedIn ? t("registerForSession") : t("signInToRegister")}
           </button>
+          {registered && !attended && <small className="register-toggle-hint">{t("tapToUnregister")}</small>}
           {attended ? (
             <p className="attendance-recorded"><CheckCircle2 size={16} /> {t("attendanceRecorded")}</p>
           ) : canMarkAttended ? (

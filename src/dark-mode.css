@@ -97,9 +97,9 @@ body.theme-dark { background:var(--canvas); color:var(--text); }
 .theme-dark .session-settings summary,
 .theme-dark .session-summary-stats strong,
 .theme-dark .session-timeline time { color:#6fd6c4; }
-.theme-dark .session-secondary,
-.theme-dark .session-chip { background:#ffffff0d; }
-.theme-dark .session-chip.selected { border-color:#3f8f80; background:#173b38; color:#7fe3d4; }
+.theme-dark .sensory-session-panel :is(.session-secondary, .session-chip) { border-color:var(--line); background:var(--surface-2); color:var(--text); }
+.theme-dark .sensory-session-panel :is(.session-secondary, .session-chip):hover { border-color:#3f8f80; background:#22403f; }
+.theme-dark .sensory-session-panel .session-chip.selected { border-color:#3f8f80; background:#173b38; color:#7fe3d4; }
 .theme-dark .session-text-button { color:var(--muted); }
 
 /* Rest reminder */

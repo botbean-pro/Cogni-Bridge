@@ -42,6 +42,11 @@ export async function registerForSession(sessionId) {
   return throwIfError(await supabase.rpc("register_for_session", { p_session_id: sessionId }));
 }
 
+// Needs unregister_from_session() from 20261022000300_unregister_from_session.sql.
+export async function unregisterFromSession(sessionId) {
+  return throwIfError(await supabase.rpc("unregister_from_session", { p_session_id: sessionId }));
+}
+
 export async function markSessionAttended(sessionId) {
   return throwIfError(await supabase.rpc("mark_session_attended", { p_session_id: sessionId }));
 }

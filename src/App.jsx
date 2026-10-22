@@ -14,7 +14,7 @@ import { clearDemoStudentCheckins } from "./studentSensory";
 import { loadStudentPrivateSessions } from "./privateSessions";
 import { readStudentActivities, recordStudentAttendance } from "./studentActivity";
 import { fetchSessions, fetchStudentNotes } from "./mentorContent";
-import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
+import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration, unregisterFromSession as removeRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { activateDemoPremium, loadPremiumSubscription } from "./premiumFlow";
 import { loadLatestHandwriting } from "./studentHandwriting";
@@ -650,6 +650,31 @@ const App = () => {
     notify(t("registrationConfirmed", { title: session?.title || "Session" }));
   };
 
+  // The Register button is a toggle: a second click cancels, unless attendance is already recorded.
+  const toggleRegistration = async (sessionId) => {
+    if (!registeredSessionIds.includes(sessionId)) {
+      await registerForSession(sessionId);
+      return;
+    }
+    if (attendedSessionIds.has(sessionId)) return;
+    const session = sessions.find((item) => item.id === sessionId);
+    if (supabaseConfigured) {
+      try {
+        const removed = await removeRegistration(sessionId);
+        if (removed) {
+          setSessions((items) => items.map((item) => (
+            item.id === sessionId ? { ...item, attendees: Math.max(0, item.attendees - 1) } : item
+          )));
+        }
+      } catch {
+        notify(t("unregisterError"));
+        return;
+      }
+    }
+    setRegisteredSessionIds((ids) => ids.filter((id) => id !== sessionId));
+    notify(t("registrationCancelled", { title: session?.title || "Session" }));
+  };
+
   const markSessionAttended = async (session) => {
     if (!signedIn || !studentEmail) {
       notify(t("signInToSaveAttendance"));
@@ -1015,7 +1040,7 @@ const App = () => {
               onSelect={openSession}
               onBack={closeSession}
               onSignIn={() => setLoginOpen(true)}
-              onRegister={registerForSession}
+              onRegister={toggleRegistration}
               onMarkAttended={markSessionAttended}
             />
           ),
