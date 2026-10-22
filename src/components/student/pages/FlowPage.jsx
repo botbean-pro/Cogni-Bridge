@@ -287,10 +287,14 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
     <section className="ai-chat-page">
       <div className="ai-chat-container">
         <ChatHeader t={t} onOpenHistory={() => setHistoryOpen((open) => !open)} />
-        <div className="ai-usage-meter" role="status" aria-label={t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}>
-          <span>{t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}</span>
-          <div className="ai-usage-track" aria-hidden="true"><span style={{ width: `${Math.min(100, (usage.used / usage.limit) * 100)}%` }} /></div>
-        </div>
+        {usage.unlimited ? (
+          <div className="ai-usage-meter" role="status"><span>{t("flowUnlimited")}</span></div>
+        ) : (
+          <div className="ai-usage-meter" role="status" aria-label={t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}>
+            <span>{t("flowUsage", { remaining: remainingTokens.toLocaleString(), limit: usage.limit.toLocaleString() })}</span>
+            <div className="ai-usage-track" aria-hidden="true"><span style={{ width: `${Math.min(100, (usage.used / usage.limit) * 100)}%` }} /></div>
+          </div>
+        )}
         {historyOpen && <section className="ai-chat-history" aria-label={t("chatHistory")}>
           <div className="ai-chat-history-heading">
             <h3>{t("chatHistory")}</h3>
@@ -336,7 +340,7 @@ export function FlowPage({ t, language, studentEmail, readAloud, assistantContex
         <ChatComposer
           input={input}
           isLoading={isLoading}
-          disabled={remainingTokens <= 0}
+          disabled={!usage.unlimited && remainingTokens <= 0}
           language={language}
           onChange={setInput}
           onSubmit={sendMessage}

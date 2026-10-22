@@ -16,6 +16,7 @@ import { readStudentActivities, recordStudentAttendance } from "./studentActivit
 import { fetchSessions, fetchStudentNotes } from "./mentorContent";
 import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
+import { activateDemoPremium, loadPremiumSubscription } from "./premiumFlow";
 import { loadLatestHandwriting } from "./studentHandwriting";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
@@ -266,18 +267,44 @@ const App = () => {
   useEffect(() => {
     if (!studentEmail) {
       setPremiumSubscription(null);
-      return;
+      return undefined;
+    }
+    // Supabase accounts keep the membership on the server, where /api/chat can see it.
+    if (supabaseConfigured) {
+      if (!authUserId) return undefined;
+      let current = true;
+      loadPremiumSubscription(authUserId)
+        .then((subscription) => { if (current) setPremiumSubscription(subscription); })
+        .catch(() => { if (current) setPremiumSubscription(null); });
+      return () => { current = false; };
     }
     try {
       setPremiumSubscription(JSON.parse(localStorage.getItem(`cognibridge_premium_${studentEmail.toLowerCase()}`) || "null"));
     } catch {
       setPremiumSubscription(null);
     }
-  }, [studentEmail]);
+    return undefined;
+  }, [studentEmail, authUserId]);
 
-  const completeDemoPurchase = (planId) => {
+  const finishPurchase = (purchase) => {
+    setPremiumSubscription(purchase);
+    setPremiumCheckoutOpen(false);
+    setPremiumCartPlan(null);
+    setActiveTab("settings");
+    setToast(t("pf_demoSuccessToast"));
+  };
+
+  const completeDemoPurchase = async (planId) => {
     const months = { monthly: 1, quarterly: 3, yearly: 12 }[planId];
     if (!signedIn || !studentEmail || !months) return;
+    if (supabaseConfigured) {
+      try {
+        finishPurchase(await activateDemoPremium(planId));
+      } catch {
+        notify(t("pf_purchaseFail"));
+      }
+      return;
+    }
     const purchasedAt = new Date();
     const expiresAt = new Date(purchasedAt);
     const expiryDay = expiresAt.getDate();
@@ -290,11 +317,7 @@ const App = () => {
     } catch {
       // Keep the demo purchase visible for this session if browser storage is unavailable.
     }
-    setPremiumSubscription(purchase);
-    setPremiumCheckoutOpen(false);
-    setPremiumCartPlan(null);
-    setActiveTab("settings");
-    setToast(t("pf_demoSuccessToast"));
+    finishPurchase(purchase);
   };
 
   const scrollToAbout = () => {

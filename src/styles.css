@@ -131,7 +131,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .empty-state { padding:40px; border:1px dashed var(--line); border-radius:16px; color:var(--muted); text-align:center; background:var(--surface); }
 .stats-section { margin-top:40px; }
 .settings-page .section-title { align-items:center; }
-.settings-details { margin-top:28px; }
+.settings-details { margin-top:28px; padding:22px 24px; border:1px solid var(--line); border-radius:18px; background:var(--surface); }
 .settings-subjects > p { color:var(--muted); }
 .settings-subjects .student-subject-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin:16px 0; }
 .settings-subjects .student-subject-options button { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:48px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); font:inherit; font-weight:700; text-align:left; cursor:pointer; }
@@ -161,7 +161,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .settings-details dd { margin:0; overflow-wrap:anywhere; font-weight:700; text-align:right; }
 .settings-edit { margin-top:18px; }
 .settings-page .stats-section { margin-top:36px; }
-@media (max-width:620px) { .settings-details dl { grid-template-columns:1fr; } }
+@media (max-width:620px) { .settings-details { padding:18px 16px; } .settings-details dl { grid-template-columns:1fr; } }
 .study-upcoming { margin-top:28px; }
 .study-section-heading { margin-bottom:14px; }
 .study-section-heading h3 { margin:0; font-size:calc(19px * var(--text-scale, 1)); }

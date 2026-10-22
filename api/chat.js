@@ -219,10 +219,19 @@ async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE
   });
 }
 
+// Premium Flow lifts the daily limit; has_active_premium() is in 20261022000200_premium_flow.sql.
+// If that migration hasn't been run, everyone keeps the normal limit.
+async function hasActivePremium(userClient) {
+  const { data, error } = await userClient.rpc("has_active_premium");
+  return !error && data === true;
+}
+
 async function translateChatResult(result, language, usage) {
   const input = JSON.stringify(result);
   const translationPromptEstimate = estimateTokens(input + tutorInstructions + translationInstructions + language);
-  const translationBudget = DAILY_TOKEN_LIMIT - usage.startingTokens - usage.tokens - translationPromptEstimate;
+  const translationBudget = usage.unlimited
+    ? MAX_RESPONSE_TOKENS
+    : DAILY_TOKEN_LIMIT - usage.startingTokens - usage.tokens - translationPromptEstimate;
   if (translationBudget <= 0) return result;
   const response = await callOpenRouter(
     [{ role: "user", content: input }],
@@ -269,9 +278,9 @@ export default async function handler(request, response) {
     }
     const userClient = await getUserClient(request);
     if (!userClient) return reply(response, 401, { error: "Sign in to view Cogni-Flow usage." });
-    const { data: used, error } = await userClient.rpc("ai_tokens_used_today");
+    const [{ data: used, error }, unlimited] = await Promise.all([userClient.rpc("ai_tokens_used_today"), hasActivePremium(userClient)]);
     if (error) return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable." });
-    return reply(response, 200, { used: Number(used) || 0, limit: DAILY_TOKEN_LIMIT });
+    return reply(response, 200, { used: Number(used) || 0, limit: DAILY_TOKEN_LIMIT, unlimited });
   }
 
   const validConversation = task === "document" ? isValidDocumentMessages(messages) : isValidMessages(messages);
@@ -285,6 +294,7 @@ export default async function handler(request, response) {
   // Without Supabase (demo mode) there are no accounts, so the per-user limit can't apply.
   let userClient = null;
   let usedToday = 0;
+  let unlimited = false;
   if (supabaseUrl && supabaseAnonKey) {
     userClient = await getUserClient(request);
     if (!userClient) {
@@ -296,15 +306,16 @@ export default async function handler(request, response) {
       return reply(response, 503, { error: "Cogni-Flow usage tracking is unavailable. Please try again later." });
     }
     usedToday = Number(data) || 0;
+    unlimited = await hasActivePremium(userClient);
     const promptEstimate = estimateTokens(messages.map((message) => message.content).join("") + tutorInstructions + taskInstructionsFor(task) + language + extraInstructions);
-    if (task === "document" && usedToday + promptEstimate + MIN_DOCUMENT_RESPONSE_TOKENS >= DAILY_TOKEN_LIMIT) {
+    if (!unlimited && task === "document" && usedToday + promptEstimate + MIN_DOCUMENT_RESPONSE_TOKENS >= DAILY_TOKEN_LIMIT) {
       return reply(response, 429, {
         error: "There aren't enough Cogni-Flow tokens left today to summarize this document. Try a shorter file, or come back tomorrow.",
         used: usedToday,
         limit: DAILY_TOKEN_LIMIT,
       });
     }
-    if (usedToday + promptEstimate >= DAILY_TOKEN_LIMIT) {
+    if (!unlimited && usedToday + promptEstimate >= DAILY_TOKEN_LIMIT) {
       return reply(response, 429, {
         error: "You've reached today's Cogni-Flow limit. It resets tomorrow.",
         used: Number(usedToday) || 0,
@@ -315,8 +326,9 @@ export default async function handler(request, response) {
 
   const requestPrompt = messages.map((message) => message.content).join("");
   const promptEstimate = estimateTokens(requestPrompt + tutorInstructions + taskInstructionsFor(task) + language + extraInstructions);
-  const responseTokenBudget = DAILY_TOKEN_LIMIT - usedToday - promptEstimate;
-  const usage = { tokens: 0, startingTokens: usedToday };
+  const responseTokenBudget = unlimited ? MAX_RESPONSE_TOKENS : DAILY_TOKEN_LIMIT - usedToday - promptEstimate;
+  // Usage is still recorded for premium students; it just isn't capped.
+  const usage = { tokens: 0, startingTokens: usedToday, unlimited };
   try {
     const responseLanguage = supportedLanguages.has(language) ? language : "English";
     const upstreamResponse = await callOpenRouter(messages, task, responseLanguage, responseTokenBudget, extraInstructions);

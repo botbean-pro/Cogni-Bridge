@@ -47,7 +47,7 @@ export async function getLearningAssistantUsage() {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Could not load Cogni-Flow usage.");
-  return { used: Number(data.used) || 0, limit: Number(data.limit) || 5000 };
+  return { used: Number(data.used) || 0, limit: Number(data.limit) || 5000, unlimited: data.unlimited === true };
 }
 
 // A document reply shows its summary in the study pack, so follow-up questions need it in the history.

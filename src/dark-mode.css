@@ -131,3 +131,9 @@ body.theme-dark { background:var(--canvas); color:var(--text); }
 
 /* Voice input error text */
 .theme-dark .ai-voice-status.error { color:#ff9f94; }
+
+/* My Little Journal: its low-sensory switch hardcodes a near-white --surface-2.
+   In dark mode use a calm dark tone derived from the current theme instead. */
+.theme-dark .low-sensory-mode { --surface-2:color-mix(in srgb, var(--surface) 70%, var(--canvas)); }
+.theme-dark .low-sensory-mode .sensory-card { border-color:var(--line); }
+.theme-dark .sensory-history-entry em.is-shared { color:#7fe3d4; }
