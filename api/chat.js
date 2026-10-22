@@ -219,7 +219,7 @@ async function callOpenRouter(messages, task, language, maxTokens = MAX_RESPONSE
   });
 }
 
-// Premium Flow lifts the daily limit; has_active_premium() is in 20261022000200_premium_flow.sql.
+// Premium Flow lifts the daily limit; has_active_premium() is in 20261022000250_premium_flow.sql.
 // If that migration hasn't been run, everyone keeps the normal limit.
 async function hasActivePremium(userClient) {
   const { data, error } = await userClient.rpc("has_active_premium");

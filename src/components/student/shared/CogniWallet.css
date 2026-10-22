@@ -1,0 +1,85 @@
+.cogni-wallet { max-width:1040px; margin:0 auto 22px; padding:22px; border:1px solid rgba(8,127,119,.2); border-radius:20px; color:var(--text); background:linear-gradient(125deg,var(--surface),#e8f5f1); box-shadow:0 16px 38px rgba(16,66,64,.09); }
+.cogni-wallet-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.cogni-wallet-brand { display:flex; align-items:center; gap:12px; }
+.cogni-wallet-brand > span { display:grid; width:45px; height:45px; place-items:center; border-radius:15px; color:var(--teal-dark); background:rgba(8,179,167,.12); }
+.cogni-wallet-brand .eyebrow { margin:0 0 2px; color:var(--teal-dark); font-size:10px; font-weight:900; letter-spacing:.14em; }
+.cogni-wallet-brand h2 { margin:0; color:var(--text); font-size:20px; letter-spacing:-.03em; }
+.cogni-store-open,.cogni-reward-footer button,.cogni-confirm-actions button { display:inline-flex; min-height:42px; align-items:center; justify-content:center; gap:8px; padding:0 15px; border:0; border-radius:12px; color:white; background:linear-gradient(120deg,#0cae9a,#087f77); font:inherit; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 7px 17px rgba(8,127,119,.19); transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease; }
+.cogni-store-open:hover,.cogni-reward-footer button:hover:not(:disabled),.cogni-confirm-actions button:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 11px 23px rgba(8,127,119,.25); }
+.cogni-store-open:disabled,.cogni-reward-footer button:disabled,.cogni-confirm-actions button:disabled { opacity:.55; cursor:not-allowed; }
+.cogni-wallet-stats { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:12px; }
+.cogni-wallet-stats > div { position:relative; display:grid; min-height:93px; align-content:center; gap:6px; overflow:hidden; padding:15px 18px; border:1px solid rgba(33,111,101,.1); border-radius:15px; background:rgba(255,255,255,.66); }
+.cogni-wallet-stats > div > span { color:var(--muted); font-size:12px; font-weight:700; }
+.cogni-wallet-stats strong { color:var(--text); font-size:25px; letter-spacing:-.04em; }
+.cogni-wallet-stats strong small { color:var(--muted); font-size:12px; letter-spacing:0; }
+.cogni-wallet-balance { background:linear-gradient(110deg,#e0f5ef,#f7fcfa)!important; }
+.cogni-wallet-balance strong { z-index:1; color:#087f77; font-size:32px; }
+.cogni-wallet-ambient { position:absolute; right:-20px; bottom:-38px; width:120px; height:100px; border-radius:50%; background:rgba(8,179,167,.14); filter:blur(20px); }
+.cogni-entitlement,.cogni-wallet-notice { display:flex; align-items:center; gap:8px; margin:12px 0 0; color:#087f77; font-size:13px; font-weight:700; }
+.cogni-wallet-notice { padding:10px 12px; border-radius:10px; background:rgba(8,179,167,.09); }
+.cogni-wallet-lower { display:grid; grid-template-columns:1.2fr 1fr; gap:18px; margin-top:20px; }
+.cogni-wallet-lower section { min-width:0; }
+.cogni-wallet-lower h3 { margin:0 0 10px; color:var(--text); font-size:14px; }
+.cogni-empty,.cogni-wallet-state { margin:0; color:var(--muted); font-size:13px; line-height:1.55; }
+.cogni-ledger,.cogni-redemption-list { display:grid; gap:0; margin:0; padding:0; list-style:none; }
+.cogni-ledger li,.cogni-redemption-list li { display:flex; min-width:0; align-items:center; gap:10px; padding:9px 0; border-top:1px solid rgba(33,111,101,.1); }
+.cogni-ledger li > span:nth-child(2),.cogni-redemption-list li > span { display:grid; min-width:0; gap:3px; flex:1; }
+.cogni-ledger strong,.cogni-redemption-list strong { overflow:hidden; color:var(--text); font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.cogni-ledger small,.cogni-redemption-list small { color:var(--muted); font-size:10px; }
+.cogni-ledger li > small { flex:none; }
+.cogni-earned { color:#087f77; font-size:12px; font-weight:900; white-space:nowrap; }
+.cogni-spent { color:#b35d4c; font-size:12px; font-weight:900; white-space:nowrap; }
+.cogni-redemption-list svg { flex:none; color:var(--teal-dark); }
+.cogni-wallet-state { display:flex; align-items:center; gap:9px; min-height:44px; }
+.cogni-wallet-error { color:#a13f38; }
+.cogni-wallet-error button { display:inline-flex; align-items:center; gap:5px; margin-left:8px; padding:5px 9px; border:1px solid var(--line); border-radius:8px; color:var(--text); background:var(--surface); cursor:pointer; }
+.cogni-spin { animation:cogniSpin .9s linear infinite; }
+@keyframes cogniSpin { to { transform:rotate(360deg); } }
+.cogni-modal-scrim { position:fixed; z-index:200; inset:0; display:grid; place-items:center; overflow:auto; padding:20px; background:rgba(13,29,31,.58); backdrop-filter:blur(5px); }
+.cogni-store-modal,.cogni-confirm-modal { position:relative; width:min(820px,100%); max-height:min(88vh,860px); overflow:auto; padding:28px; border:1px solid rgba(255,255,255,.64); border-radius:22px; color:var(--text); background:var(--surface); box-shadow:0 28px 90px rgba(0,0,0,.28); }
+.cogni-store-modal > .eyebrow,.cogni-confirm-modal > .eyebrow { margin:0 0 5px; color:var(--teal-dark); font-size:10px; font-weight:900; letter-spacing:.14em; }
+.cogni-store-modal h2,.cogni-confirm-modal h2 { margin:0; color:var(--text); font-size:clamp(24px,4vw,32px); letter-spacing:-.05em; }
+.cogni-store-balance { margin:8px 0 18px; color:var(--muted); font-size:13px; }
+.cogni-store-balance strong { color:var(--teal-dark); }
+.cogni-modal-close { position:absolute; top:16px; right:16px; display:grid; width:36px; height:36px; place-items:center; border:1px solid var(--line); border-radius:11px; color:var(--muted); background:var(--surface); cursor:pointer; }
+.cogni-store-tabs { display:flex; gap:8px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+.cogni-store-tabs button { display:inline-flex; min-height:40px; align-items:center; gap:7px; padding:0 13px; border:1px solid transparent; border-radius:11px; color:var(--muted); background:transparent; font:inherit; font-size:13px; font-weight:750; cursor:pointer; }
+.cogni-store-tabs button.active { border-color:rgba(8,127,119,.2); color:var(--teal-dark); background:rgba(8,179,167,.1); }
+.cogni-reward-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+.cogni-reward-card { display:flex; min-width:0; flex-direction:column; padding:17px; border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:0 8px 22px rgba(21,67,67,.05); transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease; }
+.cogni-reward-card:hover { transform:translateY(-3px); border-color:rgba(8,127,119,.4); box-shadow:0 15px 30px rgba(21,67,67,.12); }
+.cogni-reward-icon { display:grid; width:38px; height:38px; place-items:center; border-radius:12px; color:var(--teal-dark); background:rgba(8,179,167,.11); }
+.cogni-reward-card h3 { margin:11px 0 5px; color:var(--text); font-size:16px; }
+.cogni-reward-card > p { min-height:40px; margin:0; color:var(--muted); font-size:12px; line-height:1.55; }
+.cogni-reward-meta { display:grid; gap:4px; margin:10px 0; color:var(--muted); font-size:11px; }
+.cogni-reward-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:10px; border-top:1px solid var(--line); }
+.cogni-reward-footer > strong { display:flex; align-items:center; gap:5px; color:var(--teal-dark); font-size:14px; white-space:nowrap; }
+.cogni-reward-footer button { min-height:36px; padding-inline:12px; font-size:12px; }
+.cogni-store-empty { padding:25px 12px; text-align:center; }
+.cogni-confirm-scrim { z-index:210; }
+.cogni-confirm-modal { width:min(460px,100%); padding:28px; }
+.cogni-confirm-modal > p:not(.eyebrow) { color:var(--muted); font-size:14px; }
+.cogni-after-balance { padding:12px; border-radius:11px; color:var(--text)!important; background:var(--surface-2); }
+.cogni-confirm-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:18px; }
+.cogni-confirm-actions button:first-child { border:1px solid var(--line); color:var(--text); background:var(--surface); box-shadow:none; }
+.cogni-confirm-actions button:last-child { min-width:150px; }
+.theme-dark .cogni-wallet { border-color:var(--line); background:linear-gradient(125deg,var(--surface),#203b3c); }
+.theme-dark .cogni-wallet-stats > div { border-color:var(--line); background:rgba(24,41,44,.7); }
+.theme-dark .cogni-wallet-balance { background:linear-gradient(110deg,#203f3d,#253638)!important; }
+.theme-dark .cogni-wallet-balance strong,.theme-dark .cogni-earned,.theme-dark .cogni-entitlement,.theme-dark .cogni-wallet-notice,.theme-dark .cogni-store-balance strong,.theme-dark .cogni-reward-footer > strong { color:#65d9c7; }
+.theme-dark .cogni-ledger li,.theme-dark .cogni-redemption-list li,.theme-dark .cogni-reward-footer { border-color:var(--line); }
+@media (max-width:700px) {
+  .cogni-wallet { padding:16px; }
+  .cogni-wallet-head { align-items:flex-start; flex-direction:column; }
+  .cogni-wallet-stats { grid-template-columns:1fr 1fr; }
+  .cogni-wallet-balance { grid-column:1/-1; }
+  .cogni-wallet-lower { grid-template-columns:1fr; gap:15px; }
+  .cogni-store-modal { padding:22px 16px; }
+  .cogni-reward-grid { grid-template-columns:1fr; }
+  .cogni-store-tabs button { flex:1; justify-content:center; padding-inline:8px; font-size:12px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .cogni-store-open,.cogni-reward-card,.cogni-reward-footer button,.cogni-confirm-actions button { transition:none; }
+  .cogni-store-open:hover,.cogni-reward-card:hover,.cogni-reward-footer button:hover:not(:disabled),.cogni-confirm-actions button:hover:not(:disabled) { transform:none; }
+  .cogni-spin { animation:none; }
+}

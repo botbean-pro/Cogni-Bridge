@@ -131,7 +131,8 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
     <section className="home-hero">
       <div className="home-hero-copy">
         <p className="hero-eyebrow">{t("learnBeyondBorders")}</p>
-        <h1>{t("bigIdeasGrow")}<br />{t("weLearn")} <span>{t("together")}</span></h1>
+        <p className="home-brand-mark" aria-label="CogniBridge"><span className="home-brand-wordmark" data-brand="CogniBridge">Cogni<span className="home-brand-bridge">Bridge</span></span></p>
+        <h1 className="home-hero-tagline"><span className="tagline-hindi" lang="hi">सपनों की उड़ान</span><br /><span>for Every Learner</span></h1>
         <p className="hero-description">{t("homeHeroDescription")}</p>
         <div className="hero-actions">
           <CognibridgeButton className="hero-primary" onClick={onSignIn}>

@@ -1,6 +1,6 @@
 import { supabase } from "./supabaseClient";
 
-// Server-side Premium Flow membership (20261022000200_premium_flow.sql). /api/chat reads the
+// Server-side Premium Flow membership (20261022000250_premium_flow.sql). /api/chat reads the
 // same row to lift the daily Cogni-Flow limit, so this is the source of truth in Supabase mode.
 const toSubscription = (row) => (row ? {
   planId: row.plan_id,

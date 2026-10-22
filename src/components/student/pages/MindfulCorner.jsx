@@ -195,7 +195,7 @@ function GameScreen({ activity, settings, clueProgress, onCompleteClueLevel, onA
         }
       }}><strong>{option}</strong></button>)}</div>
       <p className="mc-clue-feedback" role="status">{status || 'Take your time. You can try again whenever you like.'}</p>
-      {clueSolved && <button type="button" className="mc-clue-next" onClick={() => {
+      <button type="button" className="mc-clue-next" disabled={!clueSolved} onClick={() => {
         if (clueRound === clueQuestions.length - 1) {
           onCompleteClueLevel(activeClueLevel);
           setClueLevelComplete(true);
@@ -206,7 +206,7 @@ function GameScreen({ activity, settings, clueProgress, onCompleteClueLevel, onA
           setClueHintOpen(false);
           setStatus('');
         }
-      }}>{clueRound === clueQuestions.length - 1 ? 'Complete level' : 'Next puzzle'} <ArrowRight size={16} aria-hidden="true" /></button>}
+      }}>{clueRound === clueQuestions.length - 1 ? 'Complete level' : 'Next clue'} <ArrowRight size={16} aria-hidden="true" /></button>
     </div>)}
     {activity.id === 'puzzle' && <div><p>Choose a piece, then choose where it goes. Hint: the picture is a little flower.</p><div className="mc-puzzle">{puzzle.map((n, i) => <button key={i} type="button" aria-pressed={puzzleSelection === i} aria-label={`Puzzle piece ${n}, position ${i+1}`} onClick={() => { if (puzzleSelection == null) setPuzzleSelection(i); else { const copy = [...puzzle]; [copy[puzzleSelection], copy[i]] = [copy[i], copy[puzzleSelection]]; setPuzzle(copy); setPuzzleSelection(null); if (copy.every((x, j) => x === j + 1)) finishActivity(true); else setStatus('Piece moved. Keep exploring.'); } }}>{n === 1 ? '🌼' : n === 2 ? '🌿' : n === 3 ? '🟩' : '☀️'}</button>)}</div><p aria-live="polite">{puzzleSelection != null ? 'Choose where to place the selected piece.' : status}</p><button type="button" onClick={() => { setPuzzle(shuffledPuzzle()); setPuzzleSelection(null); }}>Mix pieces</button><button type="button" onClick={() => { setPuzzle([1,2,3,4]); setPuzzleSelection(null); setStatus('Picture preview: flower, leaf, grass, sun.'); }}>Show hint</button></div>}
     {activity.id === 'feelings' && <div><p>Choose stickers or colors to make a picture, if you want. You do not need to explain it.</p><div className="mc-controls">{['😊','😐','😌','🌈','☀️','🌧️','⭐','💚'].map((s) => <button type="button" key={s} aria-pressed={sticker === s} onClick={() => setSticker(s)}>{s}</button>)}</div><div className="mc-feeling-canvas" aria-label="Your picture, only on this screen"><button type="button" aria-label={`Add ${sticker} to picture`} onClick={() => setObjects((v) => [...v, sticker])}>{objects.map((o, i) => <span key={i}>{o}</span>)}<span>{sticker}</span></button></div><DrawingPad color={color} label="Optional free drawing area"/><div className="mc-palette">{['#f6c85f','#ef7f78','#76b7a5','#7394cf','#b48bd2','#253d46'].map((v) => <button key={v} type="button" style={{ background: v }} aria-label={`Choose drawing color ${v}`} aria-pressed={color === v} onClick={() => setColor(v)} />)}</div><div className="mc-controls"><button type="button" onClick={() => setObjects((v) => v.slice(0, -1))}>Undo sticker</button><button type="button" onClick={() => setObjects([])}>Clear stickers</button></div></div>}

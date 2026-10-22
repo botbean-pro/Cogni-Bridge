@@ -17,6 +17,7 @@ import { fetchSessions, fetchStudentNotes } from "./mentorContent";
 import { loadMyRegistrations, markSessionAttended as saveAttendance, registerForSession as saveRegistration, unregisterFromSession as removeRegistration } from "./sessionRegistrations";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { activateDemoPremium, loadPremiumSubscription } from "./premiumFlow";
+import { loadCogniWallet } from "./cogniRewards";
 import { loadLatestHandwriting } from "./studentHandwriting";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
@@ -65,9 +66,12 @@ const App = () => {
   const [accessibilityOpen, setAccessibilityOpen] = useState(false);
   const [appearance, setAppearance] = useState(() => {
     try {
-      return localStorage.getItem("cognibridge_appearance") || "light";
+      const saved = localStorage.getItem("cognibridge_appearance");
+      const themeMigration = localStorage.getItem("cognibridge_dark_default_v1");
+      if (!themeMigration) return "dark";
+      return saved || "dark";
     } catch {
-      return "light";
+      return "dark";
     }
   });
   const [motionSetting, setMotionSetting] = useState(() => {
@@ -285,6 +289,20 @@ const App = () => {
     }
     return undefined;
   }, [studentEmail, authUserId]);
+
+  useEffect(() => {
+    if (!supabaseConfigured || authRole !== "student" || !authUserId) return undefined;
+    let current = true;
+    loadCogniWallet().then((wallet) => {
+      if (!current) return;
+      if (wallet.premium_expires_at) {
+        setPremiumSubscription({ planId: "cogni-points", purchasedAt: null, expiresAt: wallet.premium_expires_at, paymentType: "cogni-points" });
+      } else {
+        setPremiumSubscription((currentSubscription) => currentSubscription?.paymentType === "demo" ? currentSubscription : null);
+      }
+    }).catch(() => {});
+    return () => { current = false; };
+  }, [authRole, authUserId, activeTab]);
 
   const finishPurchase = (purchase) => {
     setPremiumSubscription(purchase);
@@ -581,6 +599,7 @@ const App = () => {
   useEffect(() => {
     try {
       localStorage.setItem("cognibridge_appearance", appearance);
+      localStorage.setItem("cognibridge_dark_default_v1", "true");
     } catch {
       // Keep the selected theme for this session if browser storage is unavailable.
     }

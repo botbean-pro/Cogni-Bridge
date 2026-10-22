@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Award, CheckCircle2, Flame, Info, MinusCircle, PlusCircle, Trophy } from "lucide-react";
 import { fetchLeaderboard } from "../../../sessionRegistrations";
 import { supabaseConfigured } from "../../../supabaseClient";
+import { CogniWallet } from "../shared/CogniWallet";
 import "./LeaderboardPage.css";
 
 // Demo-mode sample data; with Supabase the leaderboard comes from public.leaderboard().
@@ -63,6 +64,8 @@ export function LeaderboardPage({ signedIn, mindfulBoard, studentName, t }) {
         </div>
         <div className="leaderboard-trophy" aria-hidden="true"><Trophy size={34} /></div>
       </div>
+
+      <CogniWallet signedIn={signedIn} studentName={studentName} />
 
       <section className="mindful-points-card" aria-labelledby="mindful-points-title">
         <div className="mindful-points-medal" aria-hidden="true">✦</div>

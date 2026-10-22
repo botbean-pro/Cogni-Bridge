@@ -49,17 +49,31 @@ begin
 end;
 $$;
 
+-- Premium bought with money (premium_subscriptions) or redeemed with Cogni-Points
+-- (cogni_entitlements, from 20261022000200_cogni_points_rewards.sql) both count.
 create or replace function public.has_active_premium()
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
-  select exists (
+begin
+  if exists (
     select 1 from public.premium_subscriptions
     where student_id = (select auth.uid()) and expires_at > now()
-  );
+  ) then
+    return true;
+  end if;
+  -- The Cogni-Points migration may not have been run yet.
+  if to_regclass('public.cogni_entitlements') is not null then
+    return exists (
+      select 1 from public.cogni_entitlements
+      where student_id = (select auth.uid()) and expires_at > now()
+    );
+  end if;
+  return false;
+end;
 $$;
 
 revoke all on function public.activate_demo_premium(text) from public, anon;
