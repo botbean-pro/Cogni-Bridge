@@ -426,10 +426,6 @@ const AuthModal = ({ onClose, onStudentSuccess, onCreateAccount, onMentor, onPar
 const AccessibilityPanel = ({
   textScale,
   setTextScale,
-  motionSetting = "full",
-  setMotionSetting = () => {},
-  lowSensory = false,
-  setLowSensory = () => {},
   appearance,
   setAppearance,
   language,
@@ -481,28 +477,6 @@ const AccessibilityPanel = ({
         step=".05"
         value={textScale}
         onChange={(event) => setTextScale(Number(event.target.value))}
-      />
-    </label>
-
-    <label className="appearance-row motion-row">
-      <strong>Animation</strong>
-      <select value={motionSetting} onChange={(event) => setMotionSetting(event.target.value)} aria-label="Animation level">
-        <option value="full">Full</option>
-        <option value="reduced">Reduced</option>
-        <option value="off">Off</option>
-      </select>
-    </label>
-
-    <label className="low-sensory-row">
-      <span>
-        <strong>{t("Low sensory mode")}</strong>
-        <small>{t("lowSensoryDescription")}</small>
-      </span>
-      <input
-        type="checkbox"
-        checked={lowSensory}
-        onChange={(event) => setLowSensory(event.target.checked)}
-        aria-label={t("Low sensory mode")}
       />
     </label>
 

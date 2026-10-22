@@ -24,8 +24,30 @@ function labelFor(element) {
   return label.slice(0, label.lastIndexOf(" ", MAX_LABEL_LENGTH) > 0 ? label.lastIndexOf(" ", MAX_LABEL_LENGTH) : MAX_LABEL_LENGTH);
 }
 
+// Inline formatting inside a paragraph reads the whole paragraph, not one bold word.
+const INLINE = "span, strong, em, b, i, u, small, code, mark, abbr, time, sup, sub, label";
+// Never read a whole page region just because the pointer is over its padding.
+const TOO_BROAD = "html, body, main, [role=\"main\"], #root";
+const hasOwnText = (element) => [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+
 // A control wins over the text inside it, so a card button reads as one thing.
-const readableFrom = (target) => target?.closest?.(INTERACTIVE) || target?.closest?.(TEXT_BLOCKS) || null;
+// Otherwise the nearest text block, or the nearest element that holds text itself
+// (spans, divs, stat tiles, badges), so nothing on screen is silent.
+function readableFrom(target) {
+  if (!target?.closest) return null;
+  const visible = target.closest("[aria-hidden=\"true\"]")?.parentElement || target;
+  const control = visible.closest(INTERACTIVE);
+  if (control) return control;
+  const block = visible.closest(TEXT_BLOCKS);
+  let inline = visible;
+  while (inline && inline !== block && inline.matches(INLINE)) inline = inline.parentElement;
+  if (block && inline === block) return block;
+  for (let node = visible; node && !node.matches(TOO_BROAD); node = node.parentElement) {
+    if (node === block) return block;
+    if (hasOwnText(node) || node.matches("img[alt], [aria-label], [title]")) return node;
+  }
+  return null;
+}
 
 // While read aloud is on, reads whatever is under the mouse (or given keyboard focus) once it rests there.
 export function useHoverReadAloud({ enabled, language, volume }) {
@@ -55,17 +77,29 @@ export function useHoverReadAloud({ enabled, language, volume }) {
       if (event.pointerType === "touch") return;
       read(readableFrom(event.target));
     };
+    // Touch screens have no hover, so a tap reads what was tapped.
+    const onPointerUp = (event) => {
+      if (event.pointerType !== "touch") return;
+      const element = readableFrom(event.target);
+      const label = element && labelFor(element);
+      window.clearTimeout(timer);
+      lastElement = null;
+      if (!label || isReadingReply()) return;
+      speak(label, { language, volume, kind: "label" });
+    };
     const onPointerLeave = () => read(null);
     const onFocusIn = (event) => {
       if (event.target.matches?.(":focus-visible") && event.target.matches(INTERACTIVE)) read(event.target);
     };
 
     document.addEventListener("pointerover", onPointerOver);
+    document.addEventListener("pointerup", onPointerUp);
     document.documentElement.addEventListener("pointerleave", onPointerLeave);
     document.addEventListener("focusin", onFocusIn);
     return () => {
       window.clearTimeout(timer);
       document.removeEventListener("pointerover", onPointerOver);
+      document.removeEventListener("pointerup", onPointerUp);
       document.documentElement.removeEventListener("pointerleave", onPointerLeave);
       document.removeEventListener("focusin", onFocusIn);
     };

@@ -159,7 +159,7 @@ export function SessionsPage({ sessions, notes = [], selectedSession, signedIn, 
         />
       ) : (
         <>
-          {privateSessions.length > 0 && <section className="private-student-sessions"><h3>Your one-to-one sessions</h3>{privateSessions.map((session) => <article key={session.id}><div><span className="subject-pill">{session.subject}</span><strong>{session.title}</strong><small>{session.mentorName} · {session.date} · {session.time}–{session.endTime}</small></div><a href={session.meetLink} target="_blank" rel="noopener noreferrer">Join meeting <ChevronRight size={15} /></a></article>)}</section>}
+          {privateSessions.length > 0 && <section className="private-student-sessions"><h3>{t("Your one-to-one sessions")}</h3>{privateSessions.map((session) => <article key={session.id}><div><span className="subject-pill">{session.subject}</span><strong>{session.title}</strong><small>{session.mentorName} · {session.date} · {session.time}–{session.endTime}</small></div><a href={session.meetLink} target="_blank" rel="noopener noreferrer">{t("Join meeting")} <ChevronRight size={15} /></a></article>)}</section>}
           <SessionList sessions={availableSessions} onSelect={onSelect} t={t} activeSubject={activeSubject} />
         </>
       )}

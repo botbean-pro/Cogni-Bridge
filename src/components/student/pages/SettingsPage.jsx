@@ -7,6 +7,7 @@ import { supabaseConfigured } from "../../../supabaseClient";
 import { StudentStats } from "../shared/StudentStats";
 import { typeLabel } from "../../../handwriting";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
+import { premiumPurchaseHistory } from "../../../premiumSubscription";
 
 export function SettingsPage({ studentEmail, studentId, studentName, studentProfile, preferredSubjects = [], onSaveSubjects, premiumSubscription, activityVersion, screenTimeVersion, screenTimeStudentKey, screenTimeDemoMode, onEditProfile, t }) {
   const [parentCode, setParentCode] = useState("");
@@ -79,6 +80,8 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
   ];
   const planNameKeys = { monthly: "pf_planMonthly", quarterly: "pf_planQuarterly", yearly: "pf_planYearly" };
   const subscriptionActive = Boolean(premiumSubscription?.expiresAt && new Date(premiumSubscription.expiresAt) > new Date());
+  const premiumPurchases = premiumPurchaseHistory(premiumSubscription).slice().reverse();
+  const purchaseTime = (value) => new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 
   return (
     <section className="content settings-page">
@@ -131,7 +134,17 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
           <div><dt>{t("pf_membershipStatus")}</dt><dd>{subscriptionActive ? t("pf_membershipActive") : premiumSubscription ? t("pf_membershipExpired") : t("pf_freePlan")}</dd></div>
           {premiumSubscription?.expiresAt && <div><dt>{t(subscriptionActive ? "pf_validUntil" : "pf_expiredOn")}</dt><dd>{new Date(premiumSubscription.expiresAt).toLocaleDateString()}</dd></div>}
           {premiumSubscription?.paymentType === "demo" && <div><dt>{t("pf_paymentType")}</dt><dd>{t("pf_demoPayment")}</dd></div>}
+          {premiumSubscription?.purchasedAt && <div><dt>{t("pf_lastBought")}</dt><dd>{purchaseTime(premiumSubscription.purchasedAt)}</dd></div>}
         </dl>
+        {premiumPurchases.length > 0 && <>
+          <h4 className="settings-purchase-heading">{t("pf_purchaseHistory")}</h4>
+          <dl>
+            {premiumPurchases.map((purchase, index) => <div key={`${purchase.purchasedAt}-${index}`}>
+              <dt>{planNameKeys[purchase.planId] ? t(planNameKeys[purchase.planId]) : t("premiumFlow")}</dt>
+              <dd>{purchaseTime(purchase.purchasedAt)}</dd>
+            </div>)}
+          </dl>
+        </>}
       </section>
       <section className="settings-details parent-link-settings" aria-labelledby="parent-link-heading">
         <h3 id="parent-link-heading">{t("ms_pcHeading")}</h3>

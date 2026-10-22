@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bird, CloudRain, Headphones, Music2, Waves } from "lucide-react";
+import { ArrowLeft, Bird, CloudRain, Music2, Waves } from "lucide-react";
 import "./RelaxationRoom.css";
 
 const soundscapes = [
@@ -111,8 +111,8 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
 
   return <div className="relax-room">
     <div className="relax-room-glow relax-room-glow-one" aria-hidden="true" /><div className="relax-room-glow relax-room-glow-two" aria-hidden="true" />
-    <header className="relax-room-header"><button type="button" className="relax-back" onClick={onBack}><ArrowLeft size={17} />{t("backToPortal")}</button><span><Headphones size={17} /> {t("quietSpaceEyebrow")}</span></header>
-    <section className="relax-room-intro"><div className="relax-room-orb" aria-hidden="true"><span>☼</span></div><p className="relax-kicker">{t("quietSpaceEyebrow")}</p><h1>{t("quietSpaceTitle")}</h1><p>{t("quietSpaceCopy")}</p></section>
+    <header className="relax-room-header"><button type="button" className="relax-back" onClick={onBack}><ArrowLeft size={17} />{t("backToPortal")}</button></header>
+    <section className="relax-room-intro"><div className="relax-room-orb" aria-hidden="true"><span>☼</span></div><h1>{t("quietSpaceTitle")}</h1><p>{t("quietSpaceCopy")}</p></section>
     <section className="relax-sound-grid" aria-label={t("soundscapes")}>
       {soundscapes.map(({ id, title, detail, Icon }) => <article className={`relax-sound-card${active.includes(id) ? " is-playing" : ""}`} key={id}>
         <span className="relax-sound-icon"><Icon size={23} /></span><h2>{t(`sound_${id}`) || title}</h2><p>{t(`sound_${id}_detail`) || detail}</p>
