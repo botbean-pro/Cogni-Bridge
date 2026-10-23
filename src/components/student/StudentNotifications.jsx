@@ -7,8 +7,9 @@ import { formatLocalizedDate, getSessionTitle } from "../../constants";
 // Session end as a Date, so finished sessions drop out of the list.
 const endOf = (session) => new Date(`${session.date}T${session.endTime}:00`);
 
-// Rail button with an unread badge, plus a popup listing one-to-one sessions from a mentor.
-export function StudentNotifications({ studentId, t }) {
+// One-to-one sessions a mentor scheduled, the unread count and the popup state. StudentPage owns it so the
+// rail's bell and the phone "More" sheet show the same badge and open the same popup.
+export function useStudentNotifications(studentId) {
   const [sessions, setSessions] = useState([]);
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -39,6 +40,13 @@ export function StudentNotifications({ studentId, t }) {
     }
   };
 
+  return { upcoming, unread, failed, open, openPanel, closePanel: () => setOpen(false) };
+}
+
+// Rail button with an unread badge, plus a popup listing one-to-one sessions from a mentor.
+export function StudentNotifications({ notifications, t }) {
+  const { upcoming, unread, failed, open, openPanel, closePanel } = notifications;
+
   return (
     <>
       <button type="button" className="student-rail-link student-notify-button" onClick={openPanel} aria-label={t("ps_bell")} title={t("ps_bell")}>
@@ -47,9 +55,9 @@ export function StudentNotifications({ studentId, t }) {
       </button>
       {/* Rendered on <body> so the rail's own positioning can't trap the overlay inside the sidebar. */}
       {open && createPortal(
-        <div className="student-calm-overlay student-notify-overlay" role="dialog" aria-modal="true" aria-label={t("ps_bell")} onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+        <div className="student-calm-overlay student-notify-overlay" role="dialog" aria-modal="true" aria-label={t("ps_bell")} onMouseDown={(event) => { if (event.target === event.currentTarget) closePanel(); }}>
           <div className="student-calm-dialog student-notify-dialog">
-            <button className="student-calm-dismiss" type="button" onClick={() => setOpen(false)} aria-label={t("close")}><X size={20} /></button>
+            <button className="student-calm-dismiss" type="button" onClick={closePanel} aria-label={t("close")}><X size={20} /></button>
             <h2>{t("ps_bell")}</h2>
             {failed && <p className="student-notify-error" role="alert">{t("ps_loadFail")}</p>}
             {!upcoming.length ? <p className="student-notify-empty">{t("ps_empty")}</p> : (

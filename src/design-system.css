@@ -128,6 +128,13 @@ body {
   box-shadow: 0 10px 24px rgba(8, 169, 150, .3), inset 0 1px 0 rgba(255,255,255,.24);
 }
 
+/* On phones the rails are opaque bottom bars. A backdrop-filter would make the bar the containing
+   block for fixed children (the profile menu), pushing them off-screen and clipping them. */
+@media (max-width: 640px) {
+  .student-rail,
+  .mentor-page .mentor-nav { backdrop-filter: none; }
+}
+
 .parent-header {
   position: relative;
   overflow: hidden;

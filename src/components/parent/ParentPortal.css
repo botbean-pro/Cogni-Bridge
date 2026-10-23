@@ -2,7 +2,7 @@
    stat-skeleton styles from styles.css; everything here uses the shared theme tokens
    so it follows light/dark mode. */
 
-.parent-page { display:grid; gap:20px; max-width:1100px; }
+.parent-page { display:grid; align-content:start; gap:20px; max-width:1100px; }
 
 /* Entrance animation. fill-mode "backwards" so it doesn't pin transform afterwards
    and hover lifts (stats-grid, cards) still work. */
@@ -131,7 +131,7 @@
 
 @media (max-width:900px) {
   .parent-grid { grid-template-columns:1fr; }
-  .parent-connect-card { align-items:stretch; flex-direction:column; }
+  .parent-connect-card { align-items:stretch; justify-content:flex-start; flex-direction:column; }
   .parent-connect-card form { width:100%; }
 }
 @media (max-width:620px) {

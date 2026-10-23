@@ -32,6 +32,7 @@ import { SessionStudents } from "../SessionStudents";
 import { MentorStudentPage } from "./MentorStudentPage";
 import { MentorParentChat } from "../MentorParentChat";
 import { usePageTitle } from "../../../pageTitle";
+import { useActiveTabInView } from "../../../useRailScroll";
 import { mentorStudentPath, parseMentorStudentPath } from "../../../routes";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { createMeetLink, listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
@@ -52,6 +53,7 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
     ["settings", Settings, t("settings")],
   ];
   usePageTitle(t("pt_mentor"), items.find(([key]) => key === tab)?.[2]);
+  useActiveTabInView(tab);
 
   return (
     <aside className="mentor-nav">
@@ -518,7 +520,7 @@ function MentorSettingsPage({ mentorId, onChanged, t }) {
             <thead><tr><th>{t("md_setColStudent")}</th><th>{t("md_setColJoined")}</th><th>{t("md_setColStatus")}</th><th>{t("md_stuProfile")}</th></tr></thead>
             <tbody>{visible.map((row) => <tr key={row.student_id} className={row.is_mine ? "is-mine" : ""}>
               <td><span className="mentor-leaderboard-avatar" aria-hidden="true">{row.display_name.charAt(0).toUpperCase()}</span> {row.display_name}</td>
-              <td>{new Date(row.joined_at).toLocaleDateString()}</td>
+              <td data-label={t("md_setColJoined")}>{new Date(row.joined_at).toLocaleDateString()}</td>
               <td><button type="button" className={`mentor-student-toggle${row.is_mine ? " active" : ""}`} aria-pressed={row.is_mine} disabled={savingId === row.student_id} onClick={() => toggle(row)}>
                 {row.is_mine ? t("md_setRemove") : t("md_setAdd")}
               </button></td>
