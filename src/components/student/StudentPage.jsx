@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Accessibility, X } from "lucide-react";
 import { classNames } from "../../constants";
-import { AnimatedLogo, MouseTrail } from "../Brand";
+import { AnimatedLogo } from "../Brand";
 import { StudentSidebar } from "./StudentSidebar";
 import { StudentTopBar } from "./StudentTopBar";
 import { StudentNotifications } from "./StudentNotifications";
@@ -35,7 +35,6 @@ export const StudentPage = ({
   }, [settingsOpen]);
 
   return <>
-    <MouseTrail />
     {showIntro && (
       <div className={classNames("intro-screen", introExiting && "is-exiting")} aria-label={t("loadingCogniBridge")}>
         <AnimatedLogo />

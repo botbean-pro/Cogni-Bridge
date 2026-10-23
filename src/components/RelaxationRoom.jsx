@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bird, CloudRain, Headphones, Music2, Pause, Play, Square, Waves } from "lucide-react";
+import { ArrowLeft, Bird, CloudRain, Music2, Waves } from "lucide-react";
 import "./RelaxationRoom.css";
 
 const soundscapes = [
@@ -23,23 +23,7 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
   const [active, setActive] = useState([]);
   const [volume, setVolume] = useState(18);
   const [message, setMessage] = useState("");
-  const [voiceState, setVoiceState] = useState("idle");
-  const [voices, setVoices] = useState([]);
-  const [voiceName, setVoiceName] = useState("");
   const nodes = useRef({});
-  const speech = typeof window !== "undefined" ? window.speechSynthesis : null;
-
-  useEffect(() => {
-    if (!speech) return undefined;
-    const updateVoices = () => {
-      const available = speech.getVoices();
-      setVoices(available);
-      setVoiceName((current) => current || available.find((voice) => voice.lang.toLowerCase().startsWith("en"))?.name || available[0]?.name || "");
-    };
-    updateVoices();
-    speech.addEventListener?.("voiceschanged", updateVoices);
-    return () => speech.removeEventListener?.("voiceschanged", updateVoices);
-  }, [speech]);
 
   const stopOne = (id) => {
     const item = nodes.current[id];
@@ -50,14 +34,8 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
     setActive((current) => current.filter((key) => key !== id));
   };
 
-  const stopVoice = () => {
-    speech?.cancel();
-    setVoiceState("idle");
-  };
-
   const stopAll = () => {
     Object.keys(nodes.current).forEach(stopOne);
-    stopVoice();
   };
 
   useEffect(() => () => {
@@ -66,7 +44,6 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
       context.close().catch(() => {});
     });
     nodes.current = {};
-    speech?.cancel();
   }, []);
 
   useEffect(() => {
@@ -134,42 +111,10 @@ export function RelaxationRoom({ onBack, t = (key) => key }) {
     }
   };
 
-  const startVoice = () => {
-    if (!speech || typeof window.SpeechSynthesisUtterance === "undefined") {
-      setMessage("Spoken guidance is not available in this browser.");
-      return;
-    }
-    speech.cancel();
-    const guide = new window.SpeechSynthesisUtterance(
-      "Settle into a comfortable position. Let your shoulders soften. Breathe in slowly through your nose. And gently breathe out. There is nothing you need to solve right now. Take one more easy breath in, and let it go. Stay here for as long as you need."
-    );
-    const selectedVoice = voices.find((voice) => voice.name === voiceName);
-    if (selectedVoice) guide.voice = selectedVoice;
-    guide.rate = 0.78;
-    guide.pitch = 0.92;
-    guide.volume = Math.min(1, volume / 100);
-    guide.onend = () => setVoiceState("idle");
-    guide.onerror = () => setVoiceState("idle");
-    speech.speak(guide);
-    setVoiceState("speaking");
-    setMessage("A calming voice guide is playing. Pause or stop it whenever you like.");
-  };
-
-  const pauseVoice = () => {
-    if (!speech) return;
-    if (voiceState === "speaking") {
-      speech.pause();
-      setVoiceState("paused");
-    } else if (voiceState === "paused") {
-      speech.resume();
-      setVoiceState("speaking");
-    }
-  };
-
   return <div className="relax-room">
     <div className="relax-room-glow relax-room-glow-one" aria-hidden="true" /><div className="relax-room-glow relax-room-glow-two" aria-hidden="true" />
-    <header className="relax-room-header"><button type="button" className="relax-back" onClick={onBack}><ArrowLeft size={17} />{t("backToPortal")}</button><span><Headphones size={17} /> {t("quietSpaceEyebrow")}</span></header>
-    <section className="relax-room-intro"><div className="relax-room-orb" aria-hidden="true"><span>☼</span></div><p className="relax-kicker">{t("quietSpaceEyebrow")}</p><h1>{t("quietSpaceTitle")}</h1><p>{t("quietSpaceCopy")}</p></section>
+    <header className="relax-room-header"><button type="button" className="relax-back" onClick={onBack}><ArrowLeft size={17} />{t("backToPortal")}</button></header>
+    <section className="relax-room-intro"><div className="relax-room-orb" aria-hidden="true"><span>☼</span></div><h1>{t("quietSpaceTitle")}</h1><p>{t("quietSpaceCopy")}</p></section>
     <section className="relax-sound-grid" aria-label={t("soundscapes")}>
       {soundscapes.map(({ id, title, detail, Icon }) => <article className={`relax-sound-card${active.includes(id) ? " is-playing" : ""}`} key={id}>
         <span className="relax-sound-icon"><Icon size={23} /></span><h2>{t(`sound_${id}`) || title}</h2><p>{t(`sound_${id}_detail`) || detail}</p>

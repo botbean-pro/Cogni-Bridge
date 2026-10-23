@@ -24,7 +24,7 @@ import {
 import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
 import { loadMentorParentMessages } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
-import { LogoImage, MouseTrail } from "../../Brand";
+import { LogoImage } from "../../Brand";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
@@ -716,7 +716,6 @@ export function MentorDashboard({
   const parentMessages = useParentMessages(mentorId, tab === "messages");
   return (
     <main className="mentor-page">
-      <MouseTrail />
       <div className="mentor-layout">
         <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
         <section className={`mentor-content route-transition${tab === "messages" ? " is-chat" : ""}`} key={tab}>

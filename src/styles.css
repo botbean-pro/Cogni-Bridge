@@ -28,26 +28,6 @@ body { margin:0; min-width:320px; background:var(--canvas); }
 .theme-dark .app,.theme-dark .main,.theme-dark .content { color:var(--text); }
 .theme-dark ::selection { color:#081817; background:#6be4d2; }
 
-/* Mouse trail effect */
-.mouse-trail-circle {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(121, 228, 216, 0.5);
-  border-radius: 50%;
-  opacity: 0;
-  transform: translate3d(-100px, -100px, 0);
-  transition: opacity 0.22s ease, scale 0.22s ease;
-  will-change: transform, opacity;
-}
-.mouse-trail-circle.is-visible {
-  opacity: .62;
-}
-
 @keyframes floatPulse {
   0%, 100% {
     transform: translateY(0px) scale(1);
@@ -57,7 +37,7 @@ body { margin:0; min-width:320px; background:var(--canvas); }
   }
 }
 body { font-size:calc(16px * var(--text-scale, 1)); }
-button,input,select { font:inherit; }
+button,input,select,textarea { font:inherit; }
 button { border:0; cursor:pointer; }
 a { color:inherit; }
 .app { min-height:100vh; display:block; background:var(--canvas); font-size:calc(16px * var(--text-scale,1)); }
@@ -142,23 +122,24 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .screen-time-summary { margin:22px 0; padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
 .screen-time-summary-heading { display:flex; align-items:center; gap:11px; }
 .screen-time-icon { display:grid; width:40px; height:40px; flex:none; place-items:center; border-radius:13px; color:var(--teal-dark); background:var(--surface-2); }
-.screen-time-summary-heading h3 { margin:0; font-size:17px; }
-.screen-time-summary-heading p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+.screen-time-summary-heading h3 { margin:0; font-size:calc(17px * var(--text-scale, 1)); }
+.screen-time-summary-heading p { margin:4px 0 0; color:var(--muted); font-size:calc(13px * var(--text-scale, 1)); }
 .screen-time-totals { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:17px 0; }
 .screen-time-totals article { display:grid; gap:4px; padding:12px 14px; border-radius:11px; background:var(--surface-2); }
-.screen-time-totals strong { color:var(--teal-dark); font-size:21px; }
-.screen-time-totals span { color:var(--muted); font-size:12px; }
+.screen-time-totals strong { color:var(--teal-dark); font-size:calc(21px * var(--text-scale, 1)); }
+.screen-time-totals span { color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); }
 .screen-time-chart { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); align-items:end; gap:8px; min-height:128px; padding-top:6px; }
 .screen-time-day { display:grid; grid-template-rows:76px auto auto; justify-items:center; gap:5px; min-width:0; }
 .screen-time-bar-track { display:flex; width:min(28px,80%); height:76px; align-items:flex-end; overflow:hidden; border-radius:99px; background:var(--surface-2); }
 .screen-time-bar { display:block; width:100%; min-height:3px; border-radius:99px; background:linear-gradient(180deg,#55c8b9,#138c80); transition:height .4s ease; }
-.screen-time-day small { overflow:hidden; max-width:100%; color:var(--muted); font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.screen-time-day small { overflow:hidden; max-width:100%; color:var(--muted); font-size:calc(10px * var(--text-scale, 1)); text-overflow:ellipsis; white-space:nowrap; }
 .screen-time-day small:last-child { color:var(--text); font-weight:700; }
 .settings-details h3 { margin:0 0 10px; font-size:calc(19px * var(--text-scale, 1)); }
 .settings-details dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; border-top:1px solid var(--line); }
 .settings-details dl > div { display:flex; flex-direction:column; gap:4px; min-width:0; padding:14px 16px 14px 0; border-bottom:1px solid var(--line); }
 .settings-details dt { color:var(--muted); }
 .settings-details dd { margin:0; overflow-wrap:anywhere; font-weight:700; }
+.settings-purchase-heading { margin:22px 0 10px; color:var(--muted); font-size:calc(14px * var(--text-scale, 1)); font-weight:800; }
 .settings-edit { margin-top:18px; }
 .settings-page .stats-section { margin-top:36px; }
 @media (max-width:620px) { .settings-details { padding:18px 16px; } .settings-details dl { grid-template-columns:1fr; } }
@@ -1077,7 +1058,7 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 }
 .ai-chat-header::after { content:""; position:absolute; width:14rem; height:14rem; top:-9rem; right:16%; border:1px solid rgba(20, 179, 161, .25); border-radius:50%; box-shadow:0 0 0 2rem rgba(20, 179, 161, .06); pointer-events:none; }
 .ai-header-content,.ai-status { position:relative; z-index:1; }
-.ai-header-icon { width:52px; height:52px; border-radius:17px; background:linear-gradient(135deg, #13c7b6, #477bea); color:white; box-shadow:0 12px 24px rgba(29, 159, 165, .25); }
+.ai-header-icon { width:52px; height:52px; border-radius:17px; background:#fff; color:var(--teal); border:1px solid var(--line); box-shadow:0 8px 18px rgba(29, 159, 165, .14); }
 .ai-chat-header h2 { font-size:calc(23px * var(--text-scale, 1)); letter-spacing:-.03em; }
 .ai-status { padding:9px 14px; background:rgba(229, 255, 250, .78); box-shadow:0 7px 18px rgba(20, 96, 93, .08); }
 .theme-dark .ai-status { background:rgba(8,169,150,.16); color:#7fe3d5; box-shadow:none; }
@@ -1118,6 +1099,8 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 /* Long names end in "..." instead of pushing the log out button out of the rail. */
 .student-rail-logout { min-width:0; max-width:100%; }
 .student-rail-logout > span:not(.avatar-small) { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.student-rail-footer,.student-rail-account { min-width:0; }
+.student-rail:is(:hover,:focus-within,:has(.pinned-open),.accessibility-open) .student-rail-account-split .student-rail-logout { flex:0 1 auto; max-width:55%; }
 
 /* Mentor pages: the content column, its headings and the narrower forms and lists sit centred
    in the space beside the rail. */
@@ -1131,11 +1114,9 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
   .mentor-content { width:auto; margin:0 auto; }
 }
 
-/* Phone layout: the side rails (student, parent, mentor) become a bottom tab bar, pages use the
-   full width, and the cursor-following circle is hidden on touch screens. */
-@media (hover:none),(pointer:coarse) { .mouse-trail-circle { display:none; } }
+/* Phone layout: the side rails (student, parent, mentor) become a bottom tab bar and pages use the
+   full width. */
 @media (max-width:640px) {
-  .mouse-trail-circle { display:none; }
   .student-rail,.student-rail:is(:hover,:focus-within,:has(.pinned-open)),
   .mentor-nav,.mentor-nav:is(:hover,:focus-within) { inset:auto 0 0 0; width:100%; height:auto; flex-direction:row; align-items:stretch; gap:4px; overflow-x:auto; overflow-y:visible; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); border-top:1px solid rgba(255,255,255,.1); border-right:0; box-shadow:0 -8px 24px rgba(20,40,42,.18); scrollbar-width:none; }
   .student-rail::-webkit-scrollbar,.mentor-nav::-webkit-scrollbar { display:none; }
@@ -1274,15 +1255,15 @@ html[data-low-sensory="true"] .app :is(.session-card,.session-detail,.my-session
   background:var(--surface-2); color:var(--text); cursor:pointer;
 }
 .rest-reminder-icon { display:grid; place-items:center; width:54px; height:54px; margin:0 auto 13px; border-radius:18px; color:#49695f; background:#e4ebe4; }
-.rest-reminder-eyebrow { margin:0 0 6px; color:var(--teal-dark); font-size:12px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
-.rest-reminder h2 { margin:0; color:var(--text); font-size:26px; line-height:1.2; }
-.rest-reminder-motivation { margin:15px 0; color:var(--text); font-size:17px; font-weight:650; line-height:1.6; }
-.rest-reminder-tip { display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 22px; color:var(--muted); font-size:14px; line-height:1.5; }
+.rest-reminder-eyebrow { margin:0 0 6px; color:var(--teal-dark); font-size:calc(12px * var(--text-scale, 1)); font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+.rest-reminder h2 { margin:0; color:var(--text); font-size:calc(26px * var(--text-scale, 1)); line-height:1.2; }
+.rest-reminder-motivation { margin:15px 0; color:var(--text); font-size:calc(17px * var(--text-scale, 1)); font-weight:650; line-height:1.6; }
+.rest-reminder-tip { display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 22px; color:var(--muted); font-size:calc(14px * var(--text-scale, 1)); line-height:1.5; }
 .rest-reminder-tip svg { flex:0 0 auto; color:var(--teal-dark); }
 .rest-reminder-action { width:100%; min-height:50px; border:0; border-radius:14px; background:#66847a; color:white; font-weight:800; cursor:pointer; }
 .rest-reminder-later { margin-top:12px; padding:8px; border:0; background:transparent; color:var(--muted); font-weight:700; cursor:pointer; }
 .rest-reminder :focus-visible { outline:3px solid #54776b; outline-offset:3px; }
-@media (max-width:520px) { .rest-reminder { padding:30px 22px 22px; border-radius:20px; } .rest-reminder h2 { font-size:23px; } }
+@media (max-width:520px) { .rest-reminder { padding:30px 22px 22px; border-radius:20px; } .rest-reminder h2 { font-size:calc(23px * var(--text-scale, 1)); } }
 html[data-low-sensory="true"] .app.theme-dark .rest-reminder-icon { color:#c1d3c7; background:#3b4b43; }
 html[data-low-sensory="true"] .rest-reminder-backdrop { backdrop-filter:none; }
 

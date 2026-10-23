@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Accessibility, LogOut } from "lucide-react";
-import { MouseTrail } from "../Brand";
 import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentMessages, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
 import { ParentSidebar } from "./ParentSidebar";
 import { useRouteTab } from "../../routes";
@@ -191,7 +190,6 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
 
   return (
     <>
-      <MouseTrail />
       <div className="student-app-shell parent-app-shell">
         <aside className="student-rail">
           <ParentSidebar activeTab={tab} onNavigate={setTab} t={t} />

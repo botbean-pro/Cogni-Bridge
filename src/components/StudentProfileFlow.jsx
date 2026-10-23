@@ -5,7 +5,7 @@ import { LogoImage } from "./Brand";
 import { typeLabel } from "../handwriting";
 import { supabase, supabaseConfigured } from "../supabaseClient";
 import { saveHandwriting } from "../studentHandwriting";
-import { analyzeHandwritingSample } from "../handwritingAnalysis";
+import { classifyHandwritingSample } from "../handwritingAnalysis";
 import "./StudentProfileFlow.css";
 
 const readImage = (file) => new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
     setStep("loading");
     let analysis;
     try {
-      analysis = await analyzeHandwritingSample(image);
+      analysis = await classifyHandwritingSample(image);
     } catch {
       analyzingRef.current = false;
       setError("handwritingAnalysisReadError");
@@ -195,7 +195,7 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
           <div className="profile-result-mark"><CheckCircle2 size={26} /></div>
           <p className="eyebrow">{t("handwritingAnalysis")}</p>
           <h1>{profile.name || t("profileYourProfile")}</h1>
-          <p className="handwriting-type">{profile.handwritingPatternKey ? t(profile.handwritingPatternKey) : profile.handwritingType}</p>
+          <p className="handwriting-type">{typeLabel(t, profile.handwritingType)}</p>
           {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt={t("hw_altUploaded")} />}
           <p className="profile-result-copy">{t(profile.handwritingMeaningKey || "handwritingAnalysisDisclaimer")}</p>
           <p className="profile-result-copy handwriting-disclaimer">{t("handwritingAnalysisDisclaimer")}</p>

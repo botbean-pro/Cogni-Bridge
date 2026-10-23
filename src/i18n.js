@@ -4,6 +4,10 @@ import premiumCareer from "./i18nPremiumCareer";
 import mentorText from "./i18nMentor";
 import miscText from "./i18nMisc";
 import privateText from "./i18nPrivate";
+import sessionText from "./i18nSession";
+import uiText from "./i18nUi";
+import mindfulText from "./i18nMindful";
+import cluesText from "./i18nClues";
 
 import { sensoryTranslation } from "./sensoryLocales.js";
 
@@ -682,6 +686,12 @@ const catalog = {
 catalog.premiumFlow = ["Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow"];
 
 Object.assign(catalog, sensoryOptions, sensoryText, premiumCareer, mentorText, miscText, privateText);
+// Text that used to stay English in every language. Existing translations win; an entry that
+// was English in all ten slots (brand names, older keys) is replaced.
+[sessionText, uiText, mindfulText, cluesText].forEach((table) => Object.entries(table).forEach(([key, values]) => {
+  const current = catalog[key];
+  if (!current || current.every((value) => value === current[0])) catalog[key] = values;
+}));
 
 // Premium Flow copy is shared across the app. Provide clear English fallbacks
 // for locales that do not yet have translated versions, rather than exposing keys.
@@ -880,7 +890,8 @@ Object.assign(handwritingTranslations.German, { screenTimeTitle: "Bildschirmzeit
 Object.assign(handwritingTranslations.Spanish, { screenTimeTitle: "Tiempo de pantalla", screenTimeDescription: "Tiempo activo en CogniBridge, por día durante los últimos 7 días.", screenTimeToday: "Hoy", screenTimeLast7Days: "Últimos 7 días" });
 
 export const translate = (language, key, values = {}) => {
-  const handwritingText = handwritingTranslations[language]?.[key] || handwritingTranslations.English[key];
+  // The catalog covers handwriting keys a language is missing, before falling back to English.
+  const handwritingText = handwritingTranslations[language]?.[key] || (catalog[key] ? null : handwritingTranslations.English[key]);
   if (handwritingText) return handwritingText.replace(/\{(\w+)\}/g, (_, name) => values[name] ?? "");
   const normalizedKey = normalizeTranslationKey(key);
   const addedDictionary = addedLocales[language];

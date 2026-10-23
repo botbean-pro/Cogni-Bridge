@@ -31,11 +31,14 @@ export const normalizePath = (pathname) => pathname.replace(/\/+$/, "") || "/";
 
 export const sessionPath = (sessionId) => `${studentTabPaths.sessions}/${encodeURIComponent(sessionId)}`;
 
+export const mindfulActivityPath = (activityPath) => `${studentTabPaths.mindful}/${activityPath}`;
+
 // Returns the student tab (and open session, if any) for a path, or a null tab for anything else.
 export function parseStudentPath(pathname) {
   const path = normalizePath(pathname);
   const sessionMatch = path.match(/^\/sessions\/([^/]+)$/);
   if (sessionMatch) return { tab: "sessions", sessionId: decodeURIComponent(sessionMatch[1]) };
+  if (/^\/mindful-corner\/[^/]+$/.test(path)) return { tab: "mindful", sessionId: null };
   return { tab: tabsByPath[path] || null, sessionId: null };
 }
 

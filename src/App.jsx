@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Coffee, Heart, X } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { classNames, demoStudents, getSessionTitle, initialSessions, readStudents, subjects } from "./constants";
 import { AccessibilityPanel, AuthModal, CreateAccountPage } from "./components/AccessAndAuth";
@@ -22,6 +22,7 @@ import { loadLatestHandwriting } from "./studentHandwriting";
 import { translate } from "./i18n";
 import { CareerOptionsPage } from "./components/student/pages/CareerOptionsPage";
 import { PremiumFlowPage } from "./components/student/pages/PremiumFlowPage";
+import { premiumPurchaseHistory } from "./premiumSubscription";
 import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
@@ -29,7 +30,6 @@ import { useHoverReadAloud } from "./components/student/flow/useHoverReadAloud";
 import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
 import { MindfulCorner } from "./components/student/pages/MindfulCorner";
 import { RelaxationRoom } from "./components/RelaxationRoom";
-import { readMindfulBoard } from "./mindfulPoints";
 import { useImmersiveEffects } from "./immersiveEffects";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { loadStudentCheckins } from "./studentSensory";
@@ -76,17 +76,6 @@ const App = () => {
       return "dark";
     }
   });
-  const [motionSetting, setMotionSetting] = useState(() => {
-    try {
-      const saved = localStorage.getItem("cognibridge_motion");
-      return ["full", "reduced", "off"].includes(saved) ? saved : "full";
-    } catch { return "full"; }
-  });
-  const [lowSensory, setLowSensory] = useState(() => {
-    try { return localStorage.getItem("cognibridge_low_sensory") === "true"; }
-    catch { return false; }
-  });
-  const [restReminderOpen, setRestReminderOpen] = useState(false);
   const [textScale, setTextScale] = useState(1);
   const [studentLanguage, setStudentLanguage] = useState(() => {
     try {
@@ -164,15 +153,6 @@ const App = () => {
     checkSample();
     return () => { current = false; };
   }, [signedIn, studentEmail, authRole, authUserId, studentProfile?.handwritingType, profileOpen, signupEmail]);
-  useEffect(() => {
-    if (!lowSensory || restReminderOpen) return undefined;
-    const reminderId = window.setTimeout(() => setRestReminderOpen(true), 3 * 60 * 1000);
-    return () => window.clearTimeout(reminderId);
-  }, [lowSensory, restReminderOpen]);
-
-  useEffect(() => {
-    if (!lowSensory) setRestReminderOpen(false);
-  }, [lowSensory]);
   const studentName = studentProfile?.name?.trim()
     || studentEmail.split("@")[0]?.replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
     || "Student";
@@ -347,12 +327,15 @@ const App = () => {
       return;
     }
     const purchasedAt = new Date();
-    const expiresAt = new Date(purchasedAt);
+    // A purchase made while premium is still active extends it instead of restarting it.
+    const currentExpiry = premiumSubscription?.expiresAt ? new Date(premiumSubscription.expiresAt) : null;
+    const expiresAt = new Date(currentExpiry && currentExpiry > purchasedAt ? currentExpiry : purchasedAt);
     const expiryDay = expiresAt.getDate();
     expiresAt.setDate(1);
     expiresAt.setMonth(expiresAt.getMonth() + months);
     expiresAt.setDate(Math.min(expiryDay, new Date(expiresAt.getFullYear(), expiresAt.getMonth() + 1, 0).getDate()));
     const purchase = { planId, purchasedAt: purchasedAt.toISOString(), expiresAt: expiresAt.toISOString(), paymentType: "demo" };
+    purchase.purchases = [...premiumPurchaseHistory(premiumSubscription), { planId, purchasedAt: purchase.purchasedAt, paymentType: "demo" }];
     try {
       localStorage.setItem(`cognibridge_premium_${studentEmail.toLowerCase()}`, JSON.stringify(purchase));
     } catch {
@@ -609,15 +592,6 @@ const App = () => {
 
   useHoverReadAloud({ enabled: readAloud.enabled, language: studentLanguage, volume: readAloud.volume });
 
-  useEffect(() => {
-    document.documentElement.dataset.motion = motionSetting;
-    try { localStorage.setItem("cognibridge_motion", motionSetting); } catch { /* Session choice remains active. */ }
-  }, [motionSetting]);
-
-  useEffect(() => {
-    document.documentElement.dataset.lowSensory = String(lowSensory);
-    try { localStorage.setItem("cognibridge_low_sensory", String(lowSensory)); } catch { /* Session choice remains active. */ }
-  }, [lowSensory]);
 
   useEffect(() => {
     try {
@@ -835,10 +809,6 @@ const App = () => {
             className="accessibility-panel-left"
             textScale={textScale}
             setTextScale={setTextScale}
-            motionSetting={motionSetting}
-            setMotionSetting={setMotionSetting}
-            lowSensory={lowSensory}
-            setLowSensory={setLowSensory}
             appearance={appearance}
             setAppearance={setAppearance}
             language={studentLanguage}
@@ -850,7 +820,6 @@ const App = () => {
             onClose={() => setAccessibilityOpen(false)}
           />
         )}
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -872,10 +841,6 @@ const App = () => {
             <AccessibilityPanel
               textScale={textScale}
               setTextScale={setTextScale}
-              motionSetting={motionSetting}
-              setMotionSetting={setMotionSetting}
-              lowSensory={lowSensory}
-              setLowSensory={setLowSensory}
               appearance={appearance}
               setAppearance={setAppearance}
               language={studentLanguage}
@@ -889,7 +854,6 @@ const App = () => {
           )}
           t={t}
         />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -898,7 +862,6 @@ const App = () => {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -907,7 +870,6 @@ const App = () => {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -924,7 +886,6 @@ const App = () => {
           onBack={() => setHandwritingPromptOpen(false)}
           onComplete={(profile) => { setStudentProfile(profile); setHandwritingPromptOpen(false); }}
         />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -951,7 +912,6 @@ const App = () => {
             setPendingPremiumLogin(false);
           }}
         />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -971,7 +931,6 @@ const App = () => {
             setProfileOpen(false);
           }}
         />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -1006,7 +965,6 @@ const App = () => {
             }
           }}
         />
-        <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
       </div>
     );
   }
@@ -1033,10 +991,6 @@ const App = () => {
           <AccessibilityPanel
             textScale={textScale}
             setTextScale={setTextScale}
-            motionSetting={motionSetting}
-            setMotionSetting={setMotionSetting}
-            lowSensory={lowSensory}
-            setLowSensory={setLowSensory}
             appearance={appearance}
             setAppearance={setAppearance}
             language={studentLanguage}
@@ -1065,8 +1019,8 @@ const App = () => {
               onOpenSession={openSession}
             />
           ),
-          leaderboard: <LeaderboardPage signedIn={signedIn} studentName={studentName} mindfulBoard={readMindfulBoard(studentEmail)} t={t} />,
-          mindful: <ErrorBoundary name="Mindful Corner" t={t} onClose={() => goToTab("home")}><MindfulCorner studentId={studentEmail} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} /></ErrorBoundary>,
+          leaderboard: <LeaderboardPage signedIn={signedIn} studentName={studentName} t={t} />,
+          mindful: <ErrorBoundary name="Mindful Corner" t={t} onClose={() => goToTab("home")}><MindfulCorner studentId={studentEmail} accountId={supabaseConfigured && authRole === "student" ? authUserId : null} signedIn={signedIn} onSignIn={() => setLoginOpen(true)} t={t} onAward={() => setMindfulVersion((version) => version + 1)} onClose={() => goToTab("home")} /></ErrorBoundary>,
           relax: <RelaxationRoom onBack={() => goToTab("home")} t={t} />,
           sessions: (
             <SessionsPage
@@ -1097,7 +1051,7 @@ const App = () => {
               onOpenSession={openSession}
             />
           ),
-          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} /> : null,
+          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} handwritingType={studentProfile?.handwritingType} handwritingImage={studentProfile?.handwritingImage} onAddHandwriting={() => setProfileOpen(true)} /> : null,
           flow: (
             <FlowPage
               t={t}
@@ -1148,8 +1102,6 @@ const App = () => {
               studentId={supabaseConfigured ? authUserId : studentEmail}
               demoMode={sensoryTrackerDemoMode}
               t={t}
-              lowSensory={lowSensory}
-              onToggleLowSensory={() => setLowSensory((value) => !value)}
             />
           ) : null,
         }}
@@ -1196,24 +1148,8 @@ const App = () => {
         />
       )}
       {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}<button type="button" className="toast-close" onClick={() => setToast("")} aria-label={t("close")}><X size={16} /></button></div>}
-      <RestReminder open={restReminderOpen} onClose={() => setRestReminderOpen(false)} t={t} />
     </div>
   );
 };
-
-const RestReminder = ({ open, onClose, t }) => open ? (
-  <div className="rest-reminder-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <section className="rest-reminder" role="dialog" aria-modal="true" aria-labelledby="rest-reminder-title" aria-describedby="rest-reminder-copy">
-      <button type="button" className="rest-reminder-close" onClick={onClose} aria-label={t("close")}><X size={20} /></button>
-      <div className="rest-reminder-icon" aria-hidden="true"><Coffee size={25} /></div>
-      <p className="rest-reminder-eyebrow">{t("restPauseEyebrow")}</p>
-      <h2 id="rest-reminder-title">{t("restReminderTitle")}</h2>
-      <p id="rest-reminder-copy" className="rest-reminder-motivation">{t("restReminderMotivation")}</p>
-      <p className="rest-reminder-tip"><Heart size={16} aria-hidden="true" /> {t("restReminderTip")}</p>
-      <button type="button" className="rest-reminder-action" onClick={onClose}>{t("takeRest")}</button>
-      <button type="button" className="rest-reminder-later" onClick={onClose}>{t("remindInThree")}</button>
-    </section>
-  </div>
-) : null;
 
 export default App;

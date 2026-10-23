@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, ChevronDown, Compass, GraduationCap, HandHeart, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, ChevronDown, Compass, GraduationCap, HandHeart, Lock, PenLine, RotateCcw, Sparkles } from "lucide-react";
+import { typeLabel } from "../../../handwriting";
+import { CareerMatchAnimation } from "./CareerMatchAnimation";
 import "./CareerOptionsPage.css";
 
 const questions = [
@@ -68,8 +70,15 @@ const careers = [
   { id: 10, titleKey: "cr_c10t", tags: ["leadership", "people", "communication"], summaryKey: "cr_c10s", exploreKey: "cr_c10e", pathway: ["Learn about an issue in your community by listening to the people it affects.", "Volunteer with a local group, school initiative, or public-service project.", "Build skills in communication, teamwork, event planning, research, and project coordination.", "Study a relevant subject such as public policy, social work, community development, or administration if it fits your target role.", "Look for internships or entry-level work with community organizations, charities, or public agencies.", "Check local qualification or public-service selection requirements for specific roles and keep learning from the communities you serve."] },
 ];
 
-const pickRandomCareers = (answers) => {
-  const tagScores = Object.values(answers).flatMap((answer) => answer.tags)
+// A light nudge from the handwriting spacing pattern; answers still carry most of the weight.
+const handwritingTags = {
+  "Open spacing": ["creative", "communication", "people"],
+  "Balanced spacing": ["leadership", "education", "business"],
+  "Compact spacing": ["technology", "engineering", "science"],
+};
+
+const pickRandomCareers = (answers, handwritingType) => {
+  const tagScores = [...Object.values(answers).flatMap((answer) => answer.tags), ...(handwritingTags[handwritingType] || [])]
     .reduce((scores, tag) => ({ ...scores, [tag]: (scores[tag] || 0) + 1 }), {});
   const pool = careers.map((career) => ({
     career,
@@ -117,25 +126,36 @@ const opportunities = [
   },
 ];
 
-export function CareerOptionsPage({ t }) {
+export function CareerOptionsPage({ t, handwritingType, handwritingImage, onAddHandwriting }) {
   const [answers, setAnswers] = useState({});
   const [step, setStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState([]);
   const [openPathway, setOpenPathway] = useState(null);
+  const [matching, setMatching] = useState(false);
+  const hasHandwriting = Boolean(handwritingType);
 
   const choose = (choice) => setAnswers((current) => ({ ...current, [step]: choice }));
   const showCareerResults = () => {
-    setResults(pickRandomCareers(answers));
+    setResults(pickRandomCareers(answers, handwritingType));
     setOpenPathway(null);
-    setShowResults(true);
+    setMatching(true);
   };
+  const finishMatching = () => { setMatching(false); setShowResults(true); };
   const restart = () => { setAnswers({}); setStep(0); setResults([]); setOpenPathway(null); setShowResults(false); };
 
   return (
     <section className="content career-page">
       <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">{t("cr_eyebrow")}</p><h1>{t("careerOptions")}</h1><p>{t("cr_subtitle")}</p></div></header>
-      {!showResults ? (
+      {matching && <CareerMatchAnimation t={t} handwritingType={handwritingType} handwritingImage={handwritingImage} onDone={finishMatching} />}
+      {!hasHandwriting ? (
+        <section className="career-card career-locked">
+          <span className="career-locked-icon"><Lock size={22} aria-hidden="true" /></span>
+          <h2>{t("cr_hwLockedTitle")}</h2>
+          <p>{t("cr_hwLockedCopy")}</p>
+          {onAddHandwriting && <button type="button" className="career-next" onClick={onAddHandwriting}><PenLine size={17} aria-hidden="true" /> {t("cr_hwAdd")}</button>}
+        </section>
+      ) : !showResults ? (
         <section className="career-card">
           <div className="career-progress-label"><span>{t("cr_questionOf", { n: step + 1, total: questions.length })}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
           <div className="career-progress"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
@@ -145,7 +165,7 @@ export function CareerOptionsPage({ t }) {
         </section>
       ) : (
         <section className="career-card career-results">
-          <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
+          <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2><p className="career-hw-note"><PenLine size={14} aria-hidden="true" /> {t("cr_hwUsing", { pattern: typeLabel(t, handwritingType) })}</p></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
           <div className="career-result-list">{results.map((career, index) => {
             const pathwayId = `career-pathway-${index}`;
             const isPathwayOpen = openPathway === career.id;
