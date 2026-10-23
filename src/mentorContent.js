@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient";
+import { fetchWithAuth } from "./components/student/flow/flowApi";
 
 const throwIfError = ({ data, error }) => {
   if (error) throw error;
@@ -17,7 +18,13 @@ const toClientSession = (row) => ({
   endTime: row.end_time,
   meetLink: row.meet_link,
   attendees: row.attendees,
+  studentClass: row.student_class || "",
 });
+
+// Only send the class column when there's something to save, so publishing still works
+// before the session class migration is applied. null clears a class on edit.
+const classColumn = (session) => (session.studentClass ? { student_class: session.studentClass }
+  : session.studentClass === null ? { student_class: null } : {});
 
 // The signed-in mentor's own display name, shown in the rail and the overview greeting.
 export async function loadMentorName(mentorId) {
@@ -56,6 +63,7 @@ export async function createSession(mentorId, session) {
       start_time: session.time,
       end_time: session.endTime,
       meet_link: session.meetLink,
+      ...classColumn(session),
     })
     .select()
     .single());
@@ -72,6 +80,7 @@ export async function updateSession(sessionId, session) {
       start_time: session.time,
       end_time: session.endTime,
       meet_link: session.meetLink,
+      ...classColumn(session),
     })
     .eq("id", sessionId)
     .select()
@@ -174,6 +183,14 @@ export async function uploadMentorNote(mentorId, { title, subject, file }) {
     .select()
     .single());
   return toClientNote(row);
+}
+
+// A new Google Meet link from api/meet.js, owned by the shared Google account.
+export async function createMeetLink() {
+  const response = await fetchWithAuth("/api/meet", { method: "POST" });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.meetLink) throw new Error(data.error || "Google Meet couldn't create a meeting.");
+  return data.meetLink;
 }
 
 // Every registered student (name and join date only) with whether they are under this mentor.

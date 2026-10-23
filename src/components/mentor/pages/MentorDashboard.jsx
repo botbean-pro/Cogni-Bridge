@@ -34,7 +34,7 @@ import { MentorParentChat } from "../MentorParentChat";
 import { usePageTitle } from "../../../pageTitle";
 import { mentorStudentPath, parseMentorStudentPath } from "../../../routes";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
-import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
+import { createMeetLink, listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
   loadMentorCheckins,
   markMentorNotificationViewed,
@@ -256,6 +256,7 @@ function OverviewPage({ sessions, notes, mentorId, mentorName, setTab, onEditSes
         {sessions.map((session) => (
           <article className="mentor-session-card" key={session.id}>
             <span className="mentor-subject">{getSessionSubjectLabel(session.subject, t)}</span>
+            {session.studentClass && <span className="mentor-subject session-class-pill">{t("class")} {session.studentClass}</span>}
             <p className="mentor-time"><Clock3 size={14} /> {formatSession(session)}</p>
             <h3>{session.titleKey ? t(session.titleKey) : session.title}</h3>
             <p className="mentor-attendee-count">
@@ -331,8 +332,22 @@ function PrivateSessionsList({ mentorId, version, students, t }) {
   );
 }
 
+const sessionClasses = Array.from({ length: 12 }, (_, index) => String(index + 1));
+
 function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, mentorId, students, privateVersion, canSchedulePrivate, t }) {
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+  const [meetStatus, setMeetStatus] = useState("idle");
+
+  const generateMeetLink = async () => {
+    setMeetStatus("creating");
+    try {
+      updateField("meetLink", await createMeetLink());
+      setMeetStatus("idle");
+    } catch (meetError) {
+      console.error("Creating a Meet link failed:", meetError);
+      setMeetStatus("failed");
+    }
+  };
 
   return (
     <>
@@ -350,14 +365,27 @@ function SchedulePage({ form, setForm, onSubmit, editing, onCancelEdit, mentorId
             {subjects.map((subject) => <option key={subject} value={subject}>{getSessionSubjectLabel(subject, t)}</option>)}
           </select>
         </label>
+        {!form.privateStudentId && <label>
+          {t("class")}
+          <select value={form.studentClass || ""} onChange={(event) => updateField("studentClass", event.target.value)}>
+            <option value="">{t("md_classAll")}</option>
+            {sessionClasses.map((level) => <option key={level} value={level}>{t("class")} {level}</option>)}
+          </select>
+        </label>}
         <div className="form-columns">
           <label>{t("date")}<input type="date" value={form.date} onChange={(event) => updateField("date", event.target.value)} required /></label>
           <label>{t("startTime")}<input type="time" value={form.time} onChange={(event) => updateField("time", event.target.value)} required /></label>
           <label>{t("endTime")}<input type="time" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required /></label>
         </div>
-        <label>
+        <label className="meet-link-field">
           {t("googleMeetUrl")}
-          <input type="text" inputMode="url" value={form.meetLink} onChange={(event) => updateField("meetLink", event.target.value)} placeholder="https://meet.google.com/..." required />
+          <span className="meet-link-row">
+            <input type="text" inputMode="url" value={form.meetLink} onChange={(event) => updateField("meetLink", event.target.value)} placeholder="https://meet.google.com/..." required />
+            <button type="button" className="meet-link-create" onClick={generateMeetLink} disabled={meetStatus === "creating"}>
+              <Video size={16} /> {meetStatus === "creating" ? t("md_meetCreating") : t("md_meetCreate")}
+            </button>
+          </span>
+          {meetStatus === "failed" && <small className="form-hint meet-link-error" role="alert">{t("md_meetCreateFail")}</small>}
         </label>
         {canSchedulePrivate && <label>
           {t("ps_visibleTo")}

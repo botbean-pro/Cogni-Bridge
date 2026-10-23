@@ -104,10 +104,11 @@ const isValidHandwritingImage = (image) => typeof image === "string"
 
 async function classifyHandwriting(image) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  // The chat model may be text-only, so handwriting has its own vision model setting.
-  const model = process.env.OPENROUTER_VISION_MODEL || "google/gemini-3.8-flash";
-  if (!apiKey) {
-    throw new Error("Cogni-Flow is not configured. Add OPENROUTER_API_KEY to the server environment.");
+  // The chat model may be text-only, so handwriting has its own vision model setting. There's no
+  // default: unless one is set, no other model touches the key and the browser's on-device check is used.
+  const model = process.env.OPENROUTER_VISION_MODEL;
+  if (!apiKey || !model) {
+    throw new Error("AI handwriting analysis is off. Set OPENROUTER_VISION_MODEL to use it; the on-device check is used meanwhile.");
   }
   const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",

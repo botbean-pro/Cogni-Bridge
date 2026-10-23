@@ -17,6 +17,7 @@ const createSessionForm = () => ({
   time: "",
   endTime: "",
   meetLink: "",
+  studentClass: "",
   privateStudentId: "",
 });
 
@@ -111,7 +112,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
     if (supabaseConfigured && mentorId) {
       try {
         const saved = editingSessionId
-          ? await updateSession(editingSessionId, sessionForm)
+          ? await updateSession(editingSessionId, { ...sessionForm, studentClass: sessionForm.studentClass || (existingSession?.studentClass ? null : "") })
           : await createSession(mentorId, {
             ...sessionForm,
             description: existingSession?.description || "A focused Maths session led by Priya Sharma.",
@@ -164,6 +165,7 @@ export function MentorPortal({ sessions, notes, initialLoggedIn = false, mentorI
       time: session.time,
       endTime: session.endTime,
       meetLink: session.meetLink,
+      studentClass: session.studentClass || "",
     });
     setTab("schedule");
   };
