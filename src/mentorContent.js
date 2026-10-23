@@ -181,6 +181,38 @@ export async function listStudentsForMentor() {
   return throwIfError(await supabase.rpc("list_students_for_mentor"));
 }
 
+// Sign-up details and chosen subjects of a student under this mentor, or null if there's no such student.
+export async function loadStudentProfile(studentId) {
+  const [row] = throwIfError(await supabase.rpc("mentor_student_profile", { p_student_id: studentId }));
+  if (!row) return null;
+  return {
+    name: row.display_name,
+    joinedAt: row.joined_at,
+    studentClass: row.student_class,
+    age: row.age,
+    section: row.section,
+    school: row.school,
+    preferredSubjects: row.preferred_subjects || [],
+  };
+}
+
+// Sessions a student under this mentor registered for, newest first.
+export async function loadStudentHistory(studentId) {
+  const rows = throwIfError(await supabase.rpc("mentor_student_history", { p_student_id: studentId }));
+  return rows.map((row) => ({
+    id: row.session_id,
+    title: row.title,
+    subject: row.subject,
+    date: row.session_date,
+    time: row.start_time,
+    endTime: row.end_time,
+    attended: Boolean(row.attended_at),
+    ended: row.ended,
+    good: row.mentor_good,
+    attention: row.attention_level,
+  }));
+}
+
 export async function setMyStudent(studentId, assigned) {
   throwIfError(await supabase.rpc("set_my_student", { p_student_id: studentId, p_assigned: assigned }));
 }

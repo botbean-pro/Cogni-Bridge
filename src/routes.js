@@ -42,6 +42,14 @@ export function parseStudentPath(pathname) {
   return { tab: tabsByPath[path] || null, sessionId: null };
 }
 
+// A student's profile page in the mentor portal, opened from Settings.
+export const mentorStudentPath = (studentId) => `/mentor/students/${encodeURIComponent(studentId)}`;
+
+export const parseMentorStudentPath = (pathname) => {
+  const match = normalizePath(pathname).match(/^\/mentor\/students\/([^/]+)$/);
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
 export const isPortalPath = (pathname, base) => {
   const path = normalizePath(pathname);
   return path === `/${base}` || path.startsWith(`/${base}/`);

@@ -31,6 +31,10 @@ function speakTime(_, hours, minutes, meridiem) {
   return `${hour} ${minute < 10 ? `oh ${minute}` : minute}${suffix ? ` ${suffix}` : ""}`;
 }
 
+// Emoji, icons and bullets (🧩, ✦, ✓, •, →) have no words, so voices fill them with an "aah"; drop them.
+const SYMBOLS = /[\p{Extended_Pictographic}\p{So}\u{FE0F}\u{200D}\u{20E3}•·←↑→↓⇒]/gu;
+const HAS_WORDS = /[\p{L}\p{N}]/u;
+
 // Only English gets spelled-out times; other languages keep the digits.
 export const toSpeechText = (text, language = "English") => String(text || "")
   .replace(/```[\s\S]*?```/g, " ")
@@ -39,8 +43,13 @@ export const toSpeechText = (text, language = "English") => String(text || "")
   .replace(/^#{1,6}\s+/gm, "")
   .replace(/^\s*[-*]\s+/gm, "")
   .replace(/[*_`#]/g, "")
+  .replace(SYMBOLS, " ")
+  .replace(/[^\S\n]+/g, " ")
   .trim()
   .slice(0, MAX_TEXT_LENGTH);
+
+// ElevenLabs trails off into a stray sound when text stops without punctuation (button labels), so end it cleanly.
+const withEnding = (text, language) => (/[.!?।]$/.test(text) ? text : `${text}${language === "Hindi" ? "।" : "."}`);
 
 export function stopSpeaking() {
   playToken += 1;
@@ -151,14 +160,14 @@ export async function speak(text, { language = "English", volume = 1, kind = "re
     onFinish?.();
   };
   const spoken = toSpeechText(text, language);
-  if (!spoken) {
+  if (!HAS_WORDS.test(spoken)) {
     onEnd();
     return;
   }
 
   if (elevenLabsLanguages.has(language)) {
     try {
-      const url = await elevenLabsClip(spoken, language);
+      const url = await elevenLabsClip(withEnding(spoken, language), language);
       if (token !== playToken) return;
       if (!stillWanted()) {
         onEnd();
