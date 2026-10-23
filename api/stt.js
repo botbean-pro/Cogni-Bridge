@@ -53,7 +53,10 @@ export default async function handler(request, response) {
       body: form,
     });
     if (!upstream.ok) {
-      return response.status(upstream.status === 401 ? 503 : 502).json({ error: "The voice provider rejected the recording." });
+      // ElevenLabs says why (bad key, missing permission, unreadable audio); log it so it isn't a mystery.
+      const reason = (await upstream.json().catch(() => ({}))).detail?.message;
+      console.error(`ElevenLabs STT ${upstream.status}: ${reason || "no reason given"}`);
+      return response.status(upstream.status === 401 ? 503 : 502).json({ error: `The voice provider rejected the recording.${reason ? ` ${reason}` : ""}` });
     }
     const data = await upstream.json();
     return response.status(200).json({ text: String(data.text || "").trim() });

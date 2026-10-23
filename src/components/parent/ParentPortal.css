@@ -31,8 +31,6 @@
 .parent-privacy { display:flex; align-items:center; gap:9px; margin:0; padding:12px 15px; border:1px solid #b9ded8; border-radius:12px; background:#eff9f7; color:var(--teal-dark); font-size: calc((13px) * var(--text-scale, 1)); }
 
 /* Line chart draws itself in (polylines carry pathLength="1"). */
-@keyframes parentLineDraw { to { stroke-dashoffset:0; } }
-.parent-page .sensory-chart polyline { stroke-dasharray:1; stroke-dashoffset:1; animation:parentLineDraw 1.2s ease-out .3s forwards; }
 
 /* Mood badge */
 .parent-mood { display:inline-grid; flex:none; place-items:center; border-radius:50%; font-size: calc((22px) * var(--text-scale, 1)); line-height:1; }

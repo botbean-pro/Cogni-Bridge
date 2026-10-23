@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Share2, Sparkles, Users, VolumeX } from "lucide-react";
+import { Activity, Angry, Frown, Laugh, Meh, Smile, ChevronDown, ChevronUp, Heart, LockKeyhole, Pause, Play, Share2, Sparkles, Users, VolumeX, Wind, X } from "lucide-react";
 import {
   causeOptions,
   emotionOptions,
@@ -21,6 +21,47 @@ const moodIcons = [Angry, Frown, Meh, Smile, Laugh];
 const moodColors = ["#d64545", "#e8833a", "#c9a227", "#5aa469", "#0c9a8a"];
 
 const labelsFor = (t, group, keys = []) => keys.map((key) => t(`${group}_${key}`));
+
+// Five equal donut slices, clockwise from the top, red (mood 1) to teal (mood 5).
+const donutPoint = (radius, angle) => {
+  const radians = (angle * Math.PI) / 180;
+  return `${(100 + radius * Math.cos(radians)).toFixed(2)} ${(100 + radius * Math.sin(radians)).toFixed(2)}`;
+};
+const donutSlice = (index) => {
+  const start = -90 + index * 72 + 1.5;
+  const end = start + 69;
+  return `M ${donutPoint(94, start)} A 94 94 0 0 1 ${donutPoint(94, end)} L ${donutPoint(58, end)} A 58 58 0 0 0 ${donutPoint(58, start)} Z`;
+};
+
+function MoodDonut({ mood, onChoose, legend, t }) {
+  const selectedIcon = mood ? moodIcons[mood - 1] : null;
+  return <fieldset className="sensory-field sensory-mood-donut">
+    <legend className="sensory-visually-hidden">{legend}</legend>
+    <div className="sensory-donut">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        {moodColors.map((color, index) => {
+          const middle = ((-90 + index * 72 + 36) * Math.PI) / 180;
+          const lift = mood === index + 1 ? 5 : 0;
+          return <path key={color} d={donutSlice(index)} fill={color}
+            className={mood === index + 1 ? "selected" : mood ? "faded" : ""}
+            transform={`translate(${(lift * Math.cos(middle)).toFixed(2)} ${(lift * Math.sin(middle)).toFixed(2)})`}
+            onClick={() => onChoose(index + 1)}><title>{t(`mood_${index + 1}`)}</title></path>;
+        })}
+      </svg>
+      <div className="sensory-donut-center" aria-live="polite">
+        {selectedIcon ? <>
+          <span style={{ color: moodColors[mood - 1] }}>{React.createElement(selectedIcon, { size: 34, strokeWidth: 1.9 })}</span>
+          <strong>{t(`mood_${mood}`)}</strong>
+        </> : <small>{t("sn_pickColour")}</small>}
+      </div>
+    </div>
+    <div className="sensory-donut-legend">
+      {moodColors.map((color, index) => <button type="button" key={color} className={mood === index + 1 ? "selected" : ""} aria-pressed={mood === index + 1} onClick={() => onChoose(index + 1)}>
+        <span aria-hidden="true" style={{ background: color }} />{t(`mood_${index + 1}`)}
+      </button>)}
+    </div>
+  </fieldset>;
+}
 
 const localDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const todayString = () => localDateKey(new Date());
@@ -55,7 +96,47 @@ function EntryDetail({ entry, reply, t }) {
   );
 }
 
+const calmVideos = [
+  { id: "v2", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=TCoUnEPeuQk" },
+  { id: "v3", source: "Cosmic Kids: Zen Den", url: "https://www.youtube.com/watch?v=8rp5bpFIUpg" },
+];
+
+export function CalmCorner({ onClose, startBreathing = false, t }) {
+  const [breathing, setBreathing] = useState(startBreathing);
+  const [phase, setPhase] = useState(startBreathing ? "in" : "out");
+  useEffect(() => {
+    if (!breathing) return undefined;
+    const timer = window.setInterval(() => setPhase((current) => current === "in" ? "out" : "in"), 4000);
+    return () => window.clearInterval(timer);
+  }, [breathing]);
+  const phaseLabel = t(phase === "in" ? "sn_breatheIn" : "sn_breatheOut");
+  return <section className="sensory-card calm-corner" id="calm-corner" aria-labelledby="calm-corner-title">
+    <div className="sensory-card-title"><div><span className="sensory-step">{t("sn_calmEyebrow")}</span><h2 id="calm-corner-title">{t("sn_calmTitle")}</h2></div></div>
+    <p className="calm-intro">{t("sn_calmIntro")}</p>
+    <div className="calm-tools">
+      <div className="calm-breath-card"><div className="breathing-copy"><h3>{t("sn_breathingEx")}</h3><p aria-live="polite">{breathing ? t(phase === "in" ? "sn_breatheInSlow" : "sn_breatheOutSlow") : t("sn_followCircle")}</p></div>
+        <div className={`breathing-stage${breathing ? " is-active" : ""}${breathing && phase === "out" ? " is-exhaling" : ""}`} aria-label={breathing ? phaseLabel : t("sn_circleLabel")}>
+          <div className="breathing-ring" aria-hidden="true"><span className={`breathing-cue${breathing ? ` is-active ${phase === "out" ? "is-exhaling" : ""}` : ""}`}>{breathing ? t(phase === "in" ? "sn_cueIn" : "sn_cueOut") : t("sn_cueBreathe")}</span></div>
+        </div>
+        <button type="button" className="calm-action" onClick={() => { setBreathing((current) => !current); setPhase("in"); }} aria-pressed={breathing}>{breathing ? <><Pause size={16} /> {t("sn_pause")}</> : <><Play size={16} /> {t("sn_begin")}</>}</button>
+      </div>
+      <div className="calm-videos"><h3>{t("sn_quietVideos")}</h3>{calmVideos.map((item) => <a key={item.id} href={item.url} target="_blank" rel="noreferrer"><span><strong>{t(`sn_${item.id}t`)}</strong><small>{t(`sn_${item.id}n`)} · {item.source}</small></span><span aria-hidden="true">↗</span></a>)}</div>
+    </div>
+    <button type="button" className="calm-close" onClick={onClose}>{t("sn_backCheckin")}</button>
+  </section>;
+}
+
 const MAX_FULL_CHECKINS_PER_DAY = 3;
+
+const dismissedNotesKey = (studentId) => `cognibridge_sensory_dismissed_notes:${String(studentId || "student").toLowerCase()}`;
+
+const readDismissedNotes = (studentId) => {
+  try {
+    return JSON.parse(localStorage.getItem(dismissedNotesKey(studentId)) || "[]");
+  } catch {
+    return [];
+  }
+};
 
 export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory = false, onToggleLowSensory = () => {} }) {
   const [entries, setEntries] = useState([]);
@@ -68,10 +149,26 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
   const [status, setStatus] = useState("");
   const [formStatus, setFormStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showCalmCorner, setShowCalmCorner] = useState(false);
+  const [dismissedNotes, setDismissedNotes] = useState(() => readDismissedNotes(studentId));
+  const dismissNote = (note) => {
+    const next = [...new Set([...dismissedNotes, note])];
+    setDismissedNotes(next);
+    try {
+      localStorage.setItem(dismissedNotesKey(studentId), JSON.stringify(next));
+    } catch { /* The note stays hidden for this visit if browser storage is unavailable. */ }
+  };
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => b.created_at.localeCompare(a.created_at)), [entries]);
   const todayFullEntries = sortedEntries.filter((entry) => entry.checkin_type === "full" && entryDay(entry) === todayString());
   const todayFullEntry = todayFullEntries[0];
   const fullLimitReached = todayFullEntries.length >= MAX_FULL_CHECKINS_PER_DAY;
+
+  useEffect(() => {
+    if (!showCalmCorner) return undefined;
+    const closeOnEscape = (event) => { if (event.key === "Escape") setShowCalmCorner(false); };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [showCalmCorner]);
 
   const refresh = async () => {
     const [history, assignedMentors, mentorResponses] = await Promise.all([
@@ -196,10 +293,24 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
     <section className={`content sensory-page${lowSensory ? " low-sensory-mode" : ""}`}>
       <header className="sensory-heading"><div><p className="eyebrow">{t("sn_eyebrow")}</p><h1>{t("sensoryTracker")}</h1><p>{t("sn_subtitle")}</p></div><div className="sensory-heading-actions"><button className={`low-sensory-toggle${lowSensory ? " active" : ""}`} type="button" aria-pressed={lowSensory} onClick={onToggleLowSensory}><VolumeX size={17} /> {t(lowSensory ? "sn_lowOn" : "sn_lowMode")}</button><span><Heart size={18} /> {t("sn_noJudgement")}</span></div></header>
       <SensorySessionSupport studentId={studentId} t={t} />
-      <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div></section>
-      {!demoMode && <div className="sensory-privacy"><LockKeyhole size={17} /> {t("sn_privacy")}</div>}
-      {!demoMode && parents.length > 0 && (
-        <div className="sensory-privacy"><Users size={17} /> {t("sn_parentsSee", { names: parents.map((parent) => parent.display_name).join(", ") })}</div>
+      <section className="break-banner"><div><span className="sensory-step">{t("sn_pauseEyebrow")}</span><h2>{t("sn_needBreakTitle")}</h2><p>{t("sn_needBreakCopy")}</p></div><button type="button" onClick={() => setShowCalmCorner(true)}><Wind size={18} /> {t("sn_needBreak")}</button></section>
+      {showCalmCorner && <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("sn_calmTitle")} onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCalmCorner(false); }}>
+        <div className="student-calm-dialog">
+          <button className="student-calm-dismiss" type="button" onClick={() => setShowCalmCorner(false)} aria-label={t("close")}><X size={20} /></button>
+          <CalmCorner onClose={() => setShowCalmCorner(false)} t={t} />
+        </div>
+      </div>}
+      {demoMode ? (
+        <div className="sensory-demo-banner" role="note"><LockKeyhole size={17} /> {t("sn_demoBanner")}</div>
+      ) : !dismissedNotes.includes("privacy") && (
+        <div className="sensory-privacy"><LockKeyhole size={17} /> <span>{t("sn_privacy")}</span>
+          <button className="sensory-note-dismiss" type="button" onClick={() => dismissNote("privacy")} aria-label={t("close")} title={t("close")}><X size={16} /></button>
+        </div>
+      )}
+      {!demoMode && parents.length > 0 && !dismissedNotes.includes("parents") && (
+        <div className="sensory-privacy"><Users size={17} /> <span>{t("sn_parentsSee", { names: parents.map((parent) => parent.display_name).join(", ") })}</span>
+          <button className="sensory-note-dismiss" type="button" onClick={() => dismissNote("parents")} aria-label={t("close")} title={t("close")}><X size={16} /></button>
+        </div>
       )}
       {status && <p className="sensory-status" role="status">{status}</p>}
 
@@ -208,7 +319,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
           {todayFullEntry && <p className="sensory-status" role="status">{t(todayFullEntry.shared_with_mentor ? "sn_fullDoneShared" : "sn_fullDonePrivate")}</p>}
           <div className="sensory-view-switch"><button className={view === "quick" ? "active" : ""} onClick={() => setView("quick")} type="button">{t("sn_quick")}</button><button className={view === "full" ? "active" : ""} onClick={() => setView("full")} type="button" disabled={fullLimitReached} title={fullLimitReached ? t("sn_fullLimit") : undefined}>{t("sn_full")}</button></div>
           <form onSubmit={(event) => submit(event, view === "quick")}>
-            <fieldset className="sensory-field"><legend>{t(view === "quick" ? "sn_feelNow" : "sn_feelToday")}</legend><div className="sensory-mood-options">{[1, 2, 3, 4, 5].map((_, index) => <button type="button" key={index} className={form.mood === index + 1 ? "selected" : ""} aria-pressed={form.mood === index + 1} onClick={() => updateForm("mood", index + 1)}><span aria-hidden="true" style={{ color: moodColors[index] }}>{React.createElement(moodIcons[index], { size: 28, strokeWidth: 1.9 })}</span>{t(`mood_${index + 1}`)}</button>)}</div></fieldset>
+            <MoodDonut mood={form.mood} onChoose={(mood) => updateForm("mood", mood)} legend={t(view === "quick" ? "sn_feelNow" : "sn_feelToday")} t={t} />
             {view === "quick" ? (
               <label className="sensory-field">{t("sn_whyTell")}<textarea value={form.quickReason} maxLength={4000} onChange={(event) => updateForm("quickReason", event.target.value)} placeholder={t("sn_whyPlaceholder")} rows="3" /></label>
             ) : (

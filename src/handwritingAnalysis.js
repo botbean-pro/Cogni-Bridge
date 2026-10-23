@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./components/student/flow/flowApi";
+
 // A small, transparent image heuristic. It measures ink coverage in the
 // writing area; it does not infer personality, intelligence, or diagnosis.
 export const analyzeHandwritingSample = (dataUrl) => new Promise((resolve, reject) => {
@@ -35,3 +37,48 @@ export const analyzeHandwritingSample = (dataUrl) => new Promise((resolve, rejec
   };
   image.src = dataUrl;
 });
+
+const resultForType = (type) => ({
+  "Open spacing": { patternKey: "handwritingPatternOpen", meaningKey: "handwritingMeaningOpen" },
+  "Balanced spacing": { patternKey: "handwritingPatternBalanced", meaningKey: "handwritingMeaningBalanced" },
+  "Compact spacing": { patternKey: "handwritingPatternCompact", meaningKey: "handwritingMeaningCompact" },
+}[type]);
+
+// Phone photos are several MB; a 1024px JPEG keeps the request small and is plenty for judging spacing.
+const shrinkForUpload = (dataUrl) => new Promise((resolve, reject) => {
+  const image = new Image();
+  image.onerror = () => reject(new Error("Could not read image"));
+  image.onload = () => {
+    const scale = Math.min(1, 1024 / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) return reject(new Error("Canvas unavailable"));
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    resolve(canvas.toDataURL("image/jpeg", 0.85));
+  };
+  image.src = dataUrl;
+});
+
+// A vision model looks at the sample through api/chat.js; if it's unreachable (no API key, `npm run dev`, offline)
+// the on-device ink-density check above is used instead.
+export const classifyHandwritingSample = async (dataUrl) => {
+  let response;
+  try {
+    response = await fetchWithAuth("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ task: "handwriting", image: await shrinkForUpload(dataUrl) }),
+    });
+  } catch {
+    return { ...(await analyzeHandwritingSample(dataUrl)), source: "device" };
+  }
+  const data = await response.json().catch(() => ({}));
+  if (data.noWriting) throw new Error("No clear writing found");
+  const keys = response.ok && resultForType(data.type);
+  if (!keys) return { ...(await analyzeHandwritingSample(dataUrl)), source: "device" };
+  return { type: data.type, ...keys, features: data.features, confidence: data.confidence, source: "ai" };
+};

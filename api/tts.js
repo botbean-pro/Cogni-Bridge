@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 const MAX_TEXT_LENGTH = 5000;
-const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
+// Matilda, one of ElevenLabs' default voices; free plans can't use Voice Library voices (Rachel included) via the API.
+const DEFAULT_VOICE_ID = "XrExE9yKIg1WjnnlVkGX";
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
@@ -53,7 +54,10 @@ export default async function handler(request, response) {
       },
     );
     if (!upstream.ok) {
-      return response.status(upstream.status === 401 ? 503 : 502).json({ error: "The voice provider rejected the request." });
+      // ElevenLabs says why (bad key, missing permission, paid-only voice); log it so it isn't a mystery.
+      const reason = (await upstream.json().catch(() => ({}))).detail?.message;
+      console.error(`ElevenLabs TTS ${upstream.status}: ${reason || "no reason given"}`);
+      return response.status(upstream.status === 401 ? 503 : 502).json({ error: `The voice provider rejected the request.${reason ? ` ${reason}` : ""}` });
     }
     response.setHeader("Content-Type", "audio/mpeg");
     response.setHeader("Cache-Control", "no-store");

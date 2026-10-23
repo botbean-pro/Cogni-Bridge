@@ -29,7 +29,7 @@ const learningPaths = {
     title: "pathStudentTitle",
     description: "pathStudentCopy",
     icon: Brain,
-    chips: ["sessions", "lowSensoryMode", "careerOptions"],
+    chips: ["sessions", "mcTitle", "careerOptions"],
     nodes: [BookOpen, Headphones, Puzzle],
   },
   parent: {

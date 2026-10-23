@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowDownToLine,
   Award,
@@ -24,12 +25,14 @@ import {
 import { formatSession, getSessionSubjectLabel, readStudents, subjects } from "../../../constants";
 import { loadMentorParentMessages } from "../../../parentPortal";
 import { calculateStudentStats, formatLearningTime, readStudentActivities } from "../../../studentActivity";
-import { LogoImage, MouseTrail } from "../../Brand";
+import { LogoImage } from "../../Brand";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { SessionStudents } from "../SessionStudents";
+import { MentorStudentPage } from "./MentorStudentPage";
 import { MentorParentChat } from "../MentorParentChat";
 import { usePageTitle } from "../../../pageTitle";
+import { mentorStudentPath, parseMentorStudentPath } from "../../../routes";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
 import {
@@ -437,6 +440,7 @@ function MentorSettingsPage({ mentorId, onChanged, t }) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [savingId, setSavingId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!mentorId) return undefined;
@@ -483,13 +487,18 @@ function MentorSettingsPage({ mentorId, onChanged, t }) {
       {loading ? <p className="mentor-subtitle" role="status">{t("md_setLoading")}</p>
         : !visible.length ? <div className="performance-empty"><Users size={24} /><h2>{t("md_setEmpty")}</h2></div>
           : <div className="mentor-students-table-wrap"><table className="mentor-students-table">
-            <thead><tr><th>{t("md_setColStudent")}</th><th>{t("md_setColJoined")}</th><th>{t("md_setColStatus")}</th></tr></thead>
+            <thead><tr><th>{t("md_setColStudent")}</th><th>{t("md_setColJoined")}</th><th>{t("md_setColStatus")}</th><th>{t("md_stuProfile")}</th></tr></thead>
             <tbody>{visible.map((row) => <tr key={row.student_id} className={row.is_mine ? "is-mine" : ""}>
               <td><span className="mentor-leaderboard-avatar" aria-hidden="true">{row.display_name.charAt(0).toUpperCase()}</span> {row.display_name}</td>
               <td>{new Date(row.joined_at).toLocaleDateString()}</td>
               <td><button type="button" className={`mentor-student-toggle${row.is_mine ? " active" : ""}`} aria-pressed={row.is_mine} disabled={savingId === row.student_id} onClick={() => toggle(row)}>
                 {row.is_mine ? t("md_setRemove") : t("md_setAdd")}
               </button></td>
+              <td>{row.is_mine
+                ? <button type="button" className="mentor-profile-link" aria-label={t("md_stuViewFor", { name: row.display_name })} onClick={() => navigate(mentorStudentPath(row.student_id))}>
+                  {t("md_stuView")} <ChevronRight size={16} aria-hidden="true" />
+                </button>
+                : <span className="mentor-profile-locked">{t("md_stuAddFirst")}</span>}</td>
             </tr>)}</tbody>
           </table></div>}
     </>}
@@ -714,21 +723,26 @@ export function MentorDashboard({
   const support = useMentorSupport(mentorId, t);
   const mentorName = useMentorName(mentorId);
   const parentMessages = useParentMessages(mentorId, tab === "messages");
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  // /mentor/students/:id isn't a tab of its own; it opens from (and highlights) Settings.
+  const studentPageId = mentorId ? parseMentorStudentPath(pathname) : null;
+  const activeTab = studentPageId ? "settings" : tab;
   return (
     <main className="mentor-page">
-      <MouseTrail />
       <div className="mentor-layout">
-        <MentorNavigation tab={tab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
-        <section className={`mentor-content route-transition${tab === "messages" ? " is-chat" : ""}`} key={tab}>
+        <MentorNavigation tab={activeTab} setTab={setTab} mentorId={mentorId} mentorName={mentorName} unreadSupportCount={support.unreadCount} unreadParentCount={parentMessages.unreadCount} accessibilityOpen={accessibilityOpen} onToggleAccessibility={onToggleAccessibility} onBack={onBack} t={t} />
+        <section className={`mentor-content route-transition${activeTab === "messages" ? " is-chat" : ""}`} key={studentPageId ? `student-${studentPageId}` : tab}>
           {actionError && <p className="error-popup">{actionError}</p>}
-          {tab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
-          {tab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
-          {tab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
-          {tab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
-          {tab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
-          {tab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
-          {tab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
-          {tab === "messages" && mentorId && <MentorParentChat mentorId={mentorId} parentMessages={parentMessages} students={support.students} t={t} />}
+          {activeTab === "overview" && <OverviewPage sessions={sessions} notes={notes} mentorId={mentorId} mentorName={mentorName} setTab={setTab} onEditSession={onEditSession} t={t} />}
+          {activeTab === "performance" && <StudentPerformancePage mentorId={mentorId} assignedStudents={support.students} t={t} />}
+          {studentPageId && <MentorStudentPage studentId={studentPageId} onBack={() => navigate("/mentor/settings")} t={t} />}
+          {!studentPageId && activeTab === "settings" && <MentorSettingsPage mentorId={mentorId} onChanged={support.reload} t={t} />}
+          {activeTab === "leaderboard" && <MentorLeaderboardPage mentorId={mentorId} t={t} />}
+          {activeTab === "schedule" && <><SchedulePage form={form} setForm={setForm} onSubmit={onPublishSession} editing={Boolean(editingSessionId)} onCancelEdit={onCancelEdit} mentorId={mentorId} students={support.students} privateVersion={privateVersion} canSchedulePrivate={Boolean(mentorId)} t={t} />{mentorId && <PrivateSessionsList mentorId={mentorId} version={privateVersion} students={support.students} t={t} />}</>}
+          {activeTab === "notes" && <NotesPage notes={notes} form={noteForm} setForm={setNoteForm} onSubmit={onUploadNote} onDownload={onDownloadNote} onView={onViewNote} onDelete={onDeleteNote} t={t} />}
+          {activeTab === "sensory" && mentorId && <SensorySupportPage support={support} t={t} />}
+          {activeTab === "messages" && mentorId && <MentorParentChat mentorId={mentorId} parentMessages={parentMessages} students={support.students} t={t} />}
         </section>
       </div>
     </main>

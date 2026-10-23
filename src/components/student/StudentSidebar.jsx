@@ -45,7 +45,7 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
       <nav className="student-rail-nav" aria-label={t("mainNavigation")}>
         {items.map(([Icon, tab]) => {
           const careerLocked = tab === "careers" && !isGrade12;
-          const label = tab === "mindful" ? "Mindful Corner" : t(navigationLabels[tab] || tab);
+          const label = t(tab === "mindful" ? "mcTitle" : navigationLabels[tab] || tab);
           const linkProps = {
             key: tab,
             className: classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked"),

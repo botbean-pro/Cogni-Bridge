@@ -29,7 +29,7 @@ const scoreStudent = (student) => {
   };
 };
 
-export function LeaderboardPage({ signedIn, mindfulBoard, studentName, t }) {
+export function LeaderboardPage({ signedIn, studentName, t }) {
   const [rows, setRows] = useState(() => (supabaseConfigured ? null : leaderboardStudents.map(scoreStudent)));
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
@@ -66,17 +66,6 @@ export function LeaderboardPage({ signedIn, mindfulBoard, studentName, t }) {
       </div>
 
       <CogniWallet signedIn={signedIn} studentName={studentName} />
-
-      <section className="mindful-points-card" aria-labelledby="mindful-points-title">
-        <div className="mindful-points-medal" aria-hidden="true">✦</div>
-        <div className="mindful-points-summary">
-          <p className="eyebrow">MINDFUL CORNER</p>
-          <h2 id="mindful-points-title">{studentName ? `${studentName}'s CogniPoints` : 'Your CogniPoints'}</h2>
-          <p>Points from exploring activities. A wrong answer never takes points away.</p>
-        </div>
-        <strong className="mindful-points-total">{mindfulBoard?.points || 0}<small> pts</small></strong>
-        {mindfulBoard?.entries?.length > 0 && <ul aria-label="Recent Mindful Corner notes">{mindfulBoard.entries.slice(0, 3).map((entry) => <li key={entry.id}>{entry.note}</li>)}</ul>}
-      </section>
 
       <aside className="points-info-box" aria-label={t("howPointsWork")}>
         <div className="points-info-icon"><Info size={20} /></div>

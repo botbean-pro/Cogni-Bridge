@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, Video, X } from "lucide-react";
 import { loadStudentPrivateSessions, markPrivateSessionsSeen } from "../../privateSessions";
 import { formatLocalizedDate, getSessionTitle } from "../../constants";
@@ -44,8 +45,9 @@ export function StudentNotifications({ studentId, t }) {
         <Bell size={19} /><span>{t("ps_bell")}</span>
         {unread > 0 && <b className="student-notify-badge" aria-label={String(unread)}>{unread}</b>}
       </button>
-      {open && (
-        <div className="student-calm-overlay" role="dialog" aria-modal="true" aria-label={t("ps_bell")} onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+      {/* Rendered on <body> so the rail's own positioning can't trap the overlay inside the sidebar. */}
+      {open && createPortal(
+        <div className="student-calm-overlay student-notify-overlay" role="dialog" aria-modal="true" aria-label={t("ps_bell")} onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
           <div className="student-calm-dialog student-notify-dialog">
             <button className="student-calm-dismiss" type="button" onClick={() => setOpen(false)} aria-label={t("close")}><X size={20} /></button>
             <h2>{t("ps_bell")}</h2>
@@ -65,7 +67,8 @@ export function StudentNotifications({ studentId, t }) {
               </ul>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
