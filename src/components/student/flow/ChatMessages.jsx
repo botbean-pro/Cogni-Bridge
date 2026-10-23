@@ -83,7 +83,7 @@ function Message({ message, language, readAloudEnabled, speaking, onToggleSpeaki
           {isAssistant ? <FormattedAnswer content={message.content} /> : message.content}
         </div>
         {message.studyPack && <StudyPack pack={message.studyPack} fileName={message.fileName} truncated={message.truncated} t={t} />}
-        {isAssistant && readAloudEnabled && supportsReadAloud(language) && (
+        {isAssistant && (readAloudEnabled || speaking) && supportsReadAloud(language) && (
           <button type="button" className="ai-listen-button" onClick={() => onToggleSpeaking(message)} aria-pressed={speaking}>
             {speaking ? <><Square size={14} /> {t("audioStop")}</> : <><Volume2 size={16} /> {t("listen")}</>}
           </button>

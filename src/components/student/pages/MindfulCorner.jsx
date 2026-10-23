@@ -5,6 +5,8 @@ import { mergeMindfulProgress, mindfulNote, readCuriousCluesProgress, readMindfu
 import { loadMindfulProgress, saveMindfulProgress } from '../../../mindfulProgress';
 import { curiousClueLevels, shuffleClueQuestions } from '../../../curiousClues';
 import { mindfulActivityPath, normalizePath, studentTabPaths } from '../../../routes';
+import { stopSpeaking } from '../flow/readAloud';
+import { speakQuietInstructions } from './quietCornerVoice';
 import './MindfulCorner.css';
 
 const activities = [
@@ -154,7 +156,8 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
   const exitActivity = () => { if (!resultSaved.current) finishActivity(false); onExit(); };
   useEffect(() => { if (activity.id === 'match' && matchDone) finishActivity(true); }, [activity.id, matchDone]);
   useEffect(() => { if (!breathing || paused || !settings.motion) return undefined; const id = window.setInterval(() => setPhase((p) => p === 'Breathe in' ? 'Breathe out' : 'Breathe in'), 5000); return () => window.clearInterval(id); }, [breathing, paused, settings.motion]);
-  useEffect(() => () => { window.clearTimeout(matchTimer.current); window.speechSynthesis?.cancel(); }, []);
+  // Let spoken instructions finish if the student navigates to another app tab.
+  useEffect(() => () => { window.clearTimeout(matchTimer.current); }, []);
   const reset = () => {
     if (activity.id === 'clues' && activeClueLevel) {
       startClueLevel(activeClueLevel);
@@ -181,7 +184,13 @@ function GameScreen({ activity, settings, t, clueProgress, onCompleteClueLevel, 
     setClueLevelComplete(false);
   };
   const pickCard = (card) => { if (card.open || card.found || paused || cardsLocked) return; if (first == null) { setFirst(card.id); setCards((cs) => cs.map((c) => c.id === card.id ? { ...c, open: true } : c)); return; } const a = cards.find((c) => c.id === first); const next = cards.map((c) => c.id === card.id || c.id === first ? { ...c, open: true } : c); if (a?.icon === card.icon) { next.forEach((c) => { if (c.id === card.id || c.id === first) c.found = true; }); setStatus(t('A pair! Great exploring.')); setCards(next); setFirst(null); } else { setStatus(t("Let's try another one!")); setCards(next); setFirst(null); setCardsLocked(true); matchTimer.current = window.setTimeout(() => { setCards((current) => current.map((c) => c.found ? c : { ...c, open: false })); setCardsLocked(false); }, 900); } };
-  const speakInstructions = () => { if (!window.speechSynthesis) { setStatus(t('Audio instructions are not available in this browser. You can read the text instructions.')); return; } window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(`${activity.title}. ${activity.note}`); utterance.lang = document.documentElement.lang || 'en-IN'; utterance.rate = 0.82; utterance.volume = 0.55; window.speechSynthesis.speak(utterance); };
+  const speakInstructions = () => {
+    const pageLanguage = (document.documentElement.lang || 'en-IN').toLowerCase();
+    const text = `${activity.title}. ${activity.note}`;
+    stopSpeaking();
+    if (!window.speechSynthesis && !window.Audio) { setStatus(t('Audio instructions are not available in this browser. You can read the text instructions.')); return; }
+    speakQuietInstructions(text, pageLanguage);
+  };
   return <section className="mc-game"><div className="mc-game-heading"><div><p className="mc-game-group">{activity.group}</p><h1>{activity.title}</h1><p>{activity.note}</p>{settings.instructions !== 'Text' && <button type="button" onClick={speakInstructions}>{t('Hear instructions')}</button>}</div><button type="button" className="mc-exit" onClick={exitActivity}><ArrowLeft size={17}/> {t('Exit activity')}</button></div><div className="mc-play-area">
     {activity.id === 'bubbles' && <div className="mc-bubbles"><p>{t('Tap any bubble. No rush.')}</p><div className="mc-bubble-row">{Array.from({ length: 6 }, (_, i) => <button key={i} type="button" className={popped.includes(i) ? 'is-popped' : ''} aria-label={popped.includes(i) ? t('Bubble {n} popped', { n: i + 1 }) : t('Pop bubble {n}', { n: i + 1 })} aria-pressed={popped.includes(i)} disabled={popped.includes(i)} onClick={() => { const next = [...popped, i]; setPopped(next); setPopCount(next.length); if (next.length === 6) finishActivity(true); else setStatus(t('Pop! Nice exploring.')); }}>{['○','◯','◌','◉','◎','◦'][i]}</button>)}</div><p aria-live="polite">{status || t('{count} of 6 bubbles popped', { count: popCount })}</p></div>}
     {activity.id === 'breathing' && <div className="mc-breath"><p aria-live="polite">{breathing && !paused ? t(phase) : paused ? t('Paused') : t('Ready when you are')}</p><div className={`mc-breath-orb${breathing && !paused && settings.motion ? ` ${phase === 'Breathe in' ? 'grow' : 'shrink'}` : ''}`} aria-hidden="true">{breathing && !paused ? '☁' : '☼'}</div><div className="mc-controls"><button type="button" aria-pressed={breathing && !paused} onClick={() => { if (!breathing) { setBreathing(true); setPaused(false); setPhase('Breathe in'); return; } setPaused((p) => !p); }}>{breathing && !paused ? <Pause size={16}/> : <Play size={16}/>} {!breathing ? t('Begin gentle breathing') : paused ? t('Continue') : t('Pause')}</button></div></div>}
