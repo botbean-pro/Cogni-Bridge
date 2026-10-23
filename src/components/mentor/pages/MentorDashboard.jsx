@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronRight,
   Clock3,
+  Ellipsis,
   Settings,
   Video,
   Eye,
@@ -33,6 +34,7 @@ import { MentorStudentPage } from "./MentorStudentPage";
 import { MentorParentChat } from "../MentorParentChat";
 import { usePageTitle } from "../../../pageTitle";
 import { useActiveTabInView } from "../../../useRailScroll";
+import { RailMoreSheet } from "../../shared/RailMoreSheet";
 import { mentorStudentPath, parseMentorStudentPath } from "../../../routes";
 import { deletePrivateSession, loadMentorPrivateSessions } from "../../../privateSessions";
 import { createMeetLink, listStudentsForMentor, loadMentorLearningActivity, loadMentorLeaderboard, loadMentorName, setMyStudent } from "../../../mentorContent";
@@ -54,9 +56,17 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
   ];
   usePageTitle(t("pt_mentor"), items.find(([key]) => key === tab)?.[2]);
   useActiveTabInView(tab);
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => { setMoreOpen(false); }, [tab]);
+  // The phone bar keeps four tabs (the ones with unread badges first); the rest sit behind "More".
+  const barFirst = ["overview", "schedule", "sensory", "messages"];
+  const barKeys = new Set([...items.filter(([key]) => barFirst.includes(key)), ...items.filter(([key]) => !barFirst.includes(key))].slice(0, 4).map(([key]) => key));
+  const moreTabs = items.filter(([key]) => !barKeys.has(key));
+  const moreActive = moreTabs.some(([key]) => key === tab);
+  const name = mentorName || "Priya Sharma";
 
-  return (
-    <aside className="mentor-nav">
+  return (<>
+    <aside className="mentor-nav has-more">
       <div className="mentor-rail-brand">
         <span className="mentor-rail-logo"><LogoImage size={42} /></span>
         <span className="mentor-rail-brand-copy"><strong>CogniBridge</strong><small>{t("md_space")}</small></span>
@@ -64,7 +74,7 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
       {items.map(([key, Icon, label]) => (
         <button
           key={key}
-          className={tab === key ? "active" : ""}
+          className={`${tab === key ? "active" : ""}${barKeys.has(key) ? "" : " mentor-secondary"}`}
           aria-current={tab === key ? "page" : undefined}
           title={label}
           onClick={() => setTab(key)}
@@ -72,16 +82,31 @@ function MentorNavigation({ tab, setTab, mentorId, mentorName, unreadSupportCoun
           <Icon size={19} /><span className="mentor-nav-label">{label}</span>{key === "sensory" && unreadSupportCount > 0 && <span className="mentor-notification-count">{unreadSupportCount}</span>}{key === "messages" && unreadParentCount > 0 && <span className="mentor-notification-count">{unreadParentCount}</span>}
         </button>
       ))}
+      <button type="button" className={`mentor-more${moreActive || moreOpen ? " active" : ""}`} onClick={() => setMoreOpen((open) => !open)} aria-haspopup="dialog" aria-expanded={moreOpen} title={t("more")}>
+        <Ellipsis size={19} /><span className="mentor-nav-label">{t("more")}</span>
+      </button>
       <div className="mentor-rail-footer">
         <button type="button" data-accessibility-toggle aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")} onClick={onToggleAccessibility}>
           <Accessibility size={19} /><span className="mentor-nav-label">{t("accessibility")}</span>
         </button>
         <button type="button" className="mentor-rail-logout" aria-label={t("mentorLogout")} title={t("mentorLogout")} onClick={onBack}>
-          <span className="mentor-avatar-small">{(mentorName || "Priya Sharma").charAt(0).toUpperCase()}</span><span className="mentor-nav-label">{mentorName || "Priya Sharma"}</span><LogOut size={16} className="mentor-logout-icon" />
+          <span className="mentor-avatar-small">{name.charAt(0).toUpperCase()}</span><span className="mentor-nav-label">{name}</span><LogOut size={16} className="mentor-logout-icon" />
         </button>
       </div>
     </aside>
-  );
+    <RailMoreSheet
+      open={moreOpen}
+      onClose={() => setMoreOpen(false)}
+      ariaLabel={t("more")}
+      returnFocus=".mentor-more"
+      name={name}
+      tabs={moreTabs.map(([key, Icon, label]) => ({ key, Icon, label, active: tab === key, onSelect: () => setTab(key) }))}
+      actions={[
+        { key: "accessibility", Icon: Accessibility, label: t("accessibility"), onSelect: onToggleAccessibility, accessibilityToggle: true },
+        { key: "logout", Icon: LogOut, label: t("mentorLogout"), onSelect: onBack, danger: true },
+      ]}
+    />
+  </>);
 }
 
 // The signed-in mentor's name; empty in demo mode, where the rail keeps the demo mentor's name.
