@@ -201,9 +201,6 @@
     grid-template-columns: 1fr;
   }
 
-  .performance-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .performance-grid { grid-template-columns:1fr; }
-
   .schedule-form label:first-child,
   .schedule-form > .form-columns,
   .schedule-form > label:nth-last-of-type(1),
@@ -239,10 +236,16 @@
 .performance-summary article strong { color:var(--text); font-size: calc((22px) * var(--text-scale, 1)); }
 .performance-summary article span { color:var(--muted); font-size: calc((12px) * var(--text-scale, 1)); }
 .performance-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; }
+/* Must come after the base rules above, or they win and the phone layout never applies. */
+@media (max-width: 760px) {
+  .performance-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .performance-grid { grid-template-columns:minmax(0,1fr); }
+}
 .performance-card { min-width:0; padding:18px; border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:var(--shadow); }
 .performance-card-heading { display:flex; align-items:center; gap:11px; }
 .performance-avatar { display:grid; width:42px; height:42px; flex:none; place-items:center; border-radius:50%; background:#d9eeeb; color:var(--teal-dark); font-weight:800; }
-.performance-card-heading h2 { margin:0 0 3px; color:var(--text); font-size: calc((16px) * var(--text-scale, 1)); }
+.performance-card-heading > div { min-width:0; }
+.performance-card-heading h2 { margin:0 0 3px; color:var(--text); font-size: calc((16px) * var(--text-scale, 1)); overflow-wrap:anywhere; }
 .performance-card-heading small,.performance-subjects small { color:var(--muted); font-size: calc((12px) * var(--text-scale, 1)); }
 .performance-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:17px 0; padding:13px 0; border-block:1px solid var(--line); }
 .performance-metrics div { display:grid; gap:3px; }
@@ -334,6 +337,19 @@
 .mentor-profile-link { display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:inherit; font-weight:700; cursor:pointer; }
 .mentor-profile-link:hover { border-color:var(--teal); }
 .mentor-profile-locked { color:var(--muted); font-size: calc((.88rem) * var(--text-scale, 1)); }
+/* On a phone each student becomes a card, so the Add/Remove and Profile buttons aren't pushed off-screen. */
+@media (max-width:640px) {
+  .mentor-students-table-wrap { overflow:visible; border:0; background:transparent; }
+  .mentor-students-table,.mentor-students-table tbody { display:block; }
+  .mentor-students-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+  .mentor-students-table tr { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin-bottom:10px; padding:14px; border:1px solid var(--line); border-radius:14px; background:var(--surface); }
+  .mentor-students-table th,.mentor-students-table td { padding:0; border-bottom:0; }
+  .mentor-students-table td:first-child,.mentor-students-table td[data-label] { grid-column:1 / -1; }
+  .mentor-students-table td[data-label] { color:var(--muted); font-size: calc((.88rem) * var(--text-scale, 1)); }
+  .mentor-students-table td[data-label]::before { content:attr(data-label) ": "; }
+  .mentor-student-toggle,.mentor-profile-link { justify-content:center; width:100%; min-height:44px; }
+  .mentor-profile-locked { align-self:center; }
+}
 .mentor-student-back { display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:inherit; font-weight:700; cursor:pointer; }
 .mentor-student-back:hover { border-color:var(--teal); }
 .mentor-student-hero { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
@@ -366,6 +382,17 @@
 .mentor-history .mentor-history-good { display:inline-flex; align-items:center; gap:5px; color:var(--teal); }
 @media (max-width:640px) { .mentor-history-side { align-items:flex-start; } }
 
+.session-class-pill { margin-left:6px; }
+.session-card-top .session-class-pill { margin-left:8px; margin-right:auto; }
+.meet-link-field { grid-column:1/-1; }
+.meet-link-row { display:flex; flex-wrap:wrap; gap:10px; }
+.meet-link-row input { flex:1 1 240px; min-width:0; }
+.meet-link-create { display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border:1px solid var(--teal); border-radius:10px; background:transparent; color:var(--teal-dark); font:inherit; font-weight:800; cursor:pointer; }
+.meet-link-create:hover { background:var(--teal-fill); color:#fff; }
+.meet-link-create:disabled { opacity:.6; cursor:wait; }
+.theme-dark .meet-link-create { color:var(--text); }
+.meet-link-error { color:#c0392b; }
+.theme-dark .meet-link-error { color:#f8b4b4; }
 .form-hint { display:block; margin-top:6px; color:var(--muted); font-size: calc((.85rem) * var(--text-scale, 1)); font-weight:400; }
 .private-sessions-list { margin-top:28px; }
 .private-sessions-list a.uploaded-note-download { text-decoration:none; color:inherit; }

@@ -58,6 +58,9 @@ const App = () => {
   const activeTab = route.tab || "home";
   const setActiveTab = (next) => {
     const tab = typeof next === "function" ? next(activeTab) : next;
+    // A functional update that keeps the current tab must not reset the URL, or a reload on an open
+    // session (/sessions/:id) or Mindful Corner activity would lose its sub-page once sign-in settles.
+    if (typeof next === "function" && tab === activeTab) return;
     const path = studentTabPaths[tab];
     if (path && normalizePath(location.pathname) !== path) navigate(path);
   };
@@ -518,7 +521,8 @@ const App = () => {
   useEffect(() => {
     if (!authSettled || mentorOpen || parentOpen) return;
     const path = normalizePath(location.pathname);
-    const gated = (activeTab === "sensory" && !sensoryTrackerEnabled) || (activeTab === "careers" && !(signedIn && isGrade12));
+    const studentOnly = !signedIn && ["study", "settings", "messages"].includes(activeTab);
+    const gated = studentOnly || (activeTab === "sensory" && !sensoryTrackerEnabled) || (activeTab === "careers" && !(signedIn && isGrade12));
     const unknown = !route.tab && path !== "/";
     if (gated || unknown) navigate("/", { replace: true });
   }, [authSettled, mentorOpen, parentOpen, location.pathname, sensoryTrackerEnabled, signedIn, isGrade12]);
@@ -1051,7 +1055,7 @@ const App = () => {
               onOpenSession={openSession}
             />
           ),
-          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} handwritingType={studentProfile?.handwritingType} handwritingImage={studentProfile?.handwritingImage} onAddHandwriting={() => setProfileOpen(true)} /> : null,
+          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} studentEmail={studentEmail} handwritingType={studentProfile?.handwritingType} handwritingImage={studentProfile?.handwritingImage} onAddHandwriting={() => setProfileOpen(true)} /> : null,
           flow: (
             <FlowPage
               t={t}

@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { navigation, classNames } from "../../constants";
 import { LogoImage } from "../Brand";
-import { BookOpen, Compass, Crown, Headphones, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
+import { BookOpen, Compass, Crown, Ellipsis, Headphones, Heart, LockKeyhole, PanelLeftClose, PanelLeftOpen, Sparkles } from "lucide-react";
 import { studentTabPaths } from "../../routes";
 import { usePageTitle } from "../../pageTitle";
+import { useActiveTabInView } from "../../useRailScroll";
 
 const navigationLabels = {
   home: "home",
@@ -18,20 +19,32 @@ const navigationLabels = {
   relax: "quietSpaceTitle",
 };
 
-export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, t }) => {
+export const railLabel = (t, tab) => t(tab === "mindful" ? "mcTitle" : navigationLabels[tab] || tab);
+
+// Tabs in the order the rail shows them. Signed-out visitors only get pages that work without an account;
+// Cogni Board, Cogni-Flow and Mindful Corner just ask them to sign in, so they appear after signing in.
+export const studentRailItems = (signedIn, sensoryTrackerEnabled) => (signedIn
+  ? [
+    [BookOpen, "study"],
+    ...navigation.filter(([, , tab]) => tab === "sessions" || tab === "flow").map(([Icon, , tab]) => [Icon, tab]),
+    [Crown, "premium"],
+    [Compass, "careers"],
+    [Sparkles, "mindful"], [Headphones, "relax"],
+    ...(sensoryTrackerEnabled ? [[Heart, "sensory"]] : []),
+    ...navigation.filter(([, , tab]) => tab === "leaderboard").map(([Icon, , tab]) => [Icon, tab]),
+  ]
+  : [...navigation.filter(([, , tab]) => tab === "home" || tab === "sessions").map(([Icon, , tab]) => [Icon, tab]), [Headphones, "relax"], [Crown, "premium"]]);
+
+// A signed-in student's phone bar shows only these; every other tab and the account actions sit behind "More".
+export const phoneBarTabs = (sensoryTrackerEnabled) => ["study", "sessions", "flow", sensoryTrackerEnabled ? "sensory" : "mindful"];
+
+export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTrackerEnabled, isGrade12, moreOpen, moreBadge, onToggleMore, t }) => {
   usePageTitle(t("pt_student"), activeTab === "mindful" ? t("mcTitle") : activeTab === "settings" ? t("settings") : t(navigationLabels[activeTab] || activeTab));
   const [pinnedOpen, setPinnedOpen] = useState(false);
-  const items = signedIn
-    ? [
-      [BookOpen, "study"],
-      ...navigation.filter(([, , tab]) => tab === "sessions" || tab === "flow").map(([Icon, , tab]) => [Icon, tab]),
-      [Crown, "premium"],
-      [Compass, "careers"],
-      [Sparkles, "mindful"], [Headphones, "relax"],
-      ...(sensoryTrackerEnabled ? [[Heart, "sensory"]] : []),
-      ...navigation.filter(([, , tab]) => tab === "leaderboard").map(([Icon, , tab]) => [Icon, tab]),
-    ]
-    : [...navigation.map(([Icon, , tab]) => [Icon, tab]), [Sparkles, "mindful"], [Headphones, "relax"], [Crown, "premium"]];
+  useActiveTabInView(activeTab);
+  const items = studentRailItems(signedIn, sensoryTrackerEnabled);
+  const barTabs = phoneBarTabs(sensoryTrackerEnabled);
+  const moreActive = signedIn && items.some(([, tab]) => tab === activeTab && !barTabs.includes(tab));
 
   return (
     <div className={classNames("student-sidebar", pinnedOpen && "pinned-open")}>
@@ -45,10 +58,10 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
       <nav className="student-rail-nav" aria-label={t("mainNavigation")}>
         {items.map(([Icon, tab]) => {
           const careerLocked = tab === "careers" && !isGrade12;
-          const label = t(tab === "mindful" ? "mcTitle" : navigationLabels[tab] || tab);
+          const label = railLabel(t, tab);
           const linkProps = {
             key: tab,
-            className: classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked"),
+            className: classNames("student-rail-link", activeTab === tab && "active", careerLocked && "locked", signedIn && !barTabs.includes(tab) && "rail-secondary"),
             "aria-current": activeTab === tab ? "page" : undefined,
             "aria-disabled": careerLocked,
             title: careerLocked ? t("career_locked") : label,
@@ -58,6 +71,11 @@ export const StudentSidebar = ({ activeTab, onNavigate, signedIn, sensoryTracker
             ? <button {...linkProps} type="button" onClick={() => onNavigate(tab)}>{content}</button>
             : <Link {...linkProps} to={studentTabPaths[tab]}>{content}</Link>;
         })}
+        {signedIn && (
+          <button type="button" className={classNames("student-rail-link", "student-rail-more", (moreActive || moreOpen) && "active")} onClick={onToggleMore} aria-haspopup="dialog" aria-expanded={Boolean(moreOpen)} title={t("more")}>
+            <Ellipsis size={20} />{moreBadge > 0 && <b className="student-notify-badge" aria-hidden="true">{moreBadge}</b>}<span>{t("more")}</span>
+          </button>
+        )}
       </nav>
     </div>
   );

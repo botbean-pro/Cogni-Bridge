@@ -25,6 +25,7 @@ export function SessionCard({
     >
       <div className="session-card-top">
         <span className="subject-pill">{getSessionSubjectLabel(session.subject, t)}</span>
+        {session.studentClass && <span className="subject-pill session-class-pill">{t("class")} {session.studentClass}</span>}
         <CalendarDays size={21} />
       </div>
       <h3>{sessionTitle}</h3>

@@ -3,6 +3,7 @@ import { CalendarDays, Heart, Home, MessageCircle, PanelLeftClose, PanelLeftOpen
 import { classNames } from "../../constants";
 import { LogoImage } from "../Brand";
 import { usePageTitle } from "../../pageTitle";
+import { useActiveTabInView } from "../../useRailScroll";
 
 const items = [
   [Home, "overview", "parentOverview"],
@@ -16,6 +17,7 @@ const items = [
 export const ParentSidebar = ({ activeTab, onNavigate, t }) => {
   usePageTitle(t("pt_parent"), t(items.find(([, tab]) => tab === activeTab)?.[2] || "parentOverview"));
   const [pinnedOpen, setPinnedOpen] = useState(false);
+  useActiveTabInView(activeTab);
 
   return (
     <div className={classNames("student-sidebar", pinnedOpen && "pinned-open")}>

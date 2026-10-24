@@ -96,7 +96,7 @@
 /* Phones: one pane at a time, like the mobile app. */
 @media (max-width:760px) {
   .mentor-content.is-chat { padding:0; }
-  .wa-shell { grid-template-columns:1fr; height:100vh; min-height:0; border:0; border-radius:0; box-shadow:none; }
+  .wa-shell { grid-template-columns:1fr; height:calc(100dvh - var(--rail-h)); min-height:0; border:0; border-radius:0; box-shadow:none; }
   .wa-shell .wa-placeholder { display:none; }
   .wa-shell.has-thread .wa-sidebar { display:none; }
   .wa-back { display:grid; }
@@ -105,4 +105,11 @@
 
 /* Parent portal: the chat sits under the page heading, so it gets a shorter fixed height. */
 .parent-page .wa-shell { height:min(72vh, 680px); }
-@media (max-width:760px) { .parent-page .wa-shell { height:calc(100vh - 140px); border:1px solid var(--line); border-radius:14px; } }
+@media (max-width:760px) {
+  /* The contact list sits under the page heading, so it gets what is left of the screen above the bar. */
+  .parent-page .wa-shell { height:max(340px, calc(100dvh - var(--rail-h) - 260px)); border:1px solid var(--line); border-radius:14px; }
+  /* An open conversation drops the heading and fills the screen above the bar, like the mentor's chat. */
+  .parent-page:has(> .wa-shell.has-thread) { gap:0; padding:0; }
+  .parent-page:has(> .wa-shell.has-thread) > .parent-heading { display:none; }
+  .parent-page > .wa-shell.has-thread { height:calc(100dvh - var(--rail-h)); border-width:0; border-radius:0; }
+}

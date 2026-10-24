@@ -274,3 +274,27 @@
 @keyframes ai-mic-pulse { 0%, 100% { box-shadow:0 0 0 0 rgba(214,69,69,.45); } 50% { box-shadow:0 0 0 8px rgba(214,69,69,0); } }
 @keyframes ai-mic-spin { to { transform:rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ai-mic-btn.recording, .ai-mic-btn .spin { animation:none; } }
+
+/* Phone chat. Only the conversation may shrink: the header, usage meter, history, prompts and composer
+   keep their size, the quick prompts become one scrolling row instead of four stacked buttons, and
+   the input can narrow so it (and the send button) stay inside the card. */
+@media (max-width: 760px) {
+  .ai-chat-page,.ai-chat-container { min-height:0; height:calc(100dvh - 100px); }
+  .ai-chat-page { height:auto; }
+  .ai-chat-header,.ai-usage-meter,.ai-chat-history,.quick-prompts,.ai-chat-input-form { flex:none; }
+  .ai-chat-header { padding:12px 14px; }
+  .ai-chat-header p,.ai-status { display:none; }
+  .ai-chat-history-list { max-height:26dvh; }
+  .quick-prompts { padding:10px 14px 12px; }
+  .quick-prompts-title { margin-bottom:8px; }
+  .quick-prompts-grid { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; }
+  .quick-prompts-grid::-webkit-scrollbar { display:none; }
+  .quick-prompt-row { flex:0 0 auto; scroll-snap-align:start; }
+  .quick-prompt-btn { flex:none; min-height:44px; white-space:nowrap; }
+  .quick-prompt-dismiss { display:none; }
+  .ai-chat-input { min-width:0; }
+  .ai-chat-input-form { padding:10px 14px 12px; }
+}
+@media (max-width: 760px) and (max-height: 700px) {
+  .ai-disclaimer { display:none; }
+}

@@ -197,8 +197,7 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
           <h1>{profile.name || t("profileYourProfile")}</h1>
           <p className="handwriting-type">{typeLabel(t, profile.handwritingType)}</p>
           {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt={t("hw_altUploaded")} />}
-          <p className="profile-result-copy">{t(profile.handwritingMeaningKey || "handwritingAnalysisDisclaimer")}</p>
-          <p className="profile-result-copy handwriting-disclaimer">{t("handwritingAnalysisDisclaimer")}</p>
+          {profile.handwritingMeaningKey && <p className="profile-result-copy">{t(profile.handwritingMeaningKey)}</p>}
           <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? t("backToAccount") : t("continueToCogniBridge")}</button>
         </section>
       </main>
