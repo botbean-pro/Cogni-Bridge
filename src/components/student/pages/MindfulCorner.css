@@ -146,7 +146,7 @@ html[data-low-sensory="true"] .mindful-corner * { animation:none!important; tran
   .mindful-corner { padding:12px 12px 24px; }
   .mc-top { flex-wrap:wrap; gap:8px; margin-bottom:20px; }
   .mc-top button { padding:7px 9px; font-size:.9em; }
-  .mc-stats { order:3; width:100%; margin-left:0; }
+  .mc-stats { order:3; width:100%; flex-wrap:wrap; gap:4px 16px; margin-left:0; white-space:normal; }
   .mc-section-head { align-items:stretch; flex-direction:column; }
   .mc-grid { grid-template-columns:1fr; gap:8px; }
   .mc-card { padding:13px; }

@@ -15,6 +15,7 @@ export const StudentPage = ({
   isGrade12,
   studentName,
   studentId,
+  breakKey,
   t,
   onLogin,
   onLogout,
@@ -53,7 +54,7 @@ export const StudentPage = ({
       <aside className={`student-rail${accessibilityOpen ? " accessibility-open" : ""}${signedIn ? " is-student" : " is-guest"}`}>
         <StudentSidebar activeTab={activeTab} onNavigate={goToTab} signedIn={signedIn} sensoryTrackerEnabled={sensoryTrackerEnabled} isGrade12={isGrade12} moreOpen={moreOpen} moreBadge={notifications.unread} onToggleMore={() => setMoreOpen((open) => !open)} t={t} />
         <div className="student-rail-footer">
-          {studentId && <StudentNotifications notifications={notifications} t={t} />}
+          {signedIn && <StudentNotifications notifications={notifications} breakKey={breakKey} t={t} />}
           <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
             <Accessibility size={19} /><span>{t("accessibility")}</span>
           </button>
@@ -71,7 +72,7 @@ export const StudentPage = ({
         isGrade12={isGrade12}
         onNavigate={goToTab}
         studentName={studentName}
-        hasNotifications={Boolean(studentId)}
+        hasNotifications
         unread={notifications.unread}
         onOpenNotifications={notifications.openPanel}
         onOpenAccessibility={onToggleAccessibility}

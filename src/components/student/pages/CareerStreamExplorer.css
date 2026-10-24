@@ -194,6 +194,11 @@
   .cx-stream-grid, .cx-career-grid { grid-template-columns:minmax(0, 1fr); }
   .cx-step-text strong { display:none; }
   .cx-step button { padding:6px 8px; gap:7px; }
+  /* Only the current step keeps a visible label, so the three steps fit without scrolling sideways or
+     breaking a word; the others show just their badge (their label stays for screen readers). */
+  .cx-step:not(.is-current) { flex:none; }
+  .cx-step:not(.is-current) .cx-step-text { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .cx-step.is-current .cx-step-text small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; overflow-wrap:normal; }
   .cx-detail-hero { flex-direction:column; align-items:flex-start; }
   .cx-banner-actions { width:100%; }
   .cx-banner-actions button { flex:1 1 0; justify-content:center; }

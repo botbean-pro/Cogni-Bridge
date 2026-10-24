@@ -1,0 +1,46 @@
+/* Screen-break lock (BreakLockScreen.jsx). Sits above every other overlay, including the phone bar. */
+html.break-locked, html.break-locked body { overflow:hidden; }
+
+.break-lock { position:fixed; inset:0; z-index:5000; display:grid; place-items:center; overflow-y:auto; padding:24px 16px; background:rgba(14, 30, 32, .86); backdrop-filter:blur(10px); color:var(--text); font-family:var(--font-body); }
+.break-lock:focus { outline:none; }
+.break-lock-card { width:min(520px, 100%); padding:32px 28px 26px; border:1px solid var(--line); border-radius:24px; background:var(--surface); box-shadow:0 30px 70px rgba(0, 0, 0, .35); text-align:center; animation:breakLockIn .35s ease both; }
+.break-lock-card h2 { margin:0; font-size:calc(clamp(24px, 4vw, 30px) * var(--text-scale, 1)); letter-spacing:-.02em; }
+.break-lock-card > p { margin:10px auto 0; max-width:420px; color:var(--muted); font-size:calc(15px * var(--text-scale, 1)); line-height:1.6; }
+
+.break-lock-timer { position:relative; width:168px; height:168px; margin:24px auto 20px; }
+.break-lock-timer svg { width:100%; height:100%; transform:rotate(-90deg); }
+.break-lock-track, .break-lock-progress { fill:none; stroke-width:8; }
+.break-lock-track { stroke:var(--line); }
+.break-lock-progress { stroke:var(--teal); stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
+.break-lock-timer > div { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.break-lock-timer span { max-width:110px; color:var(--muted); font-size:calc(12px * var(--text-scale, 1)); font-weight:700; line-height:1.3; }
+.break-lock-timer strong { font-size:calc(38px * var(--text-scale, 1)); font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+
+.break-lock-tip-slot { min-height:96px; }
+.break-lock-tip { display:flex; align-items:center; gap:14px; padding:16px 18px; border:1px solid var(--line); border-radius:18px; background:var(--surface-2); text-align:left; animation:breakTipPop .45s cubic-bezier(.2, .9, .3, 1.25) both; }
+.break-lock-tip-icon { flex:none; display:grid; width:50px; height:50px; place-items:center; border-radius:15px; background:var(--teal-fill); color:white; }
+.break-lock-tip-label { display:block; margin-bottom:3px; color:var(--teal-dark); font-size:calc(11px * var(--text-scale, 1)); font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.break-lock-tip p { margin:0; font-size:calc(16px * var(--text-scale, 1)); font-weight:700; line-height:1.45; }
+.break-lock-next { margin-top:14px; padding:9px 14px; border:1px solid var(--line); border-radius:11px; background:transparent; color:var(--text); font:inherit; font-size:calc(14px * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
+.break-lock-next:hover { background:var(--surface-2); }
+.break-lock-next:focus-visible { outline:3px solid var(--teal); outline-offset:2px; }
+
+@keyframes breakLockIn { from { opacity:0; transform:translateY(12px) scale(.98); } to { opacity:1; transform:none; } }
+@keyframes breakTipPop { from { opacity:0; transform:scale(.9) translateY(8px); } to { opacity:1; transform:none; } }
+
+@media (max-width:640px) {
+  .break-lock { padding:16px; }
+  .break-lock-card { padding:24px 18px 20px; border-radius:20px; }
+  .break-lock-timer { width:144px; height:144px; margin:18px auto 16px; }
+  .break-lock-timer strong { font-size:calc(32px * var(--text-scale, 1)); }
+}
+
+/* Motion off-switches: system setting, the Accessibility motion setting and low-sensory mode. */
+@media (prefers-reduced-motion:reduce) {
+  .break-lock-card, .break-lock-tip { animation:none; }
+  .break-lock-progress { transition:none; }
+}
+html[data-motion="off"] .break-lock-card, html[data-motion="off"] .break-lock-tip,
+html[data-motion="reduced"] .break-lock-card, html[data-motion="reduced"] .break-lock-tip,
+html[data-low-sensory="true"] .break-lock-card, html[data-low-sensory="true"] .break-lock-tip { animation:none; }
+html[data-motion="off"] .break-lock-progress, html[data-low-sensory="true"] .break-lock-progress { transition:none; }

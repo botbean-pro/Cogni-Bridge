@@ -8,6 +8,8 @@ import careerPathsMaking from "./i18nCareerPathsMaking";
 import mentorText from "./i18nMentor";
 import miscText from "./i18nMisc";
 import privateText from "./i18nPrivate";
+import breakText from "./i18nBreak";
+import handwritingSignsText from "./i18nHandwritingSigns";
 import sessionText from "./i18nSession";
 import uiText from "./i18nUi";
 import mindfulText from "./i18nMindful";
@@ -689,7 +691,7 @@ const catalog = {
 
 catalog.premiumFlow = ["Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow", "Premium Flow"];
 
-Object.assign(catalog, sensoryOptions, sensoryText, premiumCareer, careerStreams, careerPathsScience, careerPathsSociety, careerPathsMaking, mentorText, miscText, privateText);
+Object.assign(catalog, sensoryOptions, sensoryText, premiumCareer, careerStreams, careerPathsScience, careerPathsSociety, careerPathsMaking, mentorText, miscText, privateText, breakText, handwritingSignsText);
 // Text that used to stay English in every language. Existing translations win; an entry that
 // was English in all ten slots (brand names, older keys) is replaced.
 [sessionText, uiText, mindfulText, cluesText].forEach((table) => Object.entries(table).forEach(([key, values]) => {

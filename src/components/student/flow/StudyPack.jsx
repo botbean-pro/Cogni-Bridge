@@ -51,29 +51,52 @@ const curve = ({ from: [x1, y1], to: [x2, y2] }) => {
   return `M${x1},${y1} C${middle},${y1} ${middle},${y2} ${x2},${y2}`;
 };
 
+// The phone version of the map: the same branches as a vertical tree, so it fits the screen without
+// scrolling sideways. CSS shows exactly one of this and the wide map.
+function MindMapStack({ mindMap, t }) {
+  return (
+    <div className="mind-map-stack" role="group" aria-label={t("docMindMap")}>
+      <strong className="mm-stack-center">{mindMap.central}</strong>
+      <ul className="mm-stack-branches">
+        {mindMap.branches.map((branch, index) => (
+          <li key={branch.label} className={`mm-c${index % 6}`}>
+            <span className="mm-stack-branch">{branch.label}</span>
+            {branch.children.length > 0 && (
+              <ul className="mm-stack-leaves">{branch.children.map((child) => <li key={child}>{child}</li>)}</ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function MindMap({ mindMap, t }) {
   const layout = useMemo(() => layoutMindMap(mindMap), [mindMap]);
   return (
-    <div className="mind-map-scroll" tabIndex={0} aria-label={t("docMindMap")}>
-      <div className="mind-map" style={{ width: layout.width, height: layout.height }} aria-hidden="true">
-        <svg width={layout.width} height={layout.height}>
-          {layout.links.map((link) => <path key={link.key} className={`mind-map-link mm-c${link.color}`} d={curve(link)} />)}
-        </svg>
-        <div className="mind-map-node center" style={{ left: layout.centerX - CENTER_WIDTH / 2, top: layout.height / 2, width: CENTER_WIDTH }}>
-          {mindMap.central}
-        </div>
-        {layout.nodes.map((node) => (
-          <div
-            key={node.key}
-            className={`mind-map-node ${node.kind} mm-c${node.color}`}
-            style={{ left: node.side === "right" ? node.x : node.x - NODE_WIDTH, top: node.y, width: NODE_WIDTH }}
-          >
-            {node.text}
+    <>
+      <MindMapStack mindMap={mindMap} t={t} />
+      <div className="mind-map-scroll" tabIndex={0} aria-label={t("docMindMap")}>
+        <div className="mind-map" style={{ width: layout.width, height: layout.height }} aria-hidden="true">
+          <svg width={layout.width} height={layout.height}>
+            {layout.links.map((link) => <path key={link.key} className={`mind-map-link mm-c${link.color}`} d={curve(link)} />)}
+          </svg>
+          <div className="mind-map-node center" style={{ left: layout.centerX - CENTER_WIDTH / 2, top: layout.height / 2, width: CENTER_WIDTH }}>
+            {mindMap.central}
           </div>
-        ))}
+          {layout.nodes.map((node) => (
+            <div
+              key={node.key}
+              className={`mind-map-node ${node.kind} mm-c${node.color}`}
+              style={{ left: node.side === "right" ? node.x : node.x - NODE_WIDTH, top: node.y, width: NODE_WIDTH }}
+            >
+              {node.text}
+            </div>
+          ))}
+        </div>
+        <MindMapOutline mindMap={mindMap} className="visually-hidden" />
       </div>
-      <MindMapOutline mindMap={mindMap} className="visually-hidden" />
-    </div>
+    </>
   );
 }
 

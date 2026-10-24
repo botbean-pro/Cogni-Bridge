@@ -34,6 +34,7 @@ import { useImmersiveEffects } from "./immersiveEffects";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { loadStudentCheckins } from "./studentSensory";
 import { addLocalScreenTime, localDateKey, recordScreenTime } from "./screenTime";
+import { BreakLockScreen, useBreakTimer } from "./components/student/BreakLockScreen";
 
 const readPreferredSubjects = (email) => {
   if (!email) return [];
@@ -646,6 +647,14 @@ const App = () => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2800);
   };
+  // Every 30 minutes on the site a signed-in student gets a notification and a 5-minute screen break.
+  const breakLockUntil = useBreakTimer({
+    studentKey: supabaseConfigured ? authUserId : studentEmail,
+    enabled: Boolean(signedIn && studentEmail && (!authRole || authRole === "student") && !mentorOpen && !parentOpen),
+    t,
+    onNotice: notify,
+  });
+  const breakLock = breakLockUntil ? <BreakLockScreen lockUntil={breakLockUntil} t={t} /> : null;
 
   const registerForSession = async (sessionId) => {
     if (registeredSessionIds.includes(sessionId)) return;
@@ -866,6 +875,7 @@ const App = () => {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+        {breakLock}
       </div>
     );
   }
@@ -874,6 +884,7 @@ const App = () => {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
         <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
+        {breakLock}
       </div>
     );
   }
@@ -890,6 +901,7 @@ const App = () => {
           onBack={() => setHandwritingPromptOpen(false)}
           onComplete={(profile) => { setStudentProfile(profile); setHandwritingPromptOpen(false); }}
         />
+        {breakLock}
       </div>
     );
   }
@@ -935,6 +947,7 @@ const App = () => {
             setProfileOpen(false);
           }}
         />
+        {breakLock}
       </div>
     );
   }
@@ -983,6 +996,7 @@ const App = () => {
         isGrade12={isGrade12}
         studentName={studentName}
         studentId={supabaseConfigured && authRole === "student" ? authUserId : null}
+        breakKey={supabaseConfigured ? authUserId : studentEmail}
         t={t}
         onLogin={() => setLoginOpen(true)}
         onLogout={logOut}
@@ -1152,6 +1166,7 @@ const App = () => {
         />
       )}
       {toast && <div className="toast" role="status"><CheckCircle2 size={18} /> {toast}<button type="button" className="toast-close" onClick={() => setToast("")} aria-label={t("close")}><X size={16} /></button></div>}
+      {breakLock}
     </div>
   );
 };

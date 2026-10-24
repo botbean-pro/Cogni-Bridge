@@ -2,7 +2,7 @@
    stat-skeleton styles from styles.css; everything here uses the shared theme tokens
    so it follows light/dark mode. */
 
-.parent-page { display:grid; align-content:start; gap:20px; max-width:1100px; }
+.parent-page { display:grid; grid-template-columns:minmax(0, 1fr); align-content:start; gap:20px; max-width:1100px; }
 
 /* Entrance animation. fill-mode "backwards" so it doesn't pin transform afterwards
    and hover lifts (stats-grid, cards) still work. */
@@ -140,6 +140,11 @@
   .parent-meters { grid-template-columns:1fr; }
   .parent-card { padding:17px; }
   .parent-teacher-thread form button span { display:none; }
+  /* The child picker spans the row: "Viewing" stays whole and the select takes the rest. A select is as
+     wide as its longest option (a long child name), so it starts from zero width and grows instead. */
+  .parent-child-switch { display:flex; width:100%; box-sizing:border-box; }
+  .parent-child-switch span { flex:none; overflow-wrap:normal; }
+  .parent-child-switch select { width:0; flex:1 1 auto; text-overflow:ellipsis; }
 }
 @media (max-width:420px) {
   .parent-connect-card form > div { flex-direction:column; }

@@ -402,3 +402,11 @@
 .mentor-login-language select { color: var(--text); }
 @media (max-width: 760px) { .mentor-login-language { top: 82px; right: 18px; } }
 .mentor-page-content{min-height:100%;padding:clamp(20px,3vw,42px)}.mentor-page-heading{margin-bottom:22px}.mentor-page-heading h1{margin:0;font-size:calc(clamp(25px,3vw,36px) * var(--text-scale, 1))}
+
+/* Handwriting check results (HandwritingFindings.jsx) on the Settings list and student page. */
+.hw-findings ul { display:grid; gap:4px; margin:0; padding-left:18px; }
+.hw-findings-screen { margin:8px 0 0; padding:8px 10px; border-radius:10px; background:var(--surface-2); color:var(--text); font-weight:700; line-height:1.45; }
+.hw-findings-note, .hw-findings-none { margin:8px 0 0; color:var(--muted); font-size:calc(13px * var(--text-scale, 1)); }
+.hw-findings-clear { color:var(--teal-dark); font-weight:700; }
+.hw-findings.is-compact { max-width:340px; font-size:calc(13px * var(--text-scale, 1)); }
+.hw-findings.is-compact .hw-findings-screen { padding:6px 8px; font-weight:600; }

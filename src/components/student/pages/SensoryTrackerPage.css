@@ -58,7 +58,7 @@
 .sensory-card-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; color:var(--teal); }
 .sensory-card-title h2 { margin:4px 0 0; color:var(--text); font-size: calc((20px) * var(--text-scale, 1)); }
 .sensory-step { color:var(--teal); font-size: calc((11px) * var(--text-scale, 1)); font-weight:800; letter-spacing:.11em; }
-.sensory-view-switch { display:flex; gap:6px; width:max-content; max-width:100%; margin-bottom:20px; padding:4px; border-radius:11px; background:var(--surface-2); }
+.sensory-view-switch { display:flex; gap:6px; width:fit-content; max-width:100%; margin-bottom:20px; padding:4px; border-radius:11px; background:var(--surface-2); }
 .sensory-view-switch button { padding:9px 13px; border:0; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-size: calc((13px) * var(--text-scale, 1)); font-weight:700; cursor:pointer; }
 .sensory-view-switch button.active { background:var(--surface); color:var(--teal); box-shadow:0 2px 7px rgba(20,55,55,.08); }
 .sensory-view-switch button:disabled { opacity:.55; cursor:not-allowed; }
@@ -116,7 +116,7 @@
 .sensory-history-entry > button { display:flex; align-items:center; justify-content:space-between; width:100%; padding:13px 2px; border:0; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
 .sensory-history-entry > button > span { display:grid; gap:4px; }
 .sensory-history-entry small { color:var(--muted); }
-.sensory-history-entry em { width:max-content; padding:3px 7px; border-radius:99px; background:var(--surface-2); color:var(--muted); font-size: calc((10px) * var(--text-scale, 1)); font-style:normal; }
+.sensory-history-entry em { width:fit-content; padding:3px 7px; border-radius:99px; background:var(--surface-2); color:var(--muted); font-size: calc((10px) * var(--text-scale, 1)); font-style:normal; }
 .sensory-history-entry em.is-shared { background:#eaf6f3; color:var(--teal); }
 .sensory-entry-detail { padding:2px 2px 15px; color:var(--text); font-size: calc((13px) * var(--text-scale, 1)); line-height:1.5; }
 .theme-dark .sensory-mood-options button.selected,.theme-dark .sensory-chips button.selected,.theme-dark .sensory-status,.theme-dark .sensory-history-entry em.is-shared { background:#203b3c; }

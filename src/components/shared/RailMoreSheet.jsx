@@ -4,7 +4,7 @@ import { LockKeyhole } from "lucide-react";
 import { classNames } from "../../constants";
 
 // Phone only: the bottom bar keeps a few tabs and its "More" button opens this sheet with the rest plus the
-// account actions that sit in the side rail on larger screens. Shared by the student and mentor portals.
+// account actions that sit in the side rail on larger screens. Shared by the student, mentor and parent portals.
 //   tabs:    [{ key, Icon, label, active, locked, title, to | onSelect }]  (`to` renders a router link)
 //   actions: [{ key, Icon, label, onSelect, badge, danger, accessibilityToggle }]
 //   returnFocus: selector of the More button, focused again when Escape closes the sheet.

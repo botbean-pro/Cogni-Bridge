@@ -1409,6 +1409,11 @@ html[data-low-sensory="true"] .testimonial-carousel-track .testimonial-card { fi
   .testimonial-carousel-footer { justify-content:space-between; gap:10px; }
   .testimonial-dots { gap:7px; }
 }
+/* Phones never scroll sideways: the arrows, dots and auto-advance move the track (scrollTo still works
+   on a hidden overflow), and a finger drag scrolls the page instead of the carousel. */
+@media (max-width:640px) {
+  .testimonial-carousel-track { overflow-x:hidden; touch-action:pan-y; }
+}
 @media (prefers-reduced-motion:reduce) {
   .testimonial-carousel-track { scroll-behavior:auto; }
   .testimonial-carousel-track .testimonial-card { animation:none; transition:none; }

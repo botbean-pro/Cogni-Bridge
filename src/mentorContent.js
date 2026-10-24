@@ -210,6 +210,8 @@ export async function loadStudentProfile(studentId) {
     section: row.section,
     school: row.school,
     preferredSubjects: row.preferred_subjects || [],
+    handwritingSigns: row.handwriting_signs || null,
+    handwritingCheckedAt: row.handwriting_checked_at || null,
   };
 }
 

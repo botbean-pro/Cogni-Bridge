@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, ImagePlus, Loader2, Upload } from "lucide-react";
 import { readStudents } from "../constants";
 import { LogoImage } from "./Brand";
-import { typeLabel } from "../handwriting";
 import { supabase, supabaseConfigured } from "../supabaseClient";
 import { saveHandwriting } from "../studentHandwriting";
 import { classifyHandwritingSample } from "../handwritingAnalysis";
@@ -35,6 +34,8 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
   const [error, setError] = useState("");
   const fileRef = useRef(null);
   const analyzingRef = useRef(false);
+  // The handwriting check is a one-time test: once there's a result it can't be retaken.
+  const alreadyChecked = Array.isArray(existingProfile?.handwritingSigns);
 
   const chooseImage = async (event) => {
     const file = event.target.files?.[0];
@@ -130,12 +131,13 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
       handwritingType: analysis.type,
       handwritingPatternKey: analysis.patternKey,
       handwritingMeaningKey: analysis.meaningKey,
+      handwritingSigns: analysis.signs || [],
       analyzedAt: new Date().toISOString(),
     };
     // Signed-in Supabase students: the photo and result go to the database, not the browser.
     if (supabaseConfigured && existingProfile?.id) {
       setStep("loading");
-      saveHandwriting(existingProfile.id, image, result.handwritingType)
+      saveHandwriting(existingProfile.id, image, result.handwritingType, result.handwritingSigns)
         .then(() => {
           setProfile(result);
           window.setTimeout(() => setStep("result"), 2200);
@@ -150,7 +152,7 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
     // A new Supabase student (no profile row in the form yet) still keeps the sample in the database.
     if (supabaseConfigured && studentId) {
       try {
-        await saveHandwriting(studentId, image, result.handwritingType);
+        await saveHandwriting(studentId, image, result.handwritingType, result.handwritingSigns);
       } catch {
         analyzingRef.current = false;
         setError("hw_saveFail");
@@ -195,9 +197,9 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
           <div className="profile-result-mark"><CheckCircle2 size={26} /></div>
           <p className="eyebrow">{t("handwritingAnalysis")}</p>
           <h1>{profile.name || t("profileYourProfile")}</h1>
-          <p className="handwriting-type">{typeLabel(t, profile.handwritingType)}</p>
+          <p className="handwriting-type">{t("hw_checkDone")}</p>
           {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt={t("hw_altUploaded")} />}
-          {profile.handwritingMeaningKey && <p className="profile-result-copy">{t(profile.handwritingMeaningKey)}</p>}
+          <p className="profile-result-copy">{t("hw_checkDoneCopy")}</p>
           <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? t("backToAccount") : t("continueToCogniBridge")}</button>
         </section>
       </main>
@@ -212,8 +214,8 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
         <p className="eyebrow">{existingProfile ? t("studentAccount") : t("newStudentProfile")}</p>
         <h1>{handwritingPrompt ? t("handwritingPromptTitle") : existingProfile ? t("editProfile") : t("setUpLearningProfile")}</h1>
         <p className="profile-flow-copy">{handwritingPrompt ? t("handwritingPromptCopy") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
-        {existingProfile && <>
-          <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{typeLabel(t, existingProfile.handwritingType) || t("notAnalyzed")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
+        {alreadyChecked && <>
+          <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{t("hw_checkDone")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
         </>}
         <form className="profile-details-form" onSubmit={submit}>
           <label>{existingProfile ? t("profileName") : t("childName")}<input value={profile.name || ""} maxLength={80} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>
@@ -225,14 +227,16 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
             <label>{t("section")}<input value={profile.section || ""} onChange={(event) => setProfile({ ...profile, section: event.target.value })} required={!existingProfile} /></label>
             <label>{t("school")}<input value={profile.school || ""} onChange={(event) => setProfile({ ...profile, school: event.target.value })} required={!existingProfile} /></label>
           </div>
+          {!alreadyChecked && <>
           <input ref={fileRef} className="profile-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} />
           <button type="button" className="handwriting-upload" onClick={() => fileRef.current?.click()}>
             {image ? <img src={image} alt={t("hw_altPreview")} /> : <Upload size={22} />}
-            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("optionalHandwritingHint")}</small></span>
+            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t("hw_requiredHint")}</small></span>
           </button>
+          </>}
           {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
-          <button className="primary-btn" type="submit" disabled={!image && !existingProfile}>{existingProfile ? (image ? t("analyzeNewImageButton") : t("saveChanges")) : t("analyzeImage")}</button>
-          {!existingProfile && !handwritingPrompt && <button type="button" className="profile-skip-button" onClick={() => onComplete({ ...profile, email })}>{t("skipForNow")}</button>}
+          {/* Until the one-time check is done, the main button analyses the photo (and needs one). */}
+          <button className="primary-btn" type="submit" disabled={!image && (!existingProfile || handwritingPrompt)}>{existingProfile && (alreadyChecked || (!image && !handwritingPrompt)) ? t("saveChanges") : t("analyzeImage")}</button>
         </form>
       </section>
     </main>

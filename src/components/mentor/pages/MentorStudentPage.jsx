@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, CalendarDays, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, PenLine, Users } from "lucide-react";
 import { getSessionSubjectLabel } from "../../../constants";
 import { loadStudentHistory, loadStudentProfile } from "../../../mentorContent";
 import { StudentHistory, sessionStatus } from "../StudentHistory";
+import { HandwritingFindings } from "../HandwritingFindings";
 
 // One student under this mentor, opened from Settings: sign-up details, the subjects they
 // chose to learn, attendance at a glance and their full session history.
@@ -76,6 +77,10 @@ export function MentorStudentPage({ studentId, onBack, t }) {
         {profile.preferredSubjects.length
           ? <ul className="mentor-student-subjects">{profile.preferredSubjects.map((subject) => <li key={subject} className="subject-pill">{getSessionSubjectLabel(subject, t)}</li>)}</ul>
           : <p className="mentor-history-note">{t("md_stuNoSubjects", { name: profile.name })}</p>}
+      </section>
+      <section className="mentor-student-card">
+        <h2><PenLine size={18} /> {t("hw_colCheck")}</h2>
+        <HandwritingFindings signs={profile.handwritingSigns} t={t} />
       </section>
     </div>
 

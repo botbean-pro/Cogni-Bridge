@@ -1,5 +1,5 @@
 .sessions-page { min-width:0; background:var(--surface); color:var(--text); }
-.sessions-subnav { display:flex; gap:8px; margin:0 0 22px; padding:5px; width:max-content; max-width:100%; border:1px solid var(--line); border-radius:13px; background:var(--surface-2); }
+.sessions-subnav { display:flex; gap:8px; margin:0 0 22px; padding:5px; width:fit-content; max-width:100%; border:1px solid var(--line); border-radius:13px; background:var(--surface-2); }
 .sessions-subnav button { display:flex; align-items:center; gap:8px; border:0; border-radius:9px; padding:10px 16px; background:transparent; color:var(--muted); font:inherit; font-weight:700; cursor:pointer; }
 .sessions-subnav button.active { background:var(--surface); color:var(--teal); box-shadow:0 2px 8px rgba(24,47,50,.08); }
 .sessions-subnav button span { display:grid; min-width:20px; height:20px; place-items:center; padding:0 5px; border-radius:10px; background:var(--teal-fill); color:#fff; font-size: calc((11px) * var(--text-scale, 1)); }

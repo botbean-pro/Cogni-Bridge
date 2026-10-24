@@ -77,6 +77,7 @@ const findWriting = (image) => {
   const columns = new Uint32Array(width);
   const stack = new Int32Array(width * height);
   const component = [];
+  const marks = [];
   let inkPixels = 0;
   for (let start = 0; start < width * height; start += 1) {
     if (ink[start] !== 1) continue;
@@ -98,6 +99,7 @@ const findWriting = (image) => {
       if (y < height - 1 && ink[index + width] === 1) { ink[index + width] = 2; stack[size++] = index + width; }
     }
     const keep = maxX - minX < width * 0.5 && maxY - minY < height * 0.3;
+    if (keep && component.length >= 6) marks.push({ minX, maxX, minY, maxY });
     for (const index of component) {
       if (!keep) { ink[index] = 0; continue; }
       inkPixels += 1;
@@ -125,7 +127,63 @@ const findWriting = (image) => {
   return {
     box: { left: left / scale, top: top / scale, right: (right + 1) / scale, bottom: (bottom + 1) / scale },
     density: inside / ((right - left + 1) * (bottom - top + 1)),
+    marks,
   };
+};
+
+const mean = (values) => values.reduce((sum, value) => sum + value, 0) / (values.length || 1);
+const spread = (values) => {
+  const average = mean(values);
+  return average ? Math.sqrt(mean(values.map((value) => (value - average) ** 2))) / average : 0;
+};
+
+// Observable writing difficulties measured from the ink marks (letters or joined letter groups):
+// uneven letter size, letters not sitting on a line, lines drifting, uneven gaps and crowding.
+// These are things a mentor can see and support; they are not a diagnosis.
+const findSigns = ({ marks, density }) => {
+  const signs = [];
+  const sized = marks.filter((mark) => mark.maxY - mark.minY >= 4);
+  if (sized.length < 8) return signs;
+  const heights = sized.map((mark) => mark.maxY - mark.minY + 1).sort((a, b) => a - b);
+  const typical = heights[Math.floor(heights.length / 2)];
+  if (spread(heights.slice(Math.floor(heights.length * 0.1), Math.ceil(heights.length * 0.9))) > 0.45) signs.push("size");
+
+  // Group marks into lines by their vertical centre.
+  const lines = [];
+  [...sized].sort((a, b) => (a.minY + a.maxY) - (b.minY + b.maxY)).forEach((mark) => {
+    const centre = (mark.minY + mark.maxY) / 2;
+    const line = lines.find((item) => Math.abs(item.centre - centre) < typical * 0.8);
+    if (line) {
+      line.marks.push(mark);
+      line.centre = mean(line.marks.map((item) => (item.minY + item.maxY) / 2));
+    } else {
+      lines.push({ centre, marks: [mark] });
+    }
+  });
+  let offLine = 0, drift = 0, counted = 0;
+  const gaps = [];
+  lines.filter((line) => line.marks.length >= 4).forEach(({ marks: row }) => {
+    row.sort((a, b) => a.minX - b.minX);
+    const xs = row.map((mark) => (mark.minX + mark.maxX) / 2);
+    const ys = row.map((mark) => mark.maxY);
+    const mx = mean(xs), my = mean(ys);
+    const slope = xs.reduce((sum, x, index) => sum + (x - mx) * (ys[index] - my), 0) / (xs.reduce((sum, x) => sum + (x - mx) ** 2, 0) || 1);
+    const residual = Math.sqrt(mean(ys.map((y, index) => (y - (my + slope * (xs[index] - mx))) ** 2)));
+    offLine += residual / typical;
+    drift += Math.abs(slope);
+    counted += 1;
+    for (let index = 1; index < row.length; index += 1) {
+      const gap = row[index].minX - row[index - 1].maxX;
+      if (gap > 0) gaps.push(gap);
+    }
+  });
+  if (counted) {
+    if (offLine / counted > 0.35) signs.push("baseline");
+    if (drift / counted > 0.08) signs.push("drift");
+  }
+  if (gaps.length >= 6 && spread(gaps) > 1.1) signs.push("spacing");
+  if (density > 0.16) signs.push("crowded");
+  return signs;
 };
 
 const resultForType = (type) => ({
@@ -138,9 +196,9 @@ const resultForType = (type) => ({
 const typeForDensity = (density) => (density < 0.065 ? "Open spacing" : density > 0.14 ? "Compact spacing" : "Balanced spacing");
 
 export const analyzeHandwritingSample = async (dataUrl) => {
-  const { density } = findWriting(await loadImage(dataUrl));
-  const type = typeForDensity(density);
-  return { type, ...resultForType(type), inkDensity: density };
+  const writing = findWriting(await loadImage(dataUrl));
+  const type = typeForDensity(writing.density);
+  return { type, ...resultForType(type), inkDensity: writing.density, signs: findSigns(writing) };
 };
 
 // Sends only the writing, cropped with a margin and scaled to fill the frame, so a phone photo of a whole desk
@@ -175,7 +233,7 @@ export const classifyHandwritingSample = async (dataUrl) => {
   const fallback = () => {
     if (!writing) throw new Error("No clear writing found");
     const type = typeForDensity(writing.density);
-    return { type, ...resultForType(type), inkDensity: writing.density, source: "device" };
+    return { type, ...resultForType(type), inkDensity: writing.density, signs: findSigns(writing), source: "device" };
   };
   const upload = writing
     ? cropForUpload(image, writing.box)
@@ -194,5 +252,5 @@ export const classifyHandwritingSample = async (dataUrl) => {
   if (data.noWriting) throw new Error("No clear writing found");
   const keys = response.ok && resultForType(data.type);
   if (!keys) return fallback();
-  return { type: data.type, ...keys, features: data.features, source: "ai" };
+  return { type: data.type, ...keys, features: data.features, signs: writing ? findSigns(writing) : [], source: "ai" };
 };

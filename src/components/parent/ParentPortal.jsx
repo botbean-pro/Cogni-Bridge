@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Accessibility, LogOut } from "lucide-react";
 import { connectParentWithCode, loadChildCheckins, loadChildSessions, loadParentMessages, loadParentPortal, sendParentTeacherMessage } from "../../parentPortal";
-import { ParentSidebar } from "./ParentSidebar";
+import { ParentSidebar, parentBarTabs, parentRailItems } from "./ParentSidebar";
+import { RailMoreSheet } from "../shared/RailMoreSheet";
 import { useRouteTab } from "../../routes";
 import { ConnectChildCard } from "./shared/ConnectChildCard";
 import { ParentMoodsPage } from "./pages/ParentMoodsPage";
@@ -36,6 +37,8 @@ const pickChild = (children, currentId) => (
 
 export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen, onToggleAccessibility, accessibilityPanel, t }) {
   const [tab, setTab] = useRouteTab("parent", parentTabs);
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => { setMoreOpen(false); }, [tab]);
   const [portal, setPortal] = useState(null);
   const [childId, setChildId] = useState(null);
   const [childData, setChildData] = useState(null);
@@ -191,8 +194,8 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
   return (
     <>
       <div className="student-app-shell parent-app-shell">
-        <aside className="student-rail">
-          <ParentSidebar activeTab={tab} onNavigate={setTab} t={t} />
+        <aside className="student-rail is-parent">
+          <ParentSidebar activeTab={tab} onNavigate={setTab} moreOpen={moreOpen} onToggleMore={() => setMoreOpen((open) => !open)} t={t} />
           <div className="student-rail-footer">
             <button type="button" className="student-rail-link" data-accessibility-toggle onClick={onToggleAccessibility} aria-label={t("openAccessibility")} aria-expanded={accessibilityOpen} title={t("accessibility")}>
               <Accessibility size={19} /><span>{t("accessibility")}</span>
@@ -206,6 +209,18 @@ export function ParentPortal({ parentId, parentName, onLogout, accessibilityOpen
             </div>
           </div>
         </aside>
+        <RailMoreSheet
+          open={moreOpen}
+          onClose={() => setMoreOpen(false)}
+          ariaLabel={t("more")}
+          returnFocus=".student-rail-more"
+          name={parentName}
+          tabs={parentRailItems.filter(([, key]) => !parentBarTabs.includes(key)).map(([Icon, key, labelKey]) => ({ key, Icon, label: t(labelKey), active: tab === key, onSelect: () => setTab(key) }))}
+          actions={[
+            { key: "accessibility", Icon: Accessibility, label: t("accessibility"), onSelect: onToggleAccessibility, accessibilityToggle: true },
+            { key: "logout", Icon: LogOut, label: t("logOut"), onSelect: onLogout, danger: true },
+          ]}
+        />
         <main className="main">
           <section className="content parent-page route-transition" key={tab}>
             <header className="parent-heading parent-rise">

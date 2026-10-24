@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Video, X } from "lucide-react";
+import { Bell, Coffee, Video, X } from "lucide-react";
+import { STUDY_SECONDS, readBreakState } from "../../breakTimer";
 import { loadStudentPrivateSessions, markPrivateSessionsSeen } from "../../privateSessions";
 import { formatLocalizedDate, getSessionTitle } from "../../constants";
 
@@ -43,8 +44,32 @@ export function useStudentNotifications(studentId) {
   return { upcoming, unread, failed, open, openPanel, closePanel: () => setOpen(false) };
 }
 
+const clock = (seconds) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
+
+// Time left before the next screen break (or left in the current one), re-read every second from breakTimer.js.
+function BreakTimerStatus({ breakKey, t }) {
+  const [, setNow] = useState(0);
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+  if (!breakKey) return null;
+  const state = readBreakState(breakKey);
+  const breakLeft = Math.max(0, (state.lockUntil - Date.now()) / 1000);
+  const studyLeft = Math.max(0, STUDY_SECONDS - state.usedSeconds);
+  return (
+    <div className="student-notify-break" role="timer">
+      <Coffee size={20} aria-hidden="true" />
+      <div>
+        <strong>{breakLeft ? t("breakNowLeft", { time: clock(breakLeft) }) : t("breakNextIn", { time: clock(studyLeft) })}</strong>
+        <small>{t("breakTimerHint")}</small>
+      </div>
+    </div>
+  );
+}
+
 // Rail button with an unread badge, plus a popup listing one-to-one sessions from a mentor.
-export function StudentNotifications({ notifications, t }) {
+export function StudentNotifications({ notifications, breakKey, t }) {
   const { upcoming, unread, failed, open, openPanel, closePanel } = notifications;
 
   return (
@@ -59,6 +84,7 @@ export function StudentNotifications({ notifications, t }) {
           <div className="student-calm-dialog student-notify-dialog">
             <button className="student-calm-dismiss" type="button" onClick={closePanel} aria-label={t("close")}><X size={20} /></button>
             <h2>{t("ps_bell")}</h2>
+            <BreakTimerStatus breakKey={breakKey} t={t} />
             {failed && <p className="student-notify-error" role="alert">{t("ps_loadFail")}</p>}
             {!upcoming.length ? <p className="student-notify-empty">{t("ps_empty")}</p> : (
               <ul className="student-notify-list">
