@@ -79,7 +79,7 @@ export function MentorStudentPage({ studentId, onBack, t }) {
           : <p className="mentor-history-note">{t("md_stuNoSubjects", { name: profile.name })}</p>}
       </section>
       <section className="mentor-student-card">
-        <h2><PenLine size={18} /> {t("hw_colCheck")}</h2>
+        <h2><PenLine size={18} /> {t("hw_checkLabel")}</h2>
         <HandwritingFindings signs={profile.handwritingSigns} t={t} />
       </section>
     </div>

@@ -9,6 +9,7 @@ import { useActiveTabInView } from "../../useRailScroll";
 
 const navigationLabels = {
   home: "home",
+  about: "aboutUs",
   sessions: "sessions",
   leaderboard: "leaderboard",
   study: "study",

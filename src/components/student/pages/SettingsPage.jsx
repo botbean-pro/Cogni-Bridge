@@ -5,7 +5,6 @@ import { createParentLinkCode } from "../../../parentPortal";
 import { loadScreenTime, readLocalScreenTime } from "../../../screenTime";
 import { supabaseConfigured } from "../../../supabaseClient";
 import { StudentStats } from "../shared/StudentStats";
-import { typeLabel } from "../../../handwriting";
 import { ScreenTimeSummary } from "../../shared/ScreenTimeSummary";
 import { premiumPurchaseHistory } from "../../../premiumSubscription";
 
@@ -76,7 +75,7 @@ export function SettingsPage({ studentEmail, studentId, studentName, studentProf
     [t("age"), studentProfile?.age],
     [t("section"), studentProfile?.section],
     [t("school"), studentProfile?.school],
-    [t("handwritingType"), typeLabel(t, studentProfile?.handwritingType) || t("notAnalyzed")],
+    [t("hw_checkLabel"), t(studentProfile?.handwritingType ? "hw_checkStatusDone" : "hw_checkStatusPending")],
   ];
   const planNameKeys = { monthly: "pf_planMonthly", quarterly: "pf_planQuarterly", yearly: "pf_planYearly" };
   const subscriptionActive = Boolean(premiumSubscription?.expiresAt && new Date(premiumSubscription.expiresAt) > new Date());

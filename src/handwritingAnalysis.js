@@ -1,4 +1,5 @@
 import { fetchWithAuth } from "./components/student/flow/flowApi";
+import { hasEnoughWriting, measureMarks, signsFromMetrics } from "./handwritingSigns";
 
 const loadImage = (dataUrl) => new Promise((resolve, reject) => {
   const image = new Image();
@@ -15,9 +16,10 @@ const canvasFor = (width, height) => {
 };
 
 // Finds the handwriting in a photo. Each pixel is compared with the paper around it (a heavily blurred copy),
-// so shadows, tinted paper and a table at the edge aren't mistaken for ink.
-const findWriting = (image) => {
-  const scale = Math.min(1, 900 / Math.max(image.width, image.height));
+// so shadows, tinted paper and a table at the edge aren't mistaken for ink. Marks taller than
+// `maxMarkHeight` of the image are dropped as not writing (a close crop of the writing allows taller ones).
+const findWriting = (image, { maxSize = 900, maxMarkHeight = 0.3 } = {}) => {
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
   const canvas = canvasFor(image.width * scale, image.height * scale);
   const { width, height } = canvas;
   const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -98,7 +100,7 @@ const findWriting = (image) => {
       if (y > 0 && ink[index - width] === 1) { ink[index - width] = 2; stack[size++] = index - width; }
       if (y < height - 1 && ink[index + width] === 1) { ink[index + width] = 2; stack[size++] = index + width; }
     }
-    const keep = maxX - minX < width * 0.5 && maxY - minY < height * 0.3;
+    const keep = maxX - minX < width * 0.5 && maxY - minY < height * maxMarkHeight;
     if (keep && component.length >= 6) marks.push({ minX, maxX, minY, maxY });
     for (const index of component) {
       if (!keep) { ink[index] = 0; continue; }
@@ -131,61 +133,6 @@ const findWriting = (image) => {
   };
 };
 
-const mean = (values) => values.reduce((sum, value) => sum + value, 0) / (values.length || 1);
-const spread = (values) => {
-  const average = mean(values);
-  return average ? Math.sqrt(mean(values.map((value) => (value - average) ** 2))) / average : 0;
-};
-
-// Observable writing difficulties measured from the ink marks (letters or joined letter groups):
-// uneven letter size, letters not sitting on a line, lines drifting, uneven gaps and crowding.
-// These are things a mentor can see and support; they are not a diagnosis.
-const findSigns = ({ marks, density }) => {
-  const signs = [];
-  const sized = marks.filter((mark) => mark.maxY - mark.minY >= 4);
-  if (sized.length < 8) return signs;
-  const heights = sized.map((mark) => mark.maxY - mark.minY + 1).sort((a, b) => a - b);
-  const typical = heights[Math.floor(heights.length / 2)];
-  if (spread(heights.slice(Math.floor(heights.length * 0.1), Math.ceil(heights.length * 0.9))) > 0.45) signs.push("size");
-
-  // Group marks into lines by their vertical centre.
-  const lines = [];
-  [...sized].sort((a, b) => (a.minY + a.maxY) - (b.minY + b.maxY)).forEach((mark) => {
-    const centre = (mark.minY + mark.maxY) / 2;
-    const line = lines.find((item) => Math.abs(item.centre - centre) < typical * 0.8);
-    if (line) {
-      line.marks.push(mark);
-      line.centre = mean(line.marks.map((item) => (item.minY + item.maxY) / 2));
-    } else {
-      lines.push({ centre, marks: [mark] });
-    }
-  });
-  let offLine = 0, drift = 0, counted = 0;
-  const gaps = [];
-  lines.filter((line) => line.marks.length >= 4).forEach(({ marks: row }) => {
-    row.sort((a, b) => a.minX - b.minX);
-    const xs = row.map((mark) => (mark.minX + mark.maxX) / 2);
-    const ys = row.map((mark) => mark.maxY);
-    const mx = mean(xs), my = mean(ys);
-    const slope = xs.reduce((sum, x, index) => sum + (x - mx) * (ys[index] - my), 0) / (xs.reduce((sum, x) => sum + (x - mx) ** 2, 0) || 1);
-    const residual = Math.sqrt(mean(ys.map((y, index) => (y - (my + slope * (xs[index] - mx))) ** 2)));
-    offLine += residual / typical;
-    drift += Math.abs(slope);
-    counted += 1;
-    for (let index = 1; index < row.length; index += 1) {
-      const gap = row[index].minX - row[index - 1].maxX;
-      if (gap > 0) gaps.push(gap);
-    }
-  });
-  if (counted) {
-    if (offLine / counted > 0.35) signs.push("baseline");
-    if (drift / counted > 0.08) signs.push("drift");
-  }
-  if (gaps.length >= 6 && spread(gaps) > 1.1) signs.push("spacing");
-  if (density > 0.16) signs.push("crowded");
-  return signs;
-};
-
 const resultForType = (type) => ({
   "Open spacing": { patternKey: "handwritingPatternOpen", meaningKey: "handwritingMeaningOpen" },
   "Balanced spacing": { patternKey: "handwritingPatternBalanced", meaningKey: "handwritingMeaningBalanced" },
@@ -195,10 +142,50 @@ const resultForType = (type) => ({
 // The on-device fallback: how much of the writing area is ink. It does not infer personality, intelligence, or diagnosis.
 const typeForDensity = (density) => (density < 0.065 ? "Open spacing" : density > 0.14 ? "Compact spacing" : "Balanced spacing");
 
-export const analyzeHandwritingSample = async (dataUrl) => {
-  const writing = findWriting(await loadImage(dataUrl));
+// Finds the letters again on a close crop of the writing, so small writing in a big photo still has
+// enough pixels per letter. Falls back to the marks from the whole photo.
+const cropMarks = (image, writing) => {
+  let { marks } = writing;
+  try {
+    const { box } = writing;
+    const margin = 0.04 * Math.max(box.right - box.left, box.bottom - box.top);
+    const left = Math.max(0, box.left - margin);
+    const top = Math.max(0, box.top - margin);
+    const width = Math.min(image.width, box.right + margin) - left;
+    const height = Math.min(image.height, box.bottom + margin) - top;
+    const scale = Math.min(2, 1400 / Math.max(width, height));
+    const crop = canvasFor(width * scale, height * scale);
+    const context = crop.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, crop.width, crop.height);
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, left, top, width, height, 0, 0, crop.width, crop.height);
+    marks = findWriting(crop, { maxSize: 1400, maxMarkHeight: 0.6 }).marks;
+  } catch {
+    // Keep the first pass's marks.
+  }
+  return marks;
+};
+
+// The on-device result: the writing difficulties (see handwritingSigns.js) and the older spacing type,
+// which is still stored and used by the career quiz.
+const deviceResult = (image, writing) => {
+  const metrics = measureMarks(cropMarks(image, writing));
+  if (!hasEnoughWriting(metrics)) throw new Error("Not enough writing to measure");
   const type = typeForDensity(writing.density);
-  return { type, ...resultForType(type), inkDensity: writing.density, signs: findSigns(writing) };
+  return { type, ...resultForType(type), inkDensity: writing.density, signs: signsFromMetrics(metrics), metrics };
+};
+
+// TEMP (tuning harness): marks from the measuring pass.
+export const __readWriting = async (dataUrl) => {
+  const image = await loadImage(dataUrl);
+  const writing = findWriting(image);
+  return { density: writing.density, marks: cropMarks(image, writing) };
+};
+
+export const analyzeHandwritingSample = async (dataUrl) => {
+  const image = await loadImage(dataUrl);
+  return deviceResult(image, findWriting(image));
 };
 
 // Sends only the writing, cropped with a margin and scaled to fill the frame, so a phone photo of a whole desk
@@ -220,37 +207,26 @@ const cropForUpload = (image, box) => {
   return canvas.toDataURL("image/jpeg", 0.88);
 };
 
-// A vision model looks at the sample through api/chat.js; if it's unreachable (no API key, `npm run dev`, offline)
-// the on-device check above is used instead.
+// The writing difficulties are always measured on the device, so the writing has to be found here. If a
+// vision model is set up (api/chat.js), it gives the spacing type instead of the ink-density estimate;
+// when it's unreachable (no model set, `npm run dev`, offline) the device's own type is kept.
 export const classifyHandwritingSample = async (dataUrl) => {
   const image = await loadImage(dataUrl);
-  let writing = null;
-  try {
-    writing = findWriting(image);
-  } catch {
-    // Faint writing can slip past the on-device check, so the model still gets the whole photo.
-  }
-  const fallback = () => {
-    if (!writing) throw new Error("No clear writing found");
-    const type = typeForDensity(writing.density);
-    return { type, ...resultForType(type), inkDensity: writing.density, signs: findSigns(writing), source: "device" };
-  };
-  const upload = writing
-    ? cropForUpload(image, writing.box)
-    : cropForUpload(image, { left: 0, top: 0, right: image.width, bottom: image.height });
+  const writing = findWriting(image);
+  const result = { ...deviceResult(image, writing), source: "device" };
   let response;
   try {
     response = await fetchWithAuth("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ task: "handwriting", image: upload }),
+      body: JSON.stringify({ task: "handwriting", image: cropForUpload(image, writing.box) }),
     });
   } catch {
-    return fallback();
+    return result;
   }
   const data = await response.json().catch(() => ({}));
   if (data.noWriting) throw new Error("No clear writing found");
   const keys = response.ok && resultForType(data.type);
-  if (!keys) return fallback();
-  return { type: data.type, ...keys, features: data.features, signs: writing ? findSigns(writing) : [], source: "ai" };
+  if (!keys) return result;
+  return { ...result, type: data.type, ...keys, features: data.features, source: "ai" };
 };

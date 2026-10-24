@@ -27,7 +27,14 @@ const readImage = (file) => new Promise((resolve, reject) => {
 });
 
 export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, existingProfile, initialClass = "", handwritingPrompt = false, t }) => {
-  const [profile, setProfile] = useState(existingProfile || { name: "", studentClass: initialClass, age: "", section: "", school: "" });
+  // A new demo account already gave its name on the create-account form; don't ask for it twice.
+  const [profile, setProfile] = useState(() => existingProfile || {
+    name: readStudents().find((student) => student.email === email)?.name || "",
+    studentClass: initialClass,
+    age: "",
+    section: "",
+    school: "",
+  });
   const [image, setImage] = useState("");
   const [imageName, setImageName] = useState("");
   const [step, setStep] = useState("form");
@@ -200,7 +207,7 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
           <p className="handwriting-type">{t("hw_checkDone")}</p>
           {profile.handwritingImage && <img className="handwriting-preview" src={profile.handwritingImage} alt={t("hw_altUploaded")} />}
           <p className="profile-result-copy">{t("hw_checkDoneCopy")}</p>
-          <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile ? t("backToAccount") : t("continueToCogniBridge")}</button>
+          <button className="primary-btn" onClick={() => onComplete(profile)}>{existingProfile && !handwritingPrompt ? t("backToAccount") : t("continueToCogniBridge")}</button>
         </section>
       </main>
     );
@@ -213,9 +220,9 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
         <div className="profile-flow-icon"><ImagePlus size={24} /></div>
         <p className="eyebrow">{existingProfile ? t("studentAccount") : t("newStudentProfile")}</p>
         <h1>{handwritingPrompt ? t("handwritingPromptTitle") : existingProfile ? t("editProfile") : t("setUpLearningProfile")}</h1>
-        <p className="profile-flow-copy">{handwritingPrompt ? t("handwritingPromptCopy") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
+        <p className="profile-flow-copy">{handwritingPrompt ? t("hw_promptCopy") : <>{t("addSchoolDetails")} {t("emailAccount")}: <strong>{email}</strong></>}</p>
         {alreadyChecked && <>
-          <div className="current-handwriting-result"><span>{t("handwritingType")}</span><strong>{t("hw_checkDone")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
+          <div className="current-handwriting-result"><span>{t("hw_checkLabel")}</span><strong>{t("hw_checkStatusDone")}</strong>{existingProfile.handwritingImage && <img src={existingProfile.handwritingImage} alt={t("currentHandwritingSample")} />}</div>
         </>}
         <form className="profile-details-form" onSubmit={submit}>
           <label>{existingProfile ? t("profileName") : t("childName")}<input value={profile.name || ""} maxLength={80} onChange={(event) => setProfile({ ...profile, name: event.target.value })} autoComplete="name" required /></label>

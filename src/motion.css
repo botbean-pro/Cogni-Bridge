@@ -72,16 +72,20 @@
   transition: opacity 200ms ease 110ms, translate var(--motion-slide) var(--motion-ease) 110ms;
 }
 
-.student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-link,
-.mentor-nav:is(:hover, :focus-within) button {
-  padding: 0 18px;
-}
-.student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-brand,
-.mentor-nav:is(:hover, :focus-within) .mentor-rail-brand {
-  padding: 0 7px;
+/* Side rail only: on phones (640px and below) the rail is the bottom bar, and a tapped tab leaves it
+   hovered/focused, so this padding would squeeze the bar labels ("Session/s"). */
+@media (min-width: 641px) {
+  .student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-link,
+  .mentor-nav:is(:hover, :focus-within) button {
+    padding: 0 18px;
+  }
+  .student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-brand,
+  .mentor-nav:is(:hover, :focus-within) .mentor-rail-brand {
+    padding: 0 7px;
+  }
 }
 
-@media (max-width: 760px) {
+@media (min-width: 641px) and (max-width: 760px) {
   .student-rail:is(:hover, :focus-within, :has(.pinned-open)) .student-rail-link { padding: 0 16px; }
 }
 

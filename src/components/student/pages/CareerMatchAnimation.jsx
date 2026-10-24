@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BriefcaseBusiness, Check, ListChecks, PenLine } from "lucide-react";
-import { typeLabel } from "../../../handwriting";
 import "./CareerMatchAnimation.css";
 
 const steps = [
@@ -19,7 +18,7 @@ const prefersCalm = () => {
 
 // Fullscreen "matching" moment shown before career results. It renders in a
 // portal so page-entrance transforms can't clip the fixed overlay.
-export function CareerMatchAnimation({ t, handwritingType, handwritingImage, onDone }) {
+export function CareerMatchAnimation({ t, handwritingImage, onDone }) {
   const [calm] = useState(prefersCalm);
   const duration = calm ? 1600 : fullDuration;
   const [stepIndex, setStepIndex] = useState(0);
@@ -47,7 +46,7 @@ export function CareerMatchAnimation({ t, handwritingType, handwritingImage, onD
           {[0, 1, 2, 3, 4, 5].map((dot) => <span key={dot} className="career-match-spark" style={{ "--i": dot }} />)}
         </div>
         <h2 id="career-match-title">{t("cr_anTitle")}</h2>
-        <p className="career-match-pattern"><PenLine size={15} aria-hidden="true" /> {t("cr_hwUsing", { pattern: typeLabel(t, handwritingType) })}</p>
+        <p className="career-match-pattern"><PenLine size={15} aria-hidden="true" /> {t("cr_hwUsingCheck")}</p>
         <ol className="career-match-steps" aria-live="polite">
           {steps.map(({ key, Icon }, index) => (
             <li key={key} className={index < stepIndex ? "done" : index === stepIndex ? "active" : ""}>

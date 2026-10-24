@@ -643,9 +643,12 @@ const App = () => {
     };
   }, []);
 
+  // Each message gets its full time on screen: a new one cancels the previous one's timer.
+  const toastTimer = useRef(0);
   const notify = (message) => {
     setToast(message);
-    window.setTimeout(() => setToast(""), 2800);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(""), 2800);
   };
   // Every 30 minutes on the site a signed-in student gets a notification and a 5-minute screen break.
   const breakLockUntil = useBreakTimer({
@@ -920,7 +923,8 @@ const App = () => {
             setSignupStudentClass("");
             setStudentProfile(profile);
             setStudentEmail(profile.email);
-            const savedSubjects = readPreferredSubjects(profile.email);
+            // Subjects were picked just before this step; don't ask again.
+            const savedSubjects = preferredSubjects.length ? preferredSubjects : readPreferredSubjects(profile.email);
             setPreferredSubjects(savedSubjects);
             setSubjectSelectionPending(savedSubjects.length === 0);
             setSignedIn(true);
@@ -1110,6 +1114,9 @@ const App = () => {
               onSaveSubjects={savePreferredSubjects}
               premiumSubscription={premiumSubscription}
               activityVersion={activityVersion}
+              screenTimeVersion={screenTimeVersion}
+              screenTimeStudentKey={supabaseConfigured ? authUserId : studentEmail}
+              screenTimeDemoMode={!supabaseConfigured}
               onEditProfile={() => setProfileOpen(true)}
               t={t}
             />

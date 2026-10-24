@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, ChevronDown, Compass, GraduationCap, HandHeart, LayoutGrid, Lock, PenLine, RotateCcw, Sparkles } from "lucide-react";
-import { typeLabel } from "../../../handwriting";
 import { CareerMatchAnimation } from "./CareerMatchAnimation";
 import { CareerStreamExplorer } from "./CareerStreamExplorer";
 import "./CareerOptionsPage.css";
@@ -156,7 +155,7 @@ export function CareerOptionsPage({ t, studentEmail, handwritingType, handwritin
       <div hidden={mode !== "streams"}><CareerStreamExplorer t={t} studentEmail={studentEmail} onOpenQuiz={() => setMode("quiz")} /></div>
       <div className="career-quiz-pane" hidden={mode !== "quiz"}>
         <p className="career-quiz-intro">{t("cr_subtitle")}</p>
-        {matching && <CareerMatchAnimation t={t} handwritingType={handwritingType} handwritingImage={handwritingImage} onDone={finishMatching} />}
+        {matching && <CareerMatchAnimation t={t} handwritingImage={handwritingImage} onDone={finishMatching} />}
         {!hasHandwriting ? (
           <section className="career-card career-locked">
             <span className="career-locked-icon"><Lock size={22} aria-hidden="true" /></span>
@@ -174,7 +173,7 @@ export function CareerOptionsPage({ t, studentEmail, handwritingType, handwritin
           </section>
         ) : (
           <section className="career-card career-results">
-            <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2><p className="career-hw-note"><PenLine size={14} aria-hidden="true" /> {t("cr_hwUsing", { pattern: typeLabel(t, handwritingType) })}</p></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
+            <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2><p className="career-hw-note"><PenLine size={14} aria-hidden="true" /> {t("cr_hwUsingCheck")}</p></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
             <div className="career-result-list">{results.map((career, index) => {
               const pathwayId = `career-pathway-${index}`;
               const isPathwayOpen = openPathway === career.id;

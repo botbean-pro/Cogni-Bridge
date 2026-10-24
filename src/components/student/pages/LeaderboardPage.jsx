@@ -29,8 +29,11 @@ const scoreStudent = (student) => {
   };
 };
 
+// Same order as public.leaderboard(): points, then sessions attended, then name.
+const byRank = (a, b) => b.points - a.points || b.attended - a.attended || a.name.localeCompare(b.name);
+
 export function LeaderboardPage({ signedIn, studentName, t }) {
-  const [rows, setRows] = useState(() => (supabaseConfigured ? null : leaderboardStudents.map(scoreStudent)));
+  const [rows, setRows] = useState(() => (supabaseConfigured ? null : leaderboardStudents.map(scoreStudent).sort(byRank)));
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
 
