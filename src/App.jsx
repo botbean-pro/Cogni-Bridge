@@ -1055,7 +1055,7 @@ const App = () => {
               onOpenSession={openSession}
             />
           ),
-          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} handwritingType={studentProfile?.handwritingType} handwritingImage={studentProfile?.handwritingImage} onAddHandwriting={() => setProfileOpen(true)} /> : null,
+          careers: signedIn && isGrade12 ? <CareerOptionsPage t={t} studentEmail={studentEmail} handwritingType={studentProfile?.handwritingType} handwritingImage={studentProfile?.handwritingImage} onAddHandwriting={() => setProfileOpen(true)} /> : null,
           flow: (
             <FlowPage
               t={t}

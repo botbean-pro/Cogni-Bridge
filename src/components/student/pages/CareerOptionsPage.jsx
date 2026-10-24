@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, ChevronDown, Compass, GraduationCap, HandHeart, Lock, PenLine, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, ChevronDown, Compass, GraduationCap, HandHeart, LayoutGrid, Lock, PenLine, RotateCcw, Sparkles } from "lucide-react";
 import { typeLabel } from "../../../handwriting";
 import { CareerMatchAnimation } from "./CareerMatchAnimation";
+import { CareerStreamExplorer } from "./CareerStreamExplorer";
 import "./CareerOptionsPage.css";
 
 const questions = [
@@ -126,7 +127,8 @@ const opportunities = [
   },
 ];
 
-export function CareerOptionsPage({ t, handwritingType, handwritingImage, onAddHandwriting }) {
+export function CareerOptionsPage({ t, studentEmail, handwritingType, handwritingImage, onAddHandwriting }) {
+  const [mode, setMode] = useState("streams");
   const [answers, setAnswers] = useState({});
   const [step, setStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
@@ -146,50 +148,58 @@ export function CareerOptionsPage({ t, handwritingType, handwritingImage, onAddH
 
   return (
     <section className="content career-page">
-      <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">{t("cr_eyebrow")}</p><h1>{t("careerOptions")}</h1><p>{t("cr_subtitle")}</p></div></header>
-      {matching && <CareerMatchAnimation t={t} handwritingType={handwritingType} handwritingImage={handwritingImage} onDone={finishMatching} />}
-      {!hasHandwriting ? (
-        <section className="career-card career-locked">
-          <span className="career-locked-icon"><Lock size={22} aria-hidden="true" /></span>
-          <h2>{t("cr_hwLockedTitle")}</h2>
-          <p>{t("cr_hwLockedCopy")}</p>
-          {onAddHandwriting && <button type="button" className="career-next" onClick={onAddHandwriting}><PenLine size={17} aria-hidden="true" /> {t("cr_hwAdd")}</button>}
-        </section>
-      ) : !showResults ? (
-        <section className="career-card">
-          <div className="career-progress-label"><span>{t("cr_questionOf", { n: step + 1, total: questions.length })}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
-          <div className="career-progress"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
-          <h2>{t(questions[step].promptKey)}</h2>
-          <div className="career-choices">{questions[step].choices.map((choice) => <button key={choice.id} type="button" className={answers[step]?.id === choice.id ? "selected" : ""} aria-pressed={answers[step]?.id === choice.id} onClick={() => choose(choice)}>{t(choice.labelKey)}</button>)}</div>
-          <div className="career-actions">{step > 0 ? <button type="button" className="career-back" onClick={() => setStep((value) => value - 1)}><ArrowLeft size={17} /> {t("cr_back")}</button> : <span />}{step < questions.length - 1 ? <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setStep((value) => value + 1)}>{t("cr_next")} <ArrowRight size={17} /></button> : <button type="button" className="career-next" disabled={!answers[step]} onClick={showCareerResults}>{t("cr_see")} <Sparkles size={17} /></button>}</div>
-        </section>
-      ) : (
-        <section className="career-card career-results">
-          <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2><p className="career-hw-note"><PenLine size={14} aria-hidden="true" /> {t("cr_hwUsing", { pattern: typeLabel(t, handwritingType) })}</p></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
-          <div className="career-result-list">{results.map((career, index) => {
-            const pathwayId = `career-pathway-${index}`;
-            const isPathwayOpen = openPathway === career.id;
-            return <article className="career-result" key={career.id}>
-              <span className="career-result-number">{index + 1}</span>
-              <div className="career-result-content">
-                <h3>{t(career.titleKey)}</h3>
-                <p>{t(career.summaryKey)}</p>
-                <small><strong>{t("cr_tryThis")}</strong> {t(career.exploreKey)}</small>
-                <button type="button" className="career-pathway-toggle" aria-expanded={isPathwayOpen} aria-controls={pathwayId} onClick={() => setOpenPathway(isPathwayOpen ? null : career.id)}>
-                  {isPathwayOpen ? t("Hide pathway") : t("How to become this")}
-                  <ChevronDown size={16} aria-hidden="true" />
-                </button>
-                {isPathwayOpen && <div className="career-pathway" id={pathwayId}>
-                  <h4>{t("A possible path")}</h4>
-                  <ol>{career.pathway.map((item) => <li key={item}>{t(item)}</li>)}</ol>
-                </div>}
-              </div>
-            </article>;
-          })}</div>
-          <p className="career-pathway-note">{t("Pathways vary by country, role, and employer. Check local official requirements for the career you choose.")}</p>
-          <p className="career-disclaimer">{t("cr_disclaimer")}</p>
-        </section>
-      )}
+      <header className="career-heading"><span className="career-icon"><Compass size={25} /></span><div><p className="eyebrow">{t("cr_eyebrow")}</p><h1>{t("careerOptions")}</h1><p>{t("cs_subtitle")}</p></div></header>
+      <div className="career-modes" role="group" aria-label={t("cs_modesLabel")}>
+        <button type="button" aria-pressed={mode === "streams"} onClick={() => setMode("streams")}><LayoutGrid size={17} aria-hidden="true" /> {t("cs_modeStream")}</button>
+        <button type="button" aria-pressed={mode === "quiz"} onClick={() => setMode("quiz")}><Sparkles size={17} aria-hidden="true" /> {t("cs_modeQuiz")}</button>
+      </div>
+      <div hidden={mode !== "streams"}><CareerStreamExplorer t={t} studentEmail={studentEmail} onOpenQuiz={() => setMode("quiz")} /></div>
+      <div className="career-quiz-pane" hidden={mode !== "quiz"}>
+        <p className="career-quiz-intro">{t("cr_subtitle")}</p>
+        {matching && <CareerMatchAnimation t={t} handwritingType={handwritingType} handwritingImage={handwritingImage} onDone={finishMatching} />}
+        {!hasHandwriting ? (
+          <section className="career-card career-locked">
+            <span className="career-locked-icon"><Lock size={22} aria-hidden="true" /></span>
+            <h2>{t("cr_hwLockedTitle")}</h2>
+            <p>{t("cr_hwLockedCopy")}</p>
+            {onAddHandwriting && <button type="button" className="career-next" onClick={onAddHandwriting}><PenLine size={17} aria-hidden="true" /> {t("cr_hwAdd")}</button>}
+          </section>
+        ) : !showResults ? (
+          <section className="career-card">
+            <div className="career-progress-label"><span>{t("cr_questionOf", { n: step + 1, total: questions.length })}</span><span>{Math.round(((step + 1) / questions.length) * 100)}%</span></div>
+            <div className="career-progress"><span style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
+            <h2>{t(questions[step].promptKey)}</h2>
+            <div className="career-choices">{questions[step].choices.map((choice) => <button key={choice.id} type="button" className={answers[step]?.id === choice.id ? "selected" : ""} aria-pressed={answers[step]?.id === choice.id} onClick={() => choose(choice)}>{t(choice.labelKey)}</button>)}</div>
+            <div className="career-actions">{step > 0 ? <button type="button" className="career-back" onClick={() => setStep((value) => value - 1)}><ArrowLeft size={17} /> {t("cr_back")}</button> : <span />}{step < questions.length - 1 ? <button type="button" className="career-next" disabled={!answers[step]} onClick={() => setStep((value) => value + 1)}>{t("cr_next")} <ArrowRight size={17} /></button> : <button type="button" className="career-next" disabled={!answers[step]} onClick={showCareerResults}>{t("cr_see")} <Sparkles size={17} /></button>}</div>
+          </section>
+        ) : (
+          <section className="career-card career-results">
+            <div className="career-results-heading"><div><p className="eyebrow">{t("cr_pathsEyebrow")}</p><h2>{t("cr_yourAnswers")}</h2><p className="career-hw-note"><PenLine size={14} aria-hidden="true" /> {t("cr_hwUsing", { pattern: typeLabel(t, handwritingType) })}</p></div><button type="button" className="career-retake" onClick={restart}><RotateCcw size={16} /> {t("cr_startOver")}</button></div>
+            <div className="career-result-list">{results.map((career, index) => {
+              const pathwayId = `career-pathway-${index}`;
+              const isPathwayOpen = openPathway === career.id;
+              return <article className="career-result" key={career.id}>
+                <span className="career-result-number">{index + 1}</span>
+                <div className="career-result-content">
+                  <h3>{t(career.titleKey)}</h3>
+                  <p>{t(career.summaryKey)}</p>
+                  <small><strong>{t("cr_tryThis")}</strong> {t(career.exploreKey)}</small>
+                  <button type="button" className="career-pathway-toggle" aria-expanded={isPathwayOpen} aria-controls={pathwayId} onClick={() => setOpenPathway(isPathwayOpen ? null : career.id)}>
+                    {isPathwayOpen ? t("Hide pathway") : t("How to become this")}
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </button>
+                  {isPathwayOpen && <div className="career-pathway" id={pathwayId}>
+                    <h4>{t("A possible path")}</h4>
+                    <ol>{career.pathway.map((item) => <li key={item}>{t(item)}</li>)}</ol>
+                  </div>}
+                </div>
+              </article>;
+            })}</div>
+            <p className="career-pathway-note">{t("Pathways vary by country, role, and employer. Check local official requirements for the career you choose.")}</p>
+            <p className="career-disclaimer">{t("cr_disclaimer")}</p>
+          </section>
+        )}
+      </div>
       <section className="career-opportunities" aria-labelledby="career-opportunities-title">
         <header className="career-opportunities-heading">
           <span className="career-opportunities-kicker"><BriefcaseBusiness size={15} aria-hidden="true" /> {t("A curated CWSN career support directory")}</span>
