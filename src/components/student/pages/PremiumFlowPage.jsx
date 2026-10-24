@@ -3,9 +3,9 @@ import { ArrowLeft, Check, Crown, LockKeyhole, ShoppingCart, Sparkles } from "lu
 import "./PremiumFlowPage.css";
 
 const plans = [
-  { id: "monthly", nameKey: "pf_planMonthly", price: 150, periodKey: "pf_perMonth", detailKey: "pf_detailMonthly" },
-  { id: "quarterly", nameKey: "pf_planQuarterly", price: 400, periodKey: "pf_per3Months", detailKey: "pf_detailQuarterly" },
-  { id: "yearly", nameKey: "pf_planYearly", price: 1500, periodKey: "pf_perYear", detailKey: "pf_detailYearly" },
+  { id: "monthly", nameKey: "pf_planMonthly", price: 299, periodKey: "pf_perMonth", detailKey: "pf_detailMonthly" },
+  { id: "quarterly", nameKey: "pf_planQuarterly", price: 699, periodKey: "pf_per3Months", detailKey: "pf_detailQuarterly" },
+  { id: "yearly", nameKey: "pf_planYearly", price: 1999, periodKey: "pf_perYear", detailKey: "pf_detailYearly" },
 ];
 
 const money = (amount) => new Intl.NumberFormat(document.documentElement.lang || "en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
