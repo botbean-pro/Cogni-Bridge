@@ -36,6 +36,7 @@
 .cogni-spin { animation:cogniSpin .9s linear infinite; }
 @keyframes cogniSpin { to { transform:rotate(360deg); } }
 .cogni-modal-scrim { position:fixed; z-index:200; inset:0; display:grid; place-items:center; overflow:auto; padding:20px; background:rgba(13,29,31,.58); backdrop-filter:blur(5px); }
+.cogni-store-scrim { place-items:start center; padding:clamp(24px,5vh,48px) 20px 20px; }
 .cogni-store-modal,.cogni-confirm-modal { position:relative; width:min(820px,100%); max-height:min(88vh,860px); overflow:auto; padding:28px; border:1px solid rgba(255,255,255,.64); border-radius:22px; color:var(--text); background:var(--surface); box-shadow:0 28px 90px rgba(0,0,0,.28); }
 .cogni-store-modal > .eyebrow,.cogni-confirm-modal > .eyebrow { margin:0 0 5px; color:var(--teal-dark); font-size:calc(10px * var(--text-scale, 1)); font-weight:900; letter-spacing:.14em; }
 .cogni-store-modal h2,.cogni-confirm-modal h2 { margin:0; color:var(--text); font-size:calc(clamp(24px,4vw,32px) * var(--text-scale, 1)); letter-spacing:-.05em; }
