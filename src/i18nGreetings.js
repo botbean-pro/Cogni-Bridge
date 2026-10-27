@@ -1,0 +1,10 @@
+// Random greetings for the student's home page ({name} is their first name).
+// Order: English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi (same as the main catalog).
+export default {
+  studentGreeting0: ["What's up, {name}?", "क्या हाल है, {name}?", "কী খবর, {name}?", "ఏమిటి విశేషాలు, {name}?", "काय चाललंय, {name}?", "என்ன விசேஷம், {name}?", "શું ચાલે છે, {name}?", "ಏನು ವಿಶೇಷ, {name}?", "എന്തുണ്ട് വിശേഷം, {name}?", "ਕੀ ਹਾਲ ਹੈ, {name}?"],
+  studentGreeting1: ["Hello, {name}!", "नमस्ते, {name}!", "হ্যালো, {name}!", "హలో, {name}!", "नमस्कार, {name}!", "வணக்கம், {name}!", "નમસ્તે, {name}!", "ಹಲೋ, {name}!", "ഹലോ, {name}!", "ਹੈਲੋ, {name}!"],
+  studentGreeting2: ["Welcome back, {name}!", "वापसी पर स्वागत है, {name}!", "ফিরে আসার জন্য স্বাগতম, {name}!", "మళ్లీ స్వాగతం, {name}!", "पुन्हा स्वागत आहे, {name}!", "மீண்டும் வருக, {name}!", "ફરી સ્વાગત છે, {name}!", "ಮತ್ತೆ ಸ್ವಾಗತ, {name}!", "വീണ്ടും സ്വാഗതം, {name}!", "ਮੁੜ ਜੀ ਆਇਆਂ ਨੂੰ, {name}!"],
+  studentGreeting3: ["Hey {name}, good to see you!", "अरे {name}, तुम्हें देखकर अच्छा लगा!", "আরে {name}, তোমাকে দেখে ভালো লাগল!", "హేయ్ {name}, నిన్ను చూడటం సంతోషంగా ఉంది!", "अरे {name}, तुला भेटून छान वाटलं!", "ஹே {name}, உன்னைப் பார்த்ததில் மகிழ்ச்சி!", "અરે {name}, તને જોઈને આનંદ થયો!", "ಹೇ {name}, ನಿನ್ನನ್ನು ನೋಡಿ ಖುಷಿಯಾಯಿತು!", "ഹേയ് {name}, നിന്നെ കണ്ടതിൽ സന്തോഷം!", "ਹੇ {name}, ਤੈਨੂੰ ਮਿਲ ਕੇ ਚੰਗਾ ਲੱਗਿਆ!"],
+  studentGreeting4: ["Ready to learn, {name}?", "सीखने के लिए तैयार हो, {name}?", "শেখার জন্য তৈরি, {name}?", "నేర్చుకోవడానికి సిద్ధమా, {name}?", "शिकायला तयार आहेस, {name}?", "கற்கத் தயாரா, {name}?", "શીખવા માટે તૈયાર છો, {name}?", "ಕಲಿಯಲು ಸಿದ್ಧರಿದ್ದೀರಾ, {name}?", "പഠിക്കാൻ തയ്യാറാണോ, {name}?", "ਸਿੱਖਣ ਲਈ ਤਿਆਰ ਹੋ, {name}?"],
+  studentGreeting5: ["Great to have you here, {name}!", "तुम्हारा यहाँ होना बढ़िया है, {name}!", "তুমি এখানে আছো, দারুণ লাগছে, {name}!", "నువ్వు ఇక్కడ ఉండటం గొప్ప విషయం, {name}!", "तू इथे आहेस हे छान आहे, {name}!", "நீ இங்கே இருப்பது அருமை, {name}!", "તું અહીં છે એ સરસ છે, {name}!", "ನೀನು ಇಲ್ಲಿರುವುದು ಅದ್ಭುತ, {name}!", "നീ ഇവിടെയുള്ളത് മികച്ചതാണ്, {name}!", "ਤੇਰਾ ਇੱਥੇ ਹੋਣਾ ਵਧੀਆ ਹੈ, {name}!"],
+};

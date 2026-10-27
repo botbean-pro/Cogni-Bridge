@@ -73,11 +73,11 @@ const App = () => {
   const [appearance, setAppearance] = useState(() => {
     try {
       const saved = localStorage.getItem("cognibridge_appearance");
-      const themeMigration = localStorage.getItem("cognibridge_dark_default_v1");
-      if (!themeMigration) return "dark";
-      return saved || "dark";
+      // The cream theme is the default; a choice saved before it shipped is reset once, then respected.
+      if (!localStorage.getItem("cognibridge_theme_g1_v1")) return "light";
+      return saved || "light";
     } catch {
-      return "dark";
+      return "light";
     }
   });
   const [textScale, setTextScale] = useState(1);
@@ -595,13 +595,14 @@ const App = () => {
     try { localStorage.setItem("cognibridge_read_aloud", JSON.stringify(readAloud)); } catch { /* Session choice remains active. */ }
   }, [readAloud]);
 
-  useHoverReadAloud({ enabled: readAloud.enabled, language: studentLanguage, volume: readAloud.volume });
+  // Reading aloud is a student feature: the mentor and parent portals don't offer it, so a leftover setting stays quiet there.
+  useHoverReadAloud({ enabled: readAloud.enabled && !mentorOpen && !parentOpen, language: studentLanguage, volume: readAloud.volume });
 
 
   useEffect(() => {
     try {
       localStorage.setItem("cognibridge_appearance", appearance);
-      localStorage.setItem("cognibridge_dark_default_v1", "true");
+      localStorage.setItem("cognibridge_theme_g1_v1", "true");
     } catch {
       // Keep the selected theme for this session if browser storage is unavailable.
     }
@@ -830,8 +831,6 @@ const App = () => {
             language={studentLanguage}
             setLanguage={setStudentLanguage}
             showLanguage
-            readAloud={readAloud}
-            setReadAloud={setReadAloud}
             t={t}
             onClose={() => setAccessibilityOpen(false)}
           />
@@ -862,8 +861,6 @@ const App = () => {
               language={studentLanguage}
               setLanguage={setStudentLanguage}
               showLanguage
-              readAloud={readAloud}
-              setReadAloud={setReadAloud}
               t={t}
               onClose={() => setAccessibilityOpen(false)}
             />

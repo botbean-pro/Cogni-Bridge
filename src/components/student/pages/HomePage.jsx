@@ -5,6 +5,9 @@ import { CognibridgeButton } from "../../CognibridgeButton";
 import { AboutPage } from "./AboutPage";
 import { StudyPage } from "./SessionsPage";
 
+// One of these greets a signed-in student each time they open Home.
+const greetingKeys = ["studentGreeting0", "studentGreeting1", "studentGreeting2", "studentGreeting3", "studentGreeting4", "studentGreeting5"];
+
 const heroRingKeys = ["heroRingMindsDiffer", "heroRingOwnPace", "heroRingMentorsListen"];
 
 // Translated words that orbit the hero art; short translations repeat so the ring stays filled.
@@ -56,7 +59,6 @@ function LearningPathPreview({ t, onExploreSessions }) {
   return (
     <section className="learning-path-section" aria-labelledby="learning-path-heading">
       <div className="learning-path-copy">
-        <p className="eyebrow"><Sparkles size={15} aria-hidden="true" />{t("homePathEyebrow")}</p>
         <h2 id="learning-path-heading">{t("homePathHeading")}</h2>
         <p className="learning-path-intro">{t("homePathDescription")}</p>
         <div className="learning-path-choices" role="group" aria-label={t("journeyRoleSelector")}>
@@ -100,7 +102,8 @@ function LearningPathPreview({ t, onExploreSessions }) {
 function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
   const artRef = useRef(null);
   const tiltArt = (event) => {
-    if (event.pointerType === "touch" || document.documentElement.dataset.motion !== "full"
+    const root = document.documentElement.dataset;
+    if (event.pointerType === "touch" || ["off", "reduced"].includes(root.motion) || root.lowSensory === "true"
       || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const bounds = event.currentTarget.getBoundingClientRect();
     const x = (event.clientX - bounds.left) / bounds.width - 0.5;
@@ -132,7 +135,7 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
       <div className="home-hero-copy">
         <p className="hero-eyebrow">{t("learnBeyondBorders")}</p>
         <p className="home-brand-mark" aria-label="CogniBridge"><span className="home-brand-wordmark" data-brand="CogniBridge">Cogni<span className="home-brand-bridge">Bridge</span></span></p>
-        <h1 className="home-hero-tagline"><span className="tagline-hindi" lang="hi">सपनों की उड़ान</span><br /><span>for Every Learner</span></h1>
+        <h1 className="home-hero-tagline"><span className="tagline-hindi" lang="hi">सपनों की उड़ान</span><br /><span>for <em className="hl-warm">Every</em> <em className="hl-teal">Learner</em></span></h1>
         <p className="hero-description">{t("homeHeroDescription")}</p>
         <div className="hero-actions">
           <CognibridgeButton className="hero-primary" onClick={onSignIn}>
@@ -161,7 +164,6 @@ function HomeHero({ onSignIn, onExploreSessions, onScrollToAbout, t }) {
           <span className="hero-float hero-float-yellow"><Sparkles size={19} fill="currentColor" /></span>
           <span className="hero-float hero-float-mint"><Sparkles size={19} fill="currentColor" /></span>
         </div>
-        <span className="hero-art-label">{t("curiosityConnects")}</span>
       </div>
       <button
         className="home-about-scroll"
@@ -187,6 +189,7 @@ export function HomePage({
   onScrollToAbout,
   onOpenSession,
 }) {
+  const [greetingKey] = useState(() => greetingKeys[Math.floor(Math.random() * greetingKeys.length)]);
   if (signedIn) {
     return (
       <StudyPage
@@ -195,8 +198,8 @@ export function HomePage({
         studentName={studentName}
         activityVersion={activityVersion}
         onOpenSession={onOpenSession}
-        eyebrow={t("welcomeBack")}
-        heading={studentName}
+        eyebrow={t("planAhead")}
+        heading={t(greetingKey, { name: (studentName || "").trim().split(/\s+/)[0] })}
         t={t}
       />
     );

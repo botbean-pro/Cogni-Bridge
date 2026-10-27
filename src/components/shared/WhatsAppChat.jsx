@@ -175,6 +175,19 @@ export function WhatsAppChat({ title, threads, myRole, seenStorageKey, labels, l
 
   useEffect(() => setSeen(readSeen(seenStorageKey)), [seenStorageKey]);
 
+  // A browser that has never opened this chat (new device, cleared storage) treats what is already there as read,
+  // so the badge only pings for messages that arrive afterwards.
+  useEffect(() => {
+    if (loading || !threads.length || Object.keys(seen).length) return;
+    const next = Object.fromEntries(threads.map((thread) => [thread.key, thread.messages.at(-1)?.created_at || ""]));
+    setSeen(next);
+    try {
+      localStorage.setItem(seenStorageKey, JSON.stringify(next));
+    } catch {
+      // Without storage the baseline is simply taken again on the next visit.
+    }
+  }, [loading, threads, seen, seenStorageKey]);
+
   // Opening a thread (or new messages arriving in the open one) marks it read.
   useEffect(() => {
     if (!activeKey || !latestInThread || seen[activeKey] >= latestInThread) return;

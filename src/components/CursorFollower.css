@@ -1,0 +1,14 @@
+/* The trailing cursor ring. Positioned by CursorFollower.jsx; only the look lives here. */
+.cursor-follower {
+  position:fixed; top:0; left:0; z-index:2147483000; width:24px; height:24px; margin:-12px 0 0 -12px;
+  border:2px solid var(--primary, #19bea9); border-radius:50%; background:rgba(25, 190, 169, .08); box-shadow:0 0 0 1px rgba(23, 38, 41, .2);
+  opacity:0; pointer-events:none; will-change:transform;
+  transition:opacity .2s ease, width .22s cubic-bezier(.34, 1.56, .64, 1), height .22s cubic-bezier(.34, 1.56, .64, 1), margin .22s cubic-bezier(.34, 1.56, .64, 1), background .2s ease;
+}
+.cursor-follower[data-state="idle"] { opacity:.5; }
+.cursor-follower[data-state="link"] { width:38px; height:38px; margin:-19px 0 0 -19px; background:rgba(25, 190, 169, .08); opacity:.5; }
+.cursor-follower[data-pressed="true"][data-state="idle"] { width:16px; height:16px; margin:-8px 0 0 -8px; }
+.cursor-follower[data-pressed="true"][data-state="link"] { width:30px; height:30px; margin:-15px 0 0 -15px; }
+
+@media (hover:none), (pointer:coarse), (prefers-reduced-motion:reduce), print { .cursor-follower { display:none; } }
+html:is([data-motion="off"], [data-motion="reduced"], [data-low-sensory="true"]) .cursor-follower { display:none; }

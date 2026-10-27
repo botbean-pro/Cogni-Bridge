@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Sparkles } from "lucide-react";
-import logoWithoutText from "../assets/logo-without-text-optimized.svg";
+import logoWithoutText from "../assets/logo-mark.png";
 
 export function Card() {
   return (
