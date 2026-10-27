@@ -595,7 +595,6 @@ const App = () => {
     try { localStorage.setItem("cognibridge_read_aloud", JSON.stringify(readAloud)); } catch { /* Session choice remains active. */ }
   }, [readAloud]);
 
-  // Reading aloud is a student feature: the mentor and parent portals don't offer it, so a leftover setting stays quiet there.
   useHoverReadAloud({ enabled: readAloud.enabled && !mentorOpen && !parentOpen, language: studentLanguage, volume: readAloud.volume });
 
 

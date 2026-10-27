@@ -1,5 +1,3 @@
-// Random greetings for the student's home page ({name} is their first name).
-// Order: English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi (same as the main catalog).
 export default {
   studentGreeting0: ["What's up, {name}?", "क्या हाल है, {name}?", "কী খবর, {name}?", "ఏమిటి విశేషాలు, {name}?", "काय चाललंय, {name}?", "என்ன விசேஷம், {name}?", "શું ચાલે છે, {name}?", "ಏನು ವಿಶೇಷ, {name}?", "എന്തുണ്ട് വിശേഷം, {name}?", "ਕੀ ਹਾਲ ਹੈ, {name}?"],
   studentGreeting1: ["Hello, {name}!", "नमस्ते, {name}!", "হ্যালো, {name}!", "హలో, {name}!", "नमस्कार, {name}!", "வணக்கம், {name}!", "નમસ્તે, {name}!", "ಹಲೋ, {name}!", "ഹലോ, {name}!", "ਹੈਲੋ, {name}!"],

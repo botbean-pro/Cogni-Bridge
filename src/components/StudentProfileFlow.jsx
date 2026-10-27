@@ -41,7 +41,6 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
   const [error, setError] = useState("");
   const fileRef = useRef(null);
   const analyzingRef = useRef(false);
-  // The handwriting check is asked for once; after that a new sample is optional.
   const alreadyChecked = Array.isArray(existingProfile?.handwritingSigns);
 
   const chooseImage = async (event) => {
@@ -180,6 +179,15 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
     window.setTimeout(() => setStep("result"), 2200);
   };
 
+  let uploadHint = t("hw_requiredHint");
+  if (alreadyChecked) {
+    uploadHint = t("hw_replaceHint");
+  }
+  let submitLabel = t("analyzeImage");
+  if (existingProfile && !image && !handwritingPrompt) {
+    submitLabel = t("saveChanges");
+  }
+
   if (step === "loading") {
     return (
       <main className="handwriting-loading" role="status" aria-live="polite">
@@ -234,15 +242,14 @@ export const StudentProfileFlow = ({ email, studentId, onBack, onComplete, exist
             <label>{t("section")}<input value={profile.section || ""} onChange={(event) => setProfile({ ...profile, section: event.target.value })} required={!existingProfile} /></label>
             <label>{t("school")}<input value={profile.school || ""} onChange={(event) => setProfile({ ...profile, school: event.target.value })} required={!existingProfile} /></label>
           </div>
-          {/* Already checked: a new sample is optional (it replaces the old one). Otherwise it is needed once. */}
           <input ref={fileRef} className="profile-file-input" type="file" accept="image/*" capture="environment" onChange={chooseImage} />
           <button type="button" className="handwriting-upload" onClick={() => fileRef.current?.click()}>
             {image ? <img src={image} alt={t("hw_altPreview")} /> : <Upload size={22} />}
-            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || t(alreadyChecked ? "hw_replaceHint" : "hw_requiredHint")}</small></span>
+            <span><strong>{image ? t("changeHandwritingImage") : t("uploadHandwriting")}</strong><small>{imageName || uploadHint}</small></span>
           </button>
           {error && <p className="profile-flow-error" role="alert">{t(error)}</p>}
           {/* Until the one-time check is done, the main button analyses the photo (and needs one). */}
-          <button className="primary-btn" type="submit" disabled={!image && (!existingProfile || handwritingPrompt)}>{existingProfile && !image && !handwritingPrompt ? t("saveChanges") : t("analyzeImage")}</button>
+          <button className="primary-btn" type="submit" disabled={!image && (!existingProfile || handwritingPrompt)}>{submitLabel}</button>
         </form>
       </section>
     </main>

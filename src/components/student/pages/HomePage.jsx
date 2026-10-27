@@ -5,7 +5,6 @@ import { CognibridgeButton } from "../../CognibridgeButton";
 import { AboutPage } from "./AboutPage";
 import { StudyPage } from "./SessionsPage";
 
-// One of these greets a signed-in student each time they open Home.
 const greetingKeys = ["studentGreeting0", "studentGreeting1", "studentGreeting2", "studentGreeting3", "studentGreeting4", "studentGreeting5"];
 
 const heroRingKeys = ["heroRingMindsDiffer", "heroRingOwnPace", "heroRingMentorsListen"];
@@ -191,6 +190,10 @@ export function HomePage({
 }) {
   const [greetingKey] = useState(() => greetingKeys[Math.floor(Math.random() * greetingKeys.length)]);
   if (signedIn) {
+    let firstName = "";
+    if (studentName) {
+      firstName = studentName.trim().split(/\s+/)[0];
+    }
     return (
       <StudyPage
         sessions={sessions}
@@ -199,7 +202,7 @@ export function HomePage({
         activityVersion={activityVersion}
         onOpenSession={onOpenSession}
         eyebrow={t("planAhead")}
-        heading={t(greetingKey, { name: (studentName || "").trim().split(/\s+/)[0] })}
+        heading={t(greetingKey, { name: firstName })}
         t={t}
       />
     );
