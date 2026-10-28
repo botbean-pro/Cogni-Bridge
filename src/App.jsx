@@ -27,7 +27,7 @@ import { ParentPortal } from "./components/parent/ParentPortal";
 import { StudentSubjectsPage } from "./components/student/pages/StudentSubjectsPage";
 import { setSpeakingVolume, stopSpeaking } from "./components/student/flow/readAloud";
 import { useHoverReadAloud } from "./components/student/flow/useHoverReadAloud";
-import { isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths } from "./routes";
+import { accountPaths, isPortalPath, normalizePath, parseStudentPath, sessionPath, studentTabPaths, useOverlayFlag } from "./routes";
 import { MindfulCorner } from "./components/student/pages/MindfulCorner";
 import { RelaxationRoom } from "./components/RelaxationRoom";
 import { useImmersiveEffects } from "./immersiveEffects";
@@ -66,10 +66,12 @@ const App = () => {
     if (path && normalizePath(location.pathname) !== path) navigate(path);
   };
   const [scrollToAboutOnHome, setScrollToAboutOnHome] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
+  // Sign-in, the account editor and Accessibility float over whatever page is already showing, so
+  // they live in the URL as a query flag rather than their own path - see routes.js.
+  const [loginOpen, setLoginOpen] = useOverlayFlag("signin");
   const [mentorOpen, setMentorOpen] = useState(false);
   const [parentOpen, setParentOpen] = useState(false);
-  const [accessibilityOpen, setAccessibilityOpen] = useState(false);
+  const [accessibilityOpen, setAccessibilityOpen] = useOverlayFlag("accessibility");
   const [appearance, setAppearance] = useState(() => {
     try {
       const saved = localStorage.getItem("cognibridge_appearance");
@@ -124,9 +126,15 @@ const App = () => {
   const [screenTimeVersion, setScreenTimeVersion] = useState(0);
   const [attendedSessionIds, setAttendedSessionIds] = useState(new Set());
   const [privateSessions, setPrivateSessions] = useState([]);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useOverlayFlag("account");
   const [handwritingPromptOpen, setHandwritingPromptOpen] = useState(false);
-  const [createAccountOpen, setCreateAccountOpen] = useState(false);
+  // Create account is its own page (like the student tabs above), not an overlay: closing it always
+  // goes back to Home rather than back to whatever page a guest happened to be on.
+  const createAccountOpen = normalizePath(location.pathname) === accountPaths.createAccount;
+  const setCreateAccountOpen = (next) => {
+    const open = typeof next === "function" ? next(createAccountOpen) : next;
+    navigate(open ? accountPaths.createAccount : studentTabPaths.home);
+  };
   const [toast, setToast] = useState("");
   const [premiumCartPlan, setPremiumCartPlan] = useState(null);
   const [premiumCheckoutOpen, setPremiumCheckoutOpen] = useState(false);
@@ -531,9 +539,10 @@ const App = () => {
   useEffect(() => {
     if (!authSettled || mentorOpen || parentOpen) return;
     const path = normalizePath(location.pathname);
+    const isAccountFlow = path === accountPaths.createAccount || path === accountPaths.profileSetup;
     const studentOnly = !signedIn && ["study", "settings", "messages"].includes(activeTab);
     const gated = studentOnly || (activeTab === "sensory" && !sensoryTrackerEnabled) || (activeTab === "careers" && !(signedIn && isGrade12));
-    const unknown = !route.tab && path !== "/";
+    const unknown = !route.tab && !isAccountFlow && path !== "/";
     if (gated || unknown) navigate("/", { replace: true });
   }, [authSettled, mentorOpen, parentOpen, location.pathname, sensoryTrackerEnabled, signedIn, isGrade12]);
 
@@ -542,6 +551,16 @@ const App = () => {
     if (mentorOpen && !isPortalPath(location.pathname, "mentor")) navigate("/mentor", { replace: true });
     else if (parentOpen && !isPortalPath(location.pathname, "parent")) navigate("/parent", { replace: true });
   }, [mentorOpen, parentOpen, location.pathname]);
+
+  // The profile-setup step after signup carries real data (signupEmail/signupStudentClass), so a
+  // cold load of its path can't resume it - but the back/forward buttons must still close it once
+  // the URL drifts away, since that path is the only thing recording that it's open.
+  useEffect(() => {
+    if (signupEmail && normalizePath(location.pathname) !== accountPaths.profileSetup) {
+      setSignupEmail("");
+      setSignupStudentClass("");
+    }
+  }, [location.pathname, signupEmail]);
 
   useEffect(() => {
     if (supabaseConfigured) {
@@ -927,7 +946,7 @@ const App = () => {
           studentId={authUserId}
           initialClass={signupStudentClass}
           t={t}
-          onBack={() => { setSignupEmail(""); setSignupStudentClass(""); }}
+          onBack={() => { setSignupEmail(""); setSignupStudentClass(""); navigate(accountPaths.createAccount); }}
           onComplete={(profile) => {
             setSignupEmail("");
             setSignupStudentClass("");
@@ -977,6 +996,7 @@ const App = () => {
             if (account.requiresProfileSetup) {
               setSignupEmail(account.email);
               setSignupStudentClass(account.studentClass);
+              navigate(accountPaths.profileSetup);
               setPreferredSubjects([]);
               setSubjectSelectionPending(true);
               subjectSelectionUser.current = account.email.toLowerCase();

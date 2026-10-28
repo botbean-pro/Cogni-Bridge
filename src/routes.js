@@ -54,6 +54,24 @@ export const isPortalPath = (pathname, base) => {
   return path === `/${base}` || path.startsWith(`/${base}/`);
 };
 
+// A boolean flag kept in the current path's query string (e.g. ?accessibility=1), for things that
+// float over whatever page is already showing - sign-in, the account editor, Accessibility - so a
+// shared link reopens them and the back button closes them without losing the page underneath.
+export function useOverlayFlag(name) {
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
+  const open = new URLSearchParams(search).has(name);
+  const setOpen = (next) => {
+    const value = typeof next === "function" ? next(open) : next;
+    const params = new URLSearchParams(search);
+    if (value) params.set(name, "1");
+    else params.delete(name);
+    const query = params.toString();
+    navigate(`${pathname}${query ? `?${query}` : ""}`);
+  };
+  return [open, setOpen];
+}
+
 // Tab state for the mentor and parent portals, kept in the URL (/mentor/notes, /parent/moods, ...).
 export function useRouteTab(base, tabs, fallback = tabs[0]) {
   const { pathname } = useLocation();
