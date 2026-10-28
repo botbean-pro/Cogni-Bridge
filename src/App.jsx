@@ -893,15 +893,6 @@ const App = () => {
     );
   }
 
-  if (subjectSelectionPending) {
-    return (
-      <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>
-        <StudentSubjectsPage selectedSubjects={preferredSubjects} onContinue={savePreferredSubjects} t={t} />
-        {breakLock}
-      </div>
-    );
-  }
-
   if (subjectSelectionPending && signedIn && authRole !== "mentor" && !parentOpen) {
     return (
       <div className={classNames("app page-ready", `theme-${appearance}`)} style={{ "--text-scale": textScale }}>

@@ -197,16 +197,7 @@ export function SensoryTrackerPage({ studentId, demoMode = false, t, lowSensory 
         if (isCurrent) setParents(linkedParents);
       })
       .catch(() => {});
-    Promise.all([
-      loadStudentCheckins(studentId),
-      loadAssignedMentors(studentId),
-      loadStudentResponses(),
-    ]).then(([history, assignedMentors, mentorResponses]) => {
-      if (!isCurrent) return;
-      setEntries(history);
-      setMentors(assignedMentors);
-      setResponses(mentorResponses);
-    }).catch(() => {
+    refresh().catch(() => {
       if (isCurrent) setStatus(t("sn_stLoadFail"));
     });
     return () => { isCurrent = false; };
