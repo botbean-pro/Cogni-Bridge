@@ -9,6 +9,7 @@ import {
   Sparkles,
   UserRound,
   Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import {
@@ -428,6 +429,8 @@ const AccessibilityPanel = ({
   setTextScale,
   appearance,
   setAppearance,
+  lowSensory = false,
+  setLowSensory = () => {},
   language,
   setLanguage,
   showLanguage = true,
@@ -521,6 +524,18 @@ const AccessibilityPanel = ({
         <option value="dark">{t("darkMode")}</option>
       </select>
     </label>
+
+    <label className="appearance-row">
+      <strong><VolumeX size={17} /> {t("sn_lowMode")}</strong>
+      <input
+        type="checkbox"
+        role="switch"
+        className="read-aloud-switch"
+        checked={lowSensory}
+        onChange={(event) => setLowSensory(event.target.checked)}
+      />
+    </label>
+    <p className="read-aloud-note">{t("ms_lowSensoryNote")}</p>
 
     <button className="reset-button" onClick={() => setTextScale(1)}>
       {t("resetTextSize")}

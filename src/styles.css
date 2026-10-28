@@ -781,6 +781,14 @@ h1,h2,h3 { font-family:var(--font-body); font-weight:800; letter-spacing:-.025em
 .student-rail-account-split { position:relative; }
 .student-settings-dialog .content { padding:28px 24px 24px; }
 .student-app-shell ~ .accessibility-panel { right:auto; left:88px; bottom:96px; z-index:40; }
+/* The rail's nav scrolls once the tabs outgrow the rail's height, and a scroll box clips at its padding
+   edge: without this clearance the bottom tab's pill (and the glow under the active one) is sliced in
+   half. scroll-margin keeps the same clearance when focus or a route change scrolls a tab into view.
+   Phones are excluded: there the nav is the bottom bar and extra padding would squeeze its labels. */
+@media (min-width:641px) {
+  .student-rail-nav { padding-block:2px 8px; scroll-padding-block:2px 8px; }
+  .student-rail-nav .student-rail-link { scroll-margin-block:2px 8px; }
+}
 .student-rail:hover .student-rail-account-split,.student-rail:focus-within .student-rail-account-split,.student-rail:has(.pinned-open) .student-rail-account-split { display:flex; align-items:center; gap:6px; }
 .student-rail:hover .student-rail-account-split .student-rail-logout,.student-rail:focus-within .student-rail-account-split .student-rail-logout,.student-rail:has(.pinned-open) .student-rail-account-split .student-rail-logout { width:auto; flex:none; }
 .student-rail:hover .student-rail-account-split .student-rail-profile,.student-rail:focus-within .student-rail-account-split .student-rail-profile,.student-rail:has(.pinned-open) .student-rail-account-split .student-rail-profile { width:auto; flex:1; min-width:0; justify-content:flex-start; }

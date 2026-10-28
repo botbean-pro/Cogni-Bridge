@@ -110,3 +110,23 @@ html[data-low-sensory="true"] :is(.student-rail, .mentor-nav, .student-rail *, .
   *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }
   .student-rail, .mentor-nav, .student-rail *, .mentor-nav * { transition: none !important; }
 }
+
+/* Low sensory mode (the Accessibility panel's switch, and the Sensory Tracker's own toggle, set
+   html[data-low-sensory="true"]): the bare minimum of animation anywhere in the app. Entrances keep a
+   1ms animation instead of none, so anything that fades in from opacity:0 still ends up visible, and
+   the files that define a specific effect switch it off by name above and in design-system.css. */
+html[data-low-sensory="true"] *,
+html[data-low-sensory="true"] *::before,
+html[data-low-sensory="true"] *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* The three loops that report progress are left running: frozen, they read as broken rather than calm. */
+html[data-low-sensory="true"] .typing-indicator span { animation-duration: 1.4s !important; animation-iteration-count: infinite !important; }
+html[data-low-sensory="true"] .stat-skeleton { animation-duration: 1.4s !important; animation-iteration-count: infinite !important; }
+html[data-low-sensory="true"] :is(.handwriting-loader > svg, .ai-mic-btn .spin) { animation-duration: 1.2s !important; animation-iteration-count: infinite !important; }

@@ -81,6 +81,15 @@ const App = () => {
     }
   });
   const [textScale, setTextScale] = useState(1);
+  // Low sensory mode: the whole app runs with the bare minimum of animation. One choice drives both
+  // the Accessibility panel switch and the Sensory Tracker's own toggle, saved so it survives reloads.
+  const [lowSensory, setLowSensory] = useState(() => {
+    try {
+      return localStorage.getItem("cognibridge_low_sensory") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [studentLanguage, setStudentLanguage] = useState(() => {
     try {
       return localStorage.getItem("cognibridge_language") || "English";
@@ -584,6 +593,16 @@ const App = () => {
   }, [textScale]);
 
   useEffect(() => {
+    // Every animation rule reads this attribute, so setting it here switches the whole app at once.
+    document.documentElement.dataset.lowSensory = lowSensory ? "true" : "false";
+    try {
+      localStorage.setItem("cognibridge_low_sensory", lowSensory ? "true" : "false");
+    } catch {
+      // Keep the choice for this session when browser storage is unavailable.
+    }
+  }, [lowSensory]);
+
+  useEffect(() => {
     if (!readAloud.enabled) stopSpeaking();
   }, [readAloud.enabled]);
 
@@ -827,6 +846,8 @@ const App = () => {
             setTextScale={setTextScale}
             appearance={appearance}
             setAppearance={setAppearance}
+            lowSensory={lowSensory}
+            setLowSensory={setLowSensory}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
             showLanguage
@@ -857,6 +878,8 @@ const App = () => {
               setTextScale={setTextScale}
               appearance={appearance}
               setAppearance={setAppearance}
+              lowSensory={lowSensory}
+              setLowSensory={setLowSensory}
               language={studentLanguage}
               setLanguage={setStudentLanguage}
               showLanguage
@@ -1011,6 +1034,8 @@ const App = () => {
             setTextScale={setTextScale}
             appearance={appearance}
             setAppearance={setAppearance}
+            lowSensory={lowSensory}
+            setLowSensory={setLowSensory}
             language={studentLanguage}
             setLanguage={setStudentLanguage}
             readAloud={readAloud}
@@ -1122,6 +1147,8 @@ const App = () => {
               key={supabaseConfigured ? authUserId : studentEmail}
               studentId={supabaseConfigured ? authUserId : studentEmail}
               demoMode={sensoryTrackerDemoMode}
+              lowSensory={lowSensory}
+              onToggleLowSensory={() => setLowSensory((on) => !on)}
               t={t}
             />
           ) : null,
