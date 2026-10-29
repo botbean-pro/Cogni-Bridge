@@ -4,13 +4,15 @@ const dateKey = () => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 const storageKey = (studentId) => `${PREFIX}${encodeURIComponent(String(studentId || 'guest').trim().toLowerCase())}`;
-const clueProgressKey = (studentId) => `${storageKey(studentId)}:curious-clues`;
 // Entries store the English activity title; these keys show it in the student's language.
+// Retired activities stay listed so old entries still read back in the student's language.
 const activityTitleKeys = {
-  'Gentle Bubble Pop': 'mcBubblesTitle', 'Breathing Buddy': 'mcBreathingTitle', 'Sensory Garden': 'mcGardenTitle',
-  'Color and Create': 'mcColorTitle', 'Match the Pictures': 'mcMatchTitle', 'Curious Clues': 'mcCluesTitle',
-  'Calm Puzzle': 'mcPuzzleTitle', 'Music and Sound Explorer': 'mcSoundsTitle', 'Draw Your Feelings': 'mcFeelingsTitle',
-  'Slow Pattern Play': 'mcPatternsTitle', 'Mindful Corner': 'mcTitle',
+  'Word Coach': 'mcWordCoachTitle', 'Word Search': 'mcWordSearchTitle', 'Untrusted': 'mcUntrustedTitle',
+  '2048': 'mc2048Title', 'Lights Out': 'mcLightsTitle', 'Flow Pipes': 'mcPipesTitle',
+  'Snake': 'mcSnakeTitle', 'Simon Memory': 'mcSimonTitle',
+  'Breathing Buddy': 'mcBreathingTitle', 'Sensory Garden': 'mcGardenTitle', 'Mindful Corner': 'mcTitle',
+  'Gentle Bubble Pop': 'mcBubblesTitle', 'Color and Create': 'mcColorTitle',
+  'Match the Pictures': 'mcMatchTitle', 'Curious Clues': 'mcCluesTitle',
 };
 
 // Rebuilds an entry's note from its fields, so saved notes follow the current language.
@@ -20,28 +22,6 @@ export const mindfulNote = (t, entry) => {
   return t(entry.completed ? 'Finished {activity}. Nice exploring! +{points} CogniPoints.' : 'Took a turn with {activity}. You can come back any time. +{points} CogniPoints.', { activity, points: entry.points });
 };
 
-export const readCuriousCluesProgress = (studentId, totalLevels) => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(clueProgressKey(studentId)) || '{}');
-    const completedLevels = [...new Set((Array.isArray(saved.completedLevels) ? saved.completedLevels : [])
-      .filter((level) => Number.isSafeInteger(level) && level >= 1 && level <= totalLevels))].sort((a, b) => a - b);
-    let unlockedLevel = 1;
-    while (completedLevels.includes(unlockedLevel) && unlockedLevel < totalLevels) unlockedLevel += 1;
-    return { completedLevels, unlockedLevel, totalLevels };
-  } catch {
-    return { completedLevels: [], unlockedLevel: 1, totalLevels };
-  }
-};
-
-export const recordCuriousCluesLevel = (studentId, level, totalLevels) => {
-  const progress = readCuriousCluesProgress(studentId, totalLevels);
-  const completedLevels = [...new Set([...progress.completedLevels, level])].sort((a, b) => a - b);
-  let unlockedLevel = 1;
-  while (completedLevels.includes(unlockedLevel) && unlockedLevel < totalLevels) unlockedLevel += 1;
-  const next = { completedLevels, unlockedLevel, totalLevels };
-  try { localStorage.setItem(clueProgressKey(studentId), JSON.stringify(next)); } catch { /* The current game remains playable if storage is unavailable. */ }
-  return next;
-};
 
 // CogniPoints needed to finish each level; past the list each step grows by the two before it.
 const LEVEL_THRESHOLDS = [5, 10, 20, 35, 60];
@@ -100,20 +80,17 @@ export const recordMindfulActivity = (studentId, activity, completed) => {
 };
 
 // Merges progress saved elsewhere (e.g. the student's account) into this browser's copy.
-// Nothing is ever lost: entries and finished levels are unioned, the higher play count wins.
-export const mergeMindfulProgress = (studentId, remote, totalLevels) => {
+// Nothing is ever lost: entries are unioned and the higher play count wins.
+export const mergeMindfulProgress = (studentId, remote) => {
   const board = readMindfulBoard(studentId);
-  const clues = readCuriousCluesProgress(studentId, totalLevels);
   const byId = new Map([...(Array.isArray(remote?.entries) ? remote.entries : []), ...board.entries].map((entry) => [entry?.id, entry]));
   const entries = [...byId.values()]
     .filter((entry) => entry && typeof entry.id === 'string' && Number.isSafeInteger(entry.points) && typeof entry.date === 'string')
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 300);
   const activitiesPlayed = Math.max(board.activitiesPlayed, Number.isSafeInteger(remote?.activitiesPlayed) ? remote.activitiesPlayed : 0, entries.length);
-  const completedLevels = [...new Set([...clues.completedLevels, ...(Array.isArray(remote?.completedLevels) ? remote.completedLevels : [])])];
   try {
     localStorage.setItem(storageKey(studentId), JSON.stringify({ entries, activitiesPlayed }));
-    localStorage.setItem(clueProgressKey(studentId), JSON.stringify({ completedLevels }));
   } catch { /* The merged result is still returned for this visit. */ }
-  return { board: readMindfulBoard(studentId), clues: readCuriousCluesProgress(studentId, totalLevels) };
+  return readMindfulBoard(studentId);
 };

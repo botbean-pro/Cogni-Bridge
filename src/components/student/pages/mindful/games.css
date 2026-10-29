@@ -1,0 +1,159 @@
+/* Boards for the Mindful Corner games. Loaded after MindfulCorner.css, so the
+   board rules here win over its general .mc-play-area button styling. Grid cells
+   mark their radius !important: the app's global pill-button rule outranks a
+   class selector, and a pill cell hides where a pipe or a traced line meets its
+   neighbour. Board colours are fixed rather than themed, so a game reads the
+   same in light and dark; only the surfaces around them follow the theme. */
+.mc-play-area .mc-scoreline { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 18px; margin:10px 0 4px; }
+.mc-play-area .mc-scoreline strong { color:var(--mc-ink); font-weight:650; }
+.mc-play-area>div>p { line-height:1.55; }
+
+/* Easy / Hard switch */
+.mc-mode-switch { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:7px; margin-bottom:12px; }
+.mc-mode-switch>span { color:var(--mc-muted); font-size:.88em; font-weight:600; }
+.mc-play-area .mc-mode-switch button { min-height:36px; padding:5px 15px; font-size:.9em; }
+.mc-play-area .mc-mode-switch button.active { border-color:#1f7d52; background:#1f7d52; color:#fff!important; }
+
+/* Direction pad, shared by 2048 and Snake */
+.mc-pad { display:grid; grid-template-areas:". up ." "left down right"; justify-content:center; gap:7px; margin:16px 0; }
+.mc-pad>button { display:grid; width:52px; height:52px; min-height:0; place-items:center; padding:0; border:1px solid var(--mc-line); border-radius:8px; background:var(--mc-surface); }
+.mc-pad>button:hover { border-color:var(--mc-accent); }
+.mc-pad-up { grid-area:up; }
+.mc-pad-left { grid-area:left; }
+.mc-pad-down { grid-area:down; }
+.mc-pad-right { grid-area:right; }
+
+/* 2048, in the warm ramp the original uses: every value has its own colour. */
+.mc-2048-board { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; width:min(100%,360px); margin:16px auto; padding:9px; border-radius:10px; background:#b3a496; touch-action:none; }
+.mc-2048-board>span { display:grid; aspect-ratio:1; place-items:center; border-radius:7px; background:#cdc0b2; color:#38322c; font-size:calc(1.5em * var(--text-scale,1)); font-weight:700; }
+.mc-2048-board>span.mc-tile-0 { color:transparent; }
+.mc-2048-board>span.mc-tile-2 { background:#f2ece2; }
+.mc-2048-board>span.mc-tile-4 { background:#ecdfc6; }
+.mc-2048-board>span.mc-tile-8 { background:#f2a96a; color:#fff; }
+.mc-2048-board>span.mc-tile-16 { background:#ef8b53; color:#fff; }
+.mc-2048-board>span.mc-tile-32 { background:#ee6f4e; color:#fff; }
+.mc-2048-board>span.mc-tile-64 { background:#e8502c; color:#fff; }
+.mc-2048-board>span.mc-tile-128 { background:#f0ce6a; color:#4a3c10; font-size:calc(1.3em * var(--text-scale,1)); }
+.mc-2048-board>span.mc-tile-256 { background:#efc64d; color:#4a3c10; font-size:calc(1.3em * var(--text-scale,1)); }
+.mc-2048-board>span.mc-tile-512 { background:#6cc2a4; color:#13352a; font-size:calc(1.3em * var(--text-scale,1)); }
+.mc-2048-board>span.mc-tile-1024 { background:#4ba6d6; color:#fff; font-size:calc(1.05em * var(--text-scale,1)); }
+.mc-2048-board>span.mc-tile-2048 { background:#7a6ad1; color:#fff; font-size:calc(1.05em * var(--text-scale,1)); }
+
+/* Lights Out: warm gold when lit, deep night blue when out. */
+.mc-lights-board { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; width:min(100%,330px); margin:16px auto; }
+.mc-lights-board>button { aspect-ratio:1; min-height:0; padding:0; border:2px solid #2a3150; border-radius:8px!important; background:#39415e; color:#8b93b5; font-size:calc(1.3em * var(--text-scale,1)); }
+.mc-lights-board>button.is-on { border-color:#c98a1b; background:#f6c344; color:#7a5406; }
+.mc-lights-board>button:hover { border-color:var(--mc-accent); }
+
+/* Flow Pipes: dry pipes are grey, water turns them blue. */
+.mc-pipes-board { display:grid; grid-template-columns:repeat(var(--pipe-columns),1fr); gap:5px; width:min(100%,330px); margin:16px auto; }
+.mc-pipes-board>button { aspect-ratio:1; min-height:0; padding:0; border:1px solid #cdd6d9; border-radius:7px!important; background:#f3f6f7; }
+.mc-pipes-board>button svg { width:100%; height:100%; }
+.mc-pipes-board>button line { stroke:#9aa7ab; stroke-width:7; stroke-linecap:round; }
+.mc-pipes-board>button circle { fill:#9aa7ab; }
+.mc-pipes-board>button.is-lit { border-color:#93cfe8; background:#e4f3fa; }
+.mc-pipes-board>button.is-lit line { stroke:#2a9fd6; }
+.mc-pipes-board>button.is-lit circle { fill:#2a9fd6; }
+.mc-pipes-board>button.is-source { border-color:#e0a13c; background:#fdf1dc; }
+.mc-pipes-board>button.is-source circle { fill:#e0781f; }
+
+/* Snake: flat squares, one solid colour each, and a face on the head. */
+.mc-snake-board { display:grid; grid-template-columns:repeat(var(--snake-columns),1fr); gap:2px; width:min(100%,420px); margin:16px auto; padding:6px; border:3px solid transparent; border-radius:9px; background:#dcebdf; }
+.mc-snake-board.is-hard { border-color:#d2644f; }
+.mc-snake-board>span { aspect-ratio:1; border-radius:3px; background:#eef5ef; transition:none!important; }
+.mc-snake-board>span.is-body { background:#2e9e6b; }
+.mc-snake-board>span.is-head { display:grid; place-items:center; overflow:visible; background:#155e3c; }
+.mc-snake-board>span.is-head svg { width:100%; height:100%; overflow:visible; }
+.mc-snake-eye { fill:#fff; }
+.mc-snake-pupil { fill:#13352a; }
+.mc-snake-smile { fill:none; stroke:#fff; stroke-width:1.8; stroke-linecap:round; }
+.mc-snake-tongue { fill:none; stroke:#e0533d; stroke-width:1.6; stroke-linecap:round; }
+.mc-snake-board>span.is-fruit { background:#e0533d; }
+
+/* Simon */
+.mc-simon-pads { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; width:min(100%,290px); margin:16px auto; }
+.mc-simon-pads>button { aspect-ratio:1; min-height:0; padding:0; border:2px solid transparent; border-radius:12px; color:#13241f; font-size:calc(1.8em * var(--text-scale,1)); opacity:.6; transition:opacity .2s ease; }
+.mc-simon-pads>button.reduced { transition:none; }
+.mc-simon-pads>button.is-lit,.mc-simon-pads>button:hover:not(:disabled) { opacity:1; border-color:#13241f; }
+.mc-simon-green { background:#3fb47c; }
+.mc-simon-amber { background:#f0b43f; }
+.mc-simon-blue { background:#4a9ed8; }
+.mc-simon-plum { background:#a978c9; }
+
+/* Word Coach */
+.mc-coach { display:grid; justify-items:center; gap:12px; width:min(100%,620px); margin:0 auto; }
+.mc-coach h2 { margin:0; font-size:calc(clamp(1.3em,3vw,1.6em) * var(--text-scale,1)); }
+.mc-coach-progress { width:100%; height:7px; overflow:hidden; border-radius:4px; background:#e3e9e6; }
+.mc-coach-progress span { display:block; height:100%; background:linear-gradient(90deg,#4a9ed8,#3fb47c); transition:width .3s ease; }
+.mc-coach-prompt { margin:6px 0 0; color:var(--mc-ink)!important; font-size:calc(1.15em * var(--text-scale,1)); font-weight:600; }
+.mc-coach-options { display:grid; width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.mc-play-area .mc-coach-options>button { min-height:72px; border-width:2px; font-size:1.05em; }
+.mc-play-area .mc-coach-options>button:first-child { border-color:#9cc6e4; background:#eaf4fb; color:#1d3f57!important; }
+.mc-play-area .mc-coach-options>button:last-child { border-color:#c6b0dd; background:#f3edfa; color:#3f2c56!important; }
+.mc-play-area .mc-coach-options>button:hover:not(:disabled) { border-color:var(--mc-accent); }
+.mc-play-area .mc-coach-options>button.is-right { border-color:#3fb47c; background:#dff2e8; color:#13482f!important; }
+.mc-play-area .mc-coach-options>button.is-wrong { border-color:#d2806f; background:#fae9e5; color:#6b3129!important; }
+
+/* Word Search: every word keeps its own colour once it is found. */
+.mc-wordsearch-grid { display:grid; grid-template-columns:repeat(var(--search-columns),1fr); gap:2px; width:min(100%,430px); margin:16px auto; touch-action:none; }
+.mc-wordsearch-grid>button { aspect-ratio:1; min-height:0; padding:0; border:1px solid transparent; border-radius:4px!important; background:#eaefec; color:#33403c; font-size:calc(.85em * var(--text-scale,1)); font-weight:600; }
+.mc-wordsearch-grid>button.is-tracing { border-color:#2a9fd6; background:#dcf0fa; color:#17415a; }
+.mc-wordsearch-list { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin:0; padding:0; list-style:none; }
+.mc-wordsearch-list li { color:var(--mc-muted); font-weight:600; letter-spacing:.04em; }
+.mc-wordsearch-list li.is-found { text-decoration:line-through; }
+.found-0 { background:#cbe7d6!important; color:#17432f!important; }
+.found-1 { background:#cfe3f5!important; color:#1a3b55!important; }
+.found-2 { background:#f8dfc4!important; color:#5a3a15!important; }
+.found-3 { background:#e7d6f2!important; color:#402a55!important; }
+.found-4 { background:#f7d6d8!important; color:#5c2429!important; }
+.found-5 { background:#d9eccb!important; color:#2f4518!important; }
+.mc-wordsearch-list li.found-0 { background:none!important; color:#2e8a5c!important; }
+.mc-wordsearch-list li.found-1 { background:none!important; color:#2a7bb0!important; }
+.mc-wordsearch-list li.found-2 { background:none!important; color:#b4761f!important; }
+.mc-wordsearch-list li.found-3 { background:none!important; color:#7a56a3!important; }
+.mc-wordsearch-list li.found-4 { background:none!important; color:#b4525c!important; }
+.mc-wordsearch-list li.found-5 { background:none!important; color:#5c8a33!important; }
+
+/* Breathing Buddy */
+.mc-breath-orb.hue { animation:mc-breath-hue 10s ease-in-out infinite; }
+@keyframes mc-breath-hue { 0%,100% { background:#dff0e4; } 50% { background:#d4e6f6; } }
+
+/* Untrusted: it fills the viewport, because its own page scrolls sideways in
+   anything narrower, and it is hidden on phones (see UntrustedGame.jsx). */
+.mindful-corner.mc-full-layer { position:fixed; z-index:95; inset:0; min-height:0; padding:0; }
+.mc-game.mc-game-full { display:flex; width:100%; height:100%; max-width:none; flex-direction:column; margin:0; overflow:hidden; padding:0; border:0; border-radius:0; background:var(--mc-bg); }
+.mc-untrusted { display:flex; min-width:0; flex:1; flex-direction:column; overflow:hidden; }
+.mc-untrusted-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:10px clamp(12px,2vw,20px); border-bottom:1px solid var(--mc-line); background:var(--mc-surface); }
+.mc-untrusted-bar>p { flex:1; min-width:200px; margin:0; color:var(--mc-muted); font-size:.88em; line-height:1.4; }
+.mc-untrusted-bar>button { display:inline-flex; min-height:40px; align-items:center; gap:7px; padding:8px 14px; border:1px solid var(--mc-line); border-radius:8px; background:var(--mc-bg); font-weight:600; }
+.mc-untrusted-bar>button:hover { border-color:var(--mc-accent); }
+.mc-untrusted-frame { display:block; width:100%; flex:1; min-height:0; border:0; background:#000; }
+.mc-untrusted .mc-credit { margin:0; padding:7px clamp(12px,2vw,20px); border-top:1px solid var(--mc-line); background:var(--mc-surface); text-align:center; }
+.mc-credit { color:var(--mc-muted); font-size:.82em; line-height:1.5; }
+.mc-credit a { display:inline-flex; align-items:center; gap:5px; color:var(--mc-accent); }
+.mc-untrusted-bar>a { display:inline-flex; align-items:center; gap:5px; color:var(--mc-accent); font-size:.88em; font-weight:600; }
+.mc-untrusted-away { display:grid; gap:12px; max-width:460px; margin:0 auto; }
+
+@media (max-width:640px) {
+  .mc-pad>button { width:60px; height:60px; }
+  .mc-coach-options { grid-template-columns:1fr; }
+  .mc-play-area .mc-coach-options>button { min-height:60px; }
+  .mc-wordsearch-grid>button { font-size:calc(.72em * var(--text-scale,1)); }
+}
+
+/* App dark mode. The boards keep their own colours; only their frames follow. */
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-2048-board { background:#55493f; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-2048-board>span { background:#6b5e52; color:#f1ebe3; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-2048-board>span.mc-tile-2 { background:#cfc6b8; color:#38322c; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-2048-board>span.mc-tile-4 { background:#cbba9c; color:#38322c; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-snake-board { background:#22382c; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-snake-board>span { background:#2c4537; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-pipes-board>button { border-color:#3a4a4e; background:#223034; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-pipes-board>button.is-lit { border-color:#2a6c8a; background:#16323f; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-pipes-board>button.is-source { border-color:#8a6422; background:#3a2f18; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-wordsearch-grid>button { background:#2a3a3d; color:#dceae8; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-coach-progress { background:#2a3a3d; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-play-area .mc-coach-options>button:first-child { border-color:#3c6d8d; background:#1c3344; color:#cfe6f5!important; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-play-area .mc-coach-options>button:last-child { border-color:#6b5287; background:#2c2340; color:#e3d5f2!important; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-play-area .mc-coach-options>button.is-right { border-color:#3fb47c; background:#1c4433; color:#c3ecd6!important; }
+.theme-dark .mindful-corner:not(.theme-high-contrast) .mc-play-area .mc-coach-options>button.is-wrong { border-color:#b0685a; background:#412724; color:#f3cdc6!important; }
