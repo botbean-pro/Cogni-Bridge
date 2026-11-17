@@ -759,8 +759,9 @@ const App = () => {
         }
         setActivityVersion((version) => version + 1);
         notify(t("attendanceRecordedToast"));
-      } catch {
-        notify(t("attendanceSyncError"));
+      } catch (err) {
+        console.error("markSessionAttended failed:", err);
+        notify(err?.message || t("attendanceSyncError"));
       }
       return;
     }
